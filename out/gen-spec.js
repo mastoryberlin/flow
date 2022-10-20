@@ -14,7 +14,7 @@ function generateSpecMarkdown() {
     var md = preamble + '\n\n';
     md += sections.map(function (s) {
         var lines = s.split('\n');
-        var sectionHeading = "### ".concat(lines[0], "\n\n#### Implementation Status\n|Specs|Parser|Visitor|Statechart Transform|App|\n|:---:|:----:|:-----:|:------------------:|:-:|\n");
+        var sectionHeading = "### ".concat(lines[0], "\n\n#### Implementation Status\n|Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|\n|:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|\n");
         var others;
         if (lines.length > 1) {
             var m = lines[1].match(/\s*\/\/\s*(\|.*)/);

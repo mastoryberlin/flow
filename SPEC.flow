@@ -1,9 +1,9 @@
 // # Comments
-// |done|done|done|n/a|n/a
+// |done|done|done|done|n/a|n/a|tbd
 // Line comments start with double-slashes like in JS/TS
 
 // # State Nodes
-// |done|done|done|tbd|done
+// |done|done|done|done|tbd|done|tbd
 // To define a [state node](https://xstate.js.org/docs/guides/statenodes.html), just write its name on a line of its own.
 // Names of state nodes may contain any word, non-word or whitespace characters except `|`, `{`, `[`.
 // Special syntax like `//` or `->` is also not permitted.
@@ -27,7 +27,7 @@ Parallel State [
 ]
 
 // # Transitions
-// |done|done|done|tbd|done
+// |done|done|done|done|tbd|done|tbd
 // Inside a state's braces (or brackets), use the arrow syntax `->` to define a transition to another state.
 // Transition targets are looked up within the current compound state's scope first;
 // if no matching target is found, the search continues one level higher until a match is found.
@@ -71,7 +71,7 @@ Good we don't have to type all that again {
 // i.e. a reference like `-> State name | @label` will lead to an error.
 
 // # Conditions and Variables
-// |done|done|tbd|tbd|tbd
+// |done|done|done|tbd|tbd|tbd|tbd
 // If a state node name begins with an exclamation mark `!`,
 // it will 
 
@@ -85,7 +85,7 @@ on MY_EVENT if a == 3 || userName != 'phil' -> Target // assuming `a` is defined
 after 5min when Parallel State | I will, too | A -> Talkative
 
 // # Shortcut Syntax<a name="shortcut-transitions" id="shortcut-transitions"></a>
-// |done|tbd|tbd|tbd|tbd
+// |done|done|tbd|tbd|tbd|tbd|tbd
 // To define a sequence of states where two subsequent states are connected by exactly one transition,
 // you can use a special shortcut syntax without `->`
 State A
@@ -104,7 +104,7 @@ State B {
 State C
 
 // # Messenger Conversations
-// |tbd|tbd|tbd|tbd|tbd
+// |tbd|done|tbd|tbd|tbd|tbd|tbd
 // **IMPORTANT: The following specs are still in development and should not be relied on!**
 //
 // State names ending with a "quoted" string are interpreted as *messages*:

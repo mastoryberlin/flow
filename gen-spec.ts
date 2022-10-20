@@ -18,8 +18,8 @@ function generateSpecMarkdown() {
     let sectionHeading = `### ${lines[0]}
 
 #### Implementation Status
-|Specs|Parser|Visitor|Statechart Transform|App|
-|:---:|:----:|:-----:|:------------------:|:-:|
+|Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
+|:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
 `
     let others: string[]
     if (lines.length > 1) {

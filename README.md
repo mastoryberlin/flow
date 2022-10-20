@@ -40,9 +40,9 @@ TODO: Describe paths
 ###  Comments
 
 #### Implementation Status
-|Specs|Parser|Visitor|Statechart Transform|App|
-|:---:|:----:|:-----:|:------------------:|:-:|
-|✅|✅|✅|N/A|N/A
+|Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
+|:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
+|✅|✅|✅|✅|N/A|N/A|❌
 
 Line comments start with double-slashes like in JS/TS
 
@@ -50,9 +50,9 @@ Line comments start with double-slashes like in JS/TS
 ###  State Nodes
 
 #### Implementation Status
-|Specs|Parser|Visitor|Statechart Transform|App|
-|:---:|:----:|:-----:|:------------------:|:-:|
-|✅|✅|✅|❌|✅
+|Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
+|:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
+|✅|✅|✅|✅|❌|✅|❌
 
 To define a [state node](https://xstate.js.org/docs/guides/statenodes.html), just write its name on a line of its own.
 Names of state nodes may contain any word, non-word or whitespace characters except `|`, `{`, `[`.
@@ -86,9 +86,9 @@ Parallel State [
 ###  Transitions
 
 #### Implementation Status
-|Specs|Parser|Visitor|Statechart Transform|App|
-|:---:|:----:|:-----:|:------------------:|:-:|
-|✅|✅|✅|❌|✅
+|Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
+|:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
+|✅|✅|✅|✅|❌|✅|❌
 
 Inside a state's braces (or brackets), use the arrow syntax `->` to define a transition to another state.
 Transition targets are looked up within the current compound state's scope first;
@@ -146,9 +146,9 @@ i.e. a reference like `-> State name | @label` will lead to an error.
 ###  Conditions and Variables
 
 #### Implementation Status
-|Specs|Parser|Visitor|Statechart Transform|App|
-|:---:|:----:|:-----:|:------------------:|:-:|
-|✅|✅|❌|❌|❌
+|Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
+|:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
+|✅|✅|✅|❌|❌|❌|❌
 
 If a state node name begins with an exclamation mark `!`,
 it will 
@@ -169,9 +169,9 @@ after 5min when Parallel State | I will, too | A -> Talkative
 ###  Shortcut Syntax<a name="shortcut-transitions" id="shortcut-transitions"></a>
 
 #### Implementation Status
-|Specs|Parser|Visitor|Statechart Transform|App|
-|:---:|:----:|:-----:|:------------------:|:-:|
-|✅|❌|❌|❌|❌
+|Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
+|:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
+|✅|✅|❌|❌|❌|❌|❌
 
 To define a sequence of states where two subsequent states are connected by exactly one transition,
 you can use a special shortcut syntax without `->`
@@ -198,9 +198,9 @@ State C
 ###  Messenger Conversations
 
 #### Implementation Status
-|Specs|Parser|Visitor|Statechart Transform|App|
-|:---:|:----:|:-----:|:------------------:|:-:|
-|❌|❌|❌|❌|❌
+|Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
+|:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
+|❌|✅|❌|❌|❌|❌|❌
 
 **IMPORTANT: The following specs are still in development and should not be relied on!**
 

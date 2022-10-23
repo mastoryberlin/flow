@@ -166,7 +166,7 @@ after 5min when Parallel State | I will, too | A -> Talkative
 ```
 
 
-###  Shortcut Syntax<a name="shortcut-transitions" id="shortcut-transitions"></a>
+###  Shortcut Syntax
 
 #### Implementation Status
 |Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
@@ -193,6 +193,128 @@ State B {
 }
 State C
 ```
+
+
+###  Directives
+
+#### Implementation Status
+|Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
+|:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
+|◔|❌|❌|❌|❌|❌|❌|
+
+Next to child state nodes and transitions, you can also define that certain actions should be triggered
+once a state is reached. This can be done through Flow *directives*, which are single-word commands
+(similar to function names in other programming languages) preceded by a leading dot:
+```swift
+Beware of the dog! {
+    .biteUser
+}
+```
+
+Many times, directives have *arguments* that modify or specify its behavior. Everything following a
+directive's name on the same line (except comments) is considered its argument(s), but the concrete format and meaning
+depends entirely on the directive in question. This is much like the way command-line tools work: Each
+one has its own way of interpreting the command line, and ideally, that way is the most convenient
+one for its specific use-case. Here are some examples:
+```swift
+.showApp Dictionary
+.loadChallenge Drone
+.let VZ appear in Wire
+.let VZ jump
+```
+
+It is possible to place directives directly after `on` or `after` statements (without the
+`->` transition marker). The event or timeout will trigger the specified action just like
+it would otherwise trigger a transition when used with a target state. Keep in mind that when using `on`
+or `after` in this way, the surrounding state will not be left! Continuing the example from above:
+```swift
+Beware of the dog! {
+    .bark
+    after 3s .bark louder
+    on SELF_DEFENSE .bite burglar
+}
+```
+
+Here is a list of all directives currently supported by the Mastory app.
+Optional arguments are denoted by [brackets]; all other listed arguments are mandatory.
+
+
+
+### # `.focusApp`
+
+#### Implementation Status
+|Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
+|:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
+| | | | | |
+
+```swift
+.focusApp AppName
+```
+
+- `AppName` – one of the available apps-in-the-app: `home`, `wire`, `messenger`, or `vlog`
+
+Ensures that `AppName` is visible for the user, switching the "currently selected app" to `AppName` if necessary.
+
+
+
+### # `.inChallenge`
+
+#### Implementation Status
+|Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
+|:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
+| | | | | |
+
+```swift
+.inChallenge EventName OptionsObject
+```
+
+- `EventName` – the name of an event that can be interpreted by the currently loaded challenge state machine.
+- `OptionsObject` – a JavaScript object of the form `{option1: value1, option2: value2, ...}` containing any
+additional event-related data to be forwarded to the challenge state machine.
+
+This directive can be used to dynamically influence the current challenge from the Flow script.
+Each challenge defines the unique list of events that its [→Challenge State Machine](https://github.com/mastoryberlin/app/tree/master/challenges)
+"understands", many times by transitioning to a different state. To manipulate `SomeChallenge`'s UI or internal
+data in a certain way, check its specs in the `app` project's hierarchy at `challenges/SomeChallenge/README.md`.
+
+Note that `EventName` must *exactly* match the event name defined by the challenge state machine, as no automatic case-translations will be performed.
+Likewise, the `OptionsObject` will be passed to the challenge state machine's `send()` function as-is, so make sure to also
+match the expected data format to reach the intended result.
+
+
+
+### # `.loadChallenge`
+
+#### Implementation Status
+|Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
+|:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
+| | | | | |
+
+```swift
+.loadChallenge ChallengeName
+```
+
+- `ChallengeName` – the name or ID of a challenge, i.e. the name of the `app` project's subfolder it is contained in under `challenges`.
+
+Loads the challenge `ChallengeName` in the Wire, including its Vue component, challenge store, and challenge
+state machine. `ChallengeName` will be matched against all available challenge names in a case-insensitive
+manner.
+
+Note that `.loadChallenge` does not automatically focus the Wire app. To do so, you will need to include
+a [`.focusApp`](#focus-app) directive as well.
+
+
+
+### # `.unloadChallenge`
+
+#### Implementation Status
+|Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
+|:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
+| | | | | |
+
+*Usage: `.unloadChallenge`*
+
+Unloads any currently loaded challenge, leaving the Wire app in the state where it reads "No challenge available".
 
 
 ###  Messenger Conversations

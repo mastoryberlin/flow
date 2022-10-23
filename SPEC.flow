@@ -165,7 +165,7 @@ Beware of the dog! {
 // manner.
 //
 // Note that `.loadChallenge` does not automatically focus the Wire app. To do so, you will need to include
-// a [`.focusApp`](#focus-app) directive as well.
+// a [`.focusApp`](#focusapp) directive as well.
 //
 // #### `.unloadChallenge`
 .unloadChallenge

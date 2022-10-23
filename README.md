@@ -277,7 +277,7 @@ state machine. `ChallengeName` will be matched against all available challenge n
 manner.
 
 Note that `.loadChallenge` does not automatically focus the Wire app. To do so, you will need to include
-a [`.focusApp`](#focus-app) directive as well.
+a [`.focusApp`](#focusapp) directive as well.
 
 #### `.unloadChallenge`
 ```swift

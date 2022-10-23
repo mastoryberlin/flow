@@ -238,15 +238,7 @@ Beware of the dog! {
 Here is a list of all directives currently supported by the Mastory app.
 Optional arguments are denoted by [brackets]; all other listed arguments are mandatory.
 
-
-
-### # `.focusApp`
-
-#### Implementation Status
-|Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
-|:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
-| | | | | |
-
+#### `.focusApp`
 ```swift
 .focusApp AppName
 ```
@@ -255,15 +247,7 @@ Optional arguments are denoted by [brackets]; all other listed arguments are man
 
 Ensures that `AppName` is visible for the user, switching the "currently selected app" to `AppName` if necessary.
 
-
-
-### # `.inChallenge`
-
-#### Implementation Status
-|Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
-|:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
-| | | | | |
-
+#### `.inChallenge`
 ```swift
 .inChallenge EventName OptionsObject
 ```
@@ -281,15 +265,7 @@ Note that `EventName` must *exactly* match the event name defined by the challen
 Likewise, the `OptionsObject` will be passed to the challenge state machine's `send()` function as-is, so make sure to also
 match the expected data format to reach the intended result.
 
-
-
-### # `.loadChallenge`
-
-#### Implementation Status
-|Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
-|:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
-| | | | | |
-
+#### `.loadChallenge`
 ```swift
 .loadChallenge ChallengeName
 ```
@@ -303,16 +279,11 @@ manner.
 Note that `.loadChallenge` does not automatically focus the Wire app. To do so, you will need to include
 a [`.focusApp`](#focus-app) directive as well.
 
+#### `.unloadChallenge`
+```swift
+.unloadChallenge
+```
 
-
-### # `.unloadChallenge`
-
-#### Implementation Status
-|Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
-|:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
-| | | | | |
-
-*Usage: `.unloadChallenge`*
 
 Unloads any currently loaded challenge, leaving the Wire app in the state where it reads "No challenge available".
 

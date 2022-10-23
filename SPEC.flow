@@ -135,13 +135,13 @@ Beware of the dog! {
 // Here is a list of all directives currently supported by the Mastory app.
 // Optional arguments are denoted by [brackets]; all other listed arguments are mandatory.
 //
-// ## `.focusApp`
+// #### `.focusApp`
 .focusApp AppName
 // - `AppName` – one of the available apps-in-the-app: `home`, `wire`, `messenger`, or `vlog`
 //
 // Ensures that `AppName` is visible for the user, switching the "currently selected app" to `AppName` if necessary.
 //
-// ## `.inChallenge`
+// #### `.inChallenge`
 .inChallenge EventName OptionsObject
 // - `EventName` – the name of an event that can be interpreted by the currently loaded challenge state machine.
 // - `OptionsObject` – a JavaScript object of the form `{option1: value1, option2: value2, ...}` containing any
@@ -156,7 +156,7 @@ Beware of the dog! {
 // Likewise, the `OptionsObject` will be passed to the challenge state machine's `send()` function as-is, so make sure to also
 // match the expected data format to reach the intended result.
 // 
-// ## `.loadChallenge`
+// #### `.loadChallenge`
 .loadChallenge ChallengeName
 // - `ChallengeName` – the name or ID of a challenge, i.e. the name of the `app` project's subfolder it is contained in under `challenges`.
 //
@@ -167,8 +167,8 @@ Beware of the dog! {
 // Note that `.loadChallenge` does not automatically focus the Wire app. To do so, you will need to include
 // a [`.focusApp`](#focus-app) directive as well.
 //
-// ## `.unloadChallenge`
-// *Usage: `.unloadChallenge`*
+// #### `.unloadChallenge`
+.unloadChallenge
 //
 // Unloads any currently loaded challenge, leaving the Wire app in the state where it reads "No challenge available".
 

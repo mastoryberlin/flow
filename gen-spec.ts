@@ -9,7 +9,7 @@ function generateSpecMarkdown() {
 
   const preamble = readFileSync(preamblePath).toString()
   const flowCode = readFileSync(specPath).toString()
-  const sections = flowCode.split(/(?:\s*\n)*\/\/\s*#/).slice(1)
+  const sections = flowCode.split(/(?:\s*\n)*\/\/\s*#(?!#)/).slice(1)
 
   const codeBlock = '```'
   let md = preamble + '\n\n'

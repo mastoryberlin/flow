@@ -9,7 +9,7 @@ function generateSpecMarkdown() {
     var mdPath = (0, path_1.resolve)(rootDir, "README.md");
     var preamble = (0, fs_1.readFileSync)(preamblePath).toString();
     var flowCode = (0, fs_1.readFileSync)(specPath).toString();
-    var sections = flowCode.split(/(?:\s*\n)*\/\/\s*#/).slice(1);
+    var sections = flowCode.split(/(?:\s*\n)*\/\/\s*#(?!#)/).slice(1);
     var codeBlock = '```';
     var md = preamble + '\n\n';
     md += sections.map(function (s) {

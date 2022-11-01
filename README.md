@@ -249,12 +249,13 @@ Ensures that `AppName` is visible for the user, switching the "currently selecte
 
 #### `.inChallenge`
 ```swift
-.inChallenge EventName OptionsObject
+.inChallenge [Character] EventName OptionsObject
 ```
 
+- `Character` *optional* – the name of an NPC (`Nick`, `VZ`, `Alicia`, or `Professor`) which will be merged with any options passed in the `OptionsObject` and can be used by the Challenge State Machine to implement an animation that pretends that NPC interacting with the challenge UI. Will match character names case-insensitively.
 - `EventName` – the name of an event that can be interpreted by the currently loaded challenge state machine.
 - `OptionsObject` – a JavaScript object of the form `{option1: value1, option2: value2, ...}` containing any
-additional event-related data to be forwarded to the challenge state machine.
+additional event-related data to be forwarded to the Challenge State Machine. If a `Character` argument is given, then the options object will contain an additional key `_pretendCausedByNpc` with the name of that NPC (normalized with respect to casing).
 
 This directive can be used to dynamically influence the current challenge from the Flow script.
 Each challenge defines the unique list of events that its [→Challenge State Machine](https://github.com/mastoryberlin/app/tree/master/challenges)

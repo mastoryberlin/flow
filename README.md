@@ -52,7 +52,7 @@ Line comments start with double-slashes like in JS/TS
 #### Implementation Status
 |Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
 |:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
-|✅|✅|✅|✅|❌|✅|❌
+|✅|✅|✅|✅|✅|✅|❌
 
 To define a [state node](https://xstate.js.org/docs/guides/statenodes.html), just write its name on a line of its own.
 Names of state nodes may contain any word, non-word or whitespace characters except `|`, `{`, `[`.
@@ -130,6 +130,7 @@ Unrelated State {
 C // If the above transition target had just been specified as `-> C`, this would have been selected instead
 ```
 
+#### Labels
 Prepend a state node definition with `@someLabel` to assign `someLabel` to the state node for easier reference in transitions
 ```swift
 @short This state has a very long name ...
@@ -142,7 +143,6 @@ Labels provide an *absolute* alternative to referencing a state through its (rel
 They have to be unique across a Flow file, and they must not be mixed with path information,
 i.e. a reference like `-> State name | @label` will lead to an error.
 
-
 ###  Conditions and Variables
 
 #### Implementation Status
@@ -150,8 +150,49 @@ i.e. a reference like `-> State name | @label` will lead to an error.
 |:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
 |✅|✅|✅|❌|❌|❌|❌
 
-If a state node name begins with an exclamation mark `!`,
-it will 
+Inside Flow scripts, you have access to three kinds of variables:
+1. [Global variables](#global-variables) like `userName`
+2. Utility variables in the current [Flow Scope](#flow-scope)
+3. Shared [Challenge Data]
+
+All available variables can be used for message interpolation by preceding their name with a `$` sign:
+```bash
+Intro {
+    Nick "Hello, $userName"
+}
+```
+When used in string interpolation, 
+
+#### Global Variables
+In every Flow you have access to a fixed set of global variables which are listed below. These variables are managed automatically, e.g. the `userName` will always be set based on the profile of the logged-on user.
+
+##### `userName` (string)
+The first name of the current user. E.g. if a user's profile has stored a name of *Alex Baldwin*, `VZ "Hi, $userName!"` will have VZ send out "Hi, Alex!"
+
+##### `className` (string)
+TBD
+
+##### `classSize` (number)
+The number of students in the class currently signed in.
+
+#### Flow Scope
+Each Flow may define its "own" variables that are set at one point of execution, and checked in another. These variables belong to the scope of the current Flow, so you cannot access them from other Flows.
+
+If a state node name begins with an exclamation mark `!`, it will be interpreted as a variable assignment. The assignment is expected to be of the form `varname = expression`, where `varname` and `expression` can be any valid JS variable name and expression, respectively. `varname` will be either defined or re-assigned within the current Flow scope, and can then be used in message interpolation or [conditional transitions](#conditional-transitions).
+
+Example:
+```swift
+State A {
+    ! groupSize = classSize / 5
+    // ...
+    -> State B if groupSize < 3
+}
+State B {
+    // ...
+}
+``` 
+
+#### Conditional Transitions
 If a transition definition contains an `if` clause, it becomes a ["guarded" (conditional) transition](https://xstate.js.org/docs/guides/guards.html).
 The condition can be either the name of a (globally predefined) guard 
 or any JS expression referring to the current Flow variables

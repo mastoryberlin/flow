@@ -1,13 +1,25 @@
 {
-  "name": "flow",
+  "name": "@mastoryberlin/flow",
   "version": "0.1.0",
+  "type": "module",
+  "description": "",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mastoryberlin/flow.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "author": "Felix Schwarz",
+  "license": "ISC",
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check build-only build:scripts",
     "watch": "concurrently \"yarn gen-spec watch\"",
     "preview": "vite preview --port 4173",
     "test:unit": "vitest --environment jsdom",
-    "build-only": "vite build",
+    "build-only": "concurrently \"vite build\" \"tsc --outDir out ./src/chevrotain/*\"",
     "type-check": "vue-tsc --noEmit -p tsconfig.vitest.json --composite false",
     "build:scripts": "tsc --outDir out ./gen-spec ./gen-types",
     "gen-spec": "node out/gen-spec",

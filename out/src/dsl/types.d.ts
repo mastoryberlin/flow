@@ -1,6 +1,9 @@
 import type * as vscode from './vscode';
+export declare type Range = vscode.Range;
+export declare type Position = vscode.Position;
+export declare type Uri = vscode.Uri;
 export interface SemanticUnit {
-    range: vscode.Range;
+    range: Range;
     offset: number;
 }
 export declare type NPC = 'Alicia' | 'Nick' | 'Victoria' | 'Professor' | 'Maive';
@@ -14,7 +17,7 @@ export interface TextMessage extends BaseMessage {
 }
 export interface MediaMessage extends BaseMessage {
     title: string;
-    source?: vscode.Uri;
+    source?: Uri;
 }
 export declare type Message = TextMessage | MediaMessage;
 export interface NLUContext {

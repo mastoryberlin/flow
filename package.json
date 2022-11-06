@@ -4,6 +4,7 @@
   "type": "module",
   "description": "",
   "main": "index.js",
+  "types": "./out/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mastoryberlin/flow.git"
@@ -19,7 +20,8 @@
     "watch": "concurrently \"yarn gen-spec watch\"",
     "preview": "vite preview --port 4173",
     "test:unit": "vitest --environment jsdom",
-    "build-only": "concurrently \"vite build\" \"tsc --outDir out ./src/chevrotain/*\"",
+    "build-only": "vite build",
+    "build-module": "tsc --declaration --outDir out ./index.ts",
     "type-check": "vue-tsc --noEmit -p tsconfig.vitest.json --composite false",
     "build:scripts": "tsc --outDir out ./gen-spec ./gen-types",
     "gen-spec": "node out/gen-spec",

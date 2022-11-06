@@ -4,19 +4,19 @@
 
 // # State Nodes
 // |done|done|done|done|tbd|done|tbd
-// To define a [state node](https://xstate.js.org/docs/guides/statenodes.html), just write its name on a line of its own.
+// To define a [→state node](https://xstate.js.org/docs/guides/statenodes.html), just write its name on a line of its own.
 // Names of state nodes may contain any word, non-word or whitespace characters except `|`, `{`, `[`.
 // Special syntax like `//` or `->` is also not permitted.
 My 1st State (couldn't think of a "better" name) // normal parentheses and quotation marks are allowed, too
 
-// A [compound state](https://xstate.js.org/docs/guides/hierarchical.html) is denoted by a pair of braces {}.
+// A [→compound state](https://xstate.js.org/docs/guides/hierarchical.html) is denoted by a pair of braces {}.
 // State nodes nested inside the braces are considered child nodes
 State 2 {
   State 2a // The first child state will be automatically deemed the "initial" one
   State 2b // This one won't be auto-selected
 }
 
-// Using brackets [] instead of curly braces defines a ["parallel" compound state](https://xstate.js.org/docs/guides/statenodes.html#state-node-types)
+// Using brackets [] instead of curly braces defines a [→"parallel" compound state](https://xstate.js.org/docs/guides/statenodes.html#state-node-types)
 Parallel State [
   I will be selected ...
   I will, too { // any combinations of [] and {} are valid, too
@@ -72,10 +72,46 @@ Good we don't have to type all that again {
 
 // # Conditions and Variables
 // |done|done|done|tbd|tbd|tbd|tbd
-// If a state node name begins with an exclamation mark `!`,
-// it will 
 
-// If a transition definition contains an `if` clause, it becomes a ["guarded" (conditional) transition](https://xstate.js.org/docs/guides/guards.html).
+// Inside Flow scripts, you have access to three kinds of variables:
+// 1. [Global variables](#global-variables) like `userName`
+// 2. Utility variables in the current [Flow Scope](#flow-scope)
+// 3. Shared [Challenge Data]
+
+// All available variables can be used for message interpolation by preceding their name with a `$` sign:
+Intro {
+    Nick "Hello, $userName"
+}
+// When used in string interpolation, 
+
+// #### Global Variables
+// In every Flow you have access to a fixed set of global variables which are listed below. These variables are managed automatically, e.g. the `userName` will always be set based on the profile of the logged-on user.
+
+// ##### `userName` (string)
+// The first name of the current user. E.g. if a user's profile has stored a name of *Alex Baldwin*, `VZ "Hi, $userName!"` will have VZ send out "Hi, Alex!"
+
+// ##### `className` (string)
+// TBD
+
+// ##### `classSize` (number)
+// The number of students in the class currently signed in.
+
+// #### Flow Scope
+// Each Flow may define its "own" variables that are set at one point of execution, and checked in another. These variables belong to the scope of the current Flow, so you cannot access them from other Flows.
+
+// If a state node name begins with an exclamation mark `!`, it will be interpreted as a variable assignment. The assignment is expected to be of the form `varname = expression`, where `varname` and `expression` can be any valid JS variable name and expression, respectively. `varname` will be either defined or re-assigned within the current Flow scope, and can then be used in message interpolation or [conditional transitions](#conditional-transitions).
+
+// Example:
+State A {
+    ! groupSize = classSize / 5
+    ...
+    if groupSize < 3 -> State B
+}
+State B {
+    ...
+}
+// #### Conditional Transitions
+// If a transition definition contains an `if` clause, it becomes a [→"guarded" (conditional) transition](https://xstate.js.org/docs/guides/guards.html).
 // The condition can be either the name of a (globally predefined) guard 
 // or any JS expression referring to the current Flow variables
 after 2min if someCondition -> Target // this will only transition if `someCondition` evaluates to true
@@ -108,7 +144,7 @@ State C
 // Next to child state nodes and transitions, you can also define that certain actions should be triggered
 // once a state is reached. This can be done through Flow *directives*, which are single-word commands
 // (similar to function names in other programming languages) preceded by a leading dot:
-Beware of the dog! {
+beware of the dog! {
   .biteUser
 }
 
@@ -119,8 +155,8 @@ Beware of the dog! {
 // one for its specific use-case. Here are some examples:
 .showApp Dictionary
 .loadChallenge Drone
-.let VZ appear in Wire
-.let VZ jump
+.have VZ appear in Wire
+.have VZ jump
 
 // It is possible to place directives directly after `on` or `after` statements (without the
 // `->` transition marker). The event or timeout will trigger the specified action just like
@@ -192,24 +228,24 @@ Talkative {
 }
 
 // Interactive conversations ("NLU contexts") can be defined by adding a state node called ? as the initial child of a compound state:
-Victoria "Hi, did you also get Alicia's messages?" {
+VZ "Hi, did you also get Alicia's messages?" {
   ? // This will wait for user input, process it, and select the best match among the provided intents
   "yes" {
     -> @omg // This is an "always transition": As soon as the state is entered, it is "redirected" to @omg
   }
   "no" {
-    Victoria "Here, look."
-    .. Victoria AUDIO "Challenge intro 1" // This syntax indicates an audio message to be added later through the visual Content Editor.
-                                          // The quoted string is just an (optional) description in this case.
-                                          // Once the media source is added, the above line of code will be changed into something like:
-                                          // .. Victoria http://url-to-audio-file.mp3 "Challenge intro 1"
-                                          // (the fact that is it an AUDIO source will then be derived from the URL file extension)
+    VZ "Here, look."
+    .. VZ AUDIO "Challenge intro 1" // This syntax indicates an audio message to be added later through the visual Content Editor.
+                                    // The quoted string is just an (optional) description in this case.
+                                    // Once the media source is added, the above line of code will be changed into something like:
+                                    // .. VZ http://url-to-audio-file.mp3 "Challenge intro 1"
+                                    // (the fact that is it an AUDIO source will then be derived from the URL file extension)
     after 5s
-    Victoria IMAGE "cloud message" // ... same thing can be done for an image source ...
+    VZ IMAGE "cloud message" // ... same thing can be done for an image source ...
     after 5s
     _
     // ... and a video message:
-    Victoria VIDEO "Challenge intro 2" = introVideo {
+    VZ VIDEO "Challenge intro 2" = introVideo {
       // with the "= ..." syntax, the media file / URL is linked with an identifier (constant) for reference
       // wherever the assigned identifier appears throughout the flow script, it will be replaced by the actual URL
       _ // auxiliary child states are needed to chain multiple transitions - it is recommended to call them _, __, ___
@@ -222,7 +258,7 @@ Victoria "Hi, did you also get Alicia's messages?" {
   * -> ?  // An optional wildcard state * within a conversation context provides a catch-all option,
           // which is selected when the user input doesn't match any of the other.
 }
-@omg Victoria "OMG!"
+@omg VZ "OMG!"
 
 on SOME_EVENT // transition shortcuts also work on the root level: on the SOME_EVENT event, transition to the next state node
 

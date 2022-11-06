@@ -4,15 +4,19 @@
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check build-only build:scripts",
+    "watch": "concurrently \"yarn gen-spec watch\"",
     "preview": "vite preview --port 4173",
     "test:unit": "vitest --environment jsdom",
     "build-only": "vite build",
     "type-check": "vue-tsc --noEmit -p tsconfig.vitest.json --composite false",
-    "build:scripts": "tsc --outDir out ./gen-spec",
-    "gen-spec": "node out/gen-spec"
+    "build:scripts": "tsc --outDir out ./gen-spec ./gen-types",
+    "gen-spec": "node out/gen-spec",
+    "gen-types": "node out/gen-types"
   },
   "dependencies": {
-    "vue": "^3.2.38"
+    "chevrotain": "^10.4.1",
+    "vue": "^3.2.38",
+    "vue3-treeview": "^0.4.0"
   },
   "devDependencies": {
     "@types/jsdom": "^20.0.0",
@@ -25,6 +29,10 @@
     "typescript": "~4.7.4",
     "vite": "^3.0.9",
     "vitest": "^0.23.0",
-    "vue-tsc": "^0.40.7"
+    "vue-tsc": "^0.40.7",
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7",
+    "chokidar": "^3.5.3",
+    "concurrently": "^7.5.0"
   }
 }

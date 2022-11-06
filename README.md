@@ -8,12 +8,12 @@ in the context of Mastory's complex episodic story game.
 Although Flow can be seen as a certain kind of code, it is *not* a programming language
 as it is not executable as-is. 
 In fact, Flow scripts are nothing but a convenient way to author State Machine definitions,
-suitable for use with the [XState library](https://xstate.js.org/docs/).
+suitable for use with the [→XState library](https://xstate.js.org/docs/).
 These so-called “statecharts”, in turn, *can* be executed in the very specific context of the Mastory app,
 or more precisely, can be loaded up and interpreted by an integrated instance of XState.
 
 It is therefore highly recommended to get familiar with
-the basic notions of [statecharts](https://xstate.js.org/docs/guides/introduction-to-state-machines-and-statecharts/)
+the basic notions of [→statecharts](https://xstate.js.org/docs/guides/introduction-to-state-machines-and-statecharts/)
 before diving deeper into Flow. 
 It is a good idea to keep in mind that every Flow script is ultimately translated into a
 statechart, and that Flow statements which may look like imperative commands or logical expressions will become mere
@@ -29,7 +29,7 @@ depending on the specific syntax used in that statement:
 - If the statement begins with an exclamation mark, it is interpreted as a special *assign to variable* **action**, triggered on entering the surrounding scope.
 - If the statement contains an “arrow” `->`, it is interpreted as a **transition** from the surrounding scope to a target state (RHS of the arrow).
 - If the statement does *not* contain an arrow but otherwise matches the patterns
-`on <EVENT>` or `after <TIME>` used to define event or timeout transitions, it is interpreted as a [**shortcut transition**](#shortcut-transitions). 
+`on <EVENT>` or `after <TIME>` used to define event or timeout transitions, it is interpreted as a [**shortcut transition**](#shortcut-syntax). 
 Source and target state nodes of this transition are assumed to be defined by the immediately preceding and immediately following lines, respectively.
 - Everything else is interpreted as the name of a **state node** (potentially with side-effects, depending on the specific form of the state node name).
 
@@ -37,40 +37,32 @@ TODO: Describe paths
 
 ## DSL Features
 
-###  Comments
-
-#### Implementation Status
-|Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
-|:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
-|✅|✅|✅|✅|N/A|N/A|❌
-
-Line comments start with double-slashes like in JS/TS
-
-
 ###  State Nodes
 
 #### Implementation Status
 |Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
 |:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
-|✅|✅|✅|✅|✅|✅|❌
+|✅|✅|✅|✅|❌|✅|❌
 
-To define a [state node](https://xstate.js.org/docs/guides/statenodes.html), just write its name on a line of its own.
+To define a [→state node](https://xstate.js.org/docs/guides/statenodes.html), just write its name on a line of its own.
 Names of state nodes may contain any word, non-word or whitespace characters except `|`, `{`, `[`.
 Special syntax like `//` or `->` is also not permitted.
 ```swift
 My 1st State (couldn't think of a "better" name) // normal parentheses and quotation marks are allowed, too
+
 ```
 
-A [compound state](https://xstate.js.org/docs/guides/hierarchical.html) is denoted by a pair of braces {}.
+A [→compound state](https://xstate.js.org/docs/guides/hierarchical.html) is denoted by a pair of braces {}.
 State nodes nested inside the braces are considered child nodes
 ```swift
 State 2 {
     State 2a // The first child state will be automatically deemed the "initial" one
     State 2b // This one won't be auto-selected
 }
+
 ```
 
-Using brackets [] instead of curly braces defines a ["parallel" compound state](https://xstate.js.org/docs/guides/statenodes.html#state-node-types)
+Using brackets [] instead of curly braces defines a [→"parallel" compound state](https://xstate.js.org/docs/guides/statenodes.html#state-node-types)
 ```swift
 Parallel State [
     I will be selected ...
@@ -99,6 +91,7 @@ Combine `->` with the `on` keyword to define an event transition triggered by `S
 Some State {
     on SOME_EVENT -> Another State 
 }
+
 ```
 
 You can also define "after transitions" based on a timeout with the `after` keyword.
@@ -112,6 +105,7 @@ Some Other State {
 }
 Another State // This will be selected after 20 seconds
 Yet another state // This will be selected after 3 minutes and 25 seconds
+
 ```
 
 Transitions without `on` or `after` become ["always transitions"](https://xstate.js.org/docs/guides/transitions.html#eventless-always-transitions):
@@ -120,6 +114,7 @@ As soon as the state is entered, it is "redirected" to @omg
 Transitory {
     -> @omg
 }
+
 ```
 
 Nested transition targets can be qualified by separating the scopes with a pipe `|` sign
@@ -128,20 +123,22 @@ Unrelated State {
     after 2min -> Parallel State | I will, too | C // this will only transition if someGuard evaluates to true
 }
 C // If the above transition target had just been specified as `-> C`, this would have been selected instead
+
 ```
 
-#### Labels
 Prepend a state node definition with `@someLabel` to assign `someLabel` to the state node for easier reference in transitions
 ```swift
 @short This state has a very long name ...
 Good we don't have to type all that again {
     on MY_EVENT -> @short
 }
+
 ```
 
 Labels provide an *absolute* alternative to referencing a state through its (relative) path.
 They have to be unique across a Flow file, and they must not be mixed with path information,
 i.e. a reference like `-> State name | @label` will lead to an error.
+
 
 ###  Conditions and Variables
 
@@ -150,55 +147,85 @@ i.e. a reference like `-> State name | @label` will lead to an error.
 |:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
 |✅|✅|✅|❌|❌|❌|❌
 
+```swift
+
+```
+
 Inside Flow scripts, you have access to three kinds of variables:
 1. [Global variables](#global-variables) like `userName`
 2. Utility variables in the current [Flow Scope](#flow-scope)
 3. Shared [Challenge Data]
+```swift
+
+```
 
 All available variables can be used for message interpolation by preceding their name with a `$` sign:
-```bash
+```swift
 Intro {
-    Nick "Hello, $userName"
+        Nick "Hello, $userName"
 }
 ```
+
 When used in string interpolation, 
+```swift
+
+```
 
 #### Global Variables
 In every Flow you have access to a fixed set of global variables which are listed below. These variables are managed automatically, e.g. the `userName` will always be set based on the profile of the logged-on user.
+```swift
+
+```
 
 ##### `userName` (string)
 The first name of the current user. E.g. if a user's profile has stored a name of *Alex Baldwin*, `VZ "Hi, $userName!"` will have VZ send out "Hi, Alex!"
+```swift
+
+```
 
 ##### `className` (string)
 TBD
+```swift
+
+```
 
 ##### `classSize` (number)
 The number of students in the class currently signed in.
+```swift
+
+```
 
 #### Flow Scope
 Each Flow may define its "own" variables that are set at one point of execution, and checked in another. These variables belong to the scope of the current Flow, so you cannot access them from other Flows.
+```swift
+
+```
 
 If a state node name begins with an exclamation mark `!`, it will be interpreted as a variable assignment. The assignment is expected to be of the form `varname = expression`, where `varname` and `expression` can be any valid JS variable name and expression, respectively. `varname` will be either defined or re-assigned within the current Flow scope, and can then be used in message interpolation or [conditional transitions](#conditional-transitions).
+```swift
+
+```
 
 Example:
 ```swift
 State A {
-    ! groupSize = classSize / 5
-    // ...
-    -> State B if groupSize < 3
+        ! groupSize = classSize / 5
+        ...
+        if groupSize < 3 -> State B
 }
 State B {
-    // ...
+        ...
 }
-``` 
+```
 
 #### Conditional Transitions
-If a transition definition contains an `if` clause, it becomes a ["guarded" (conditional) transition](https://xstate.js.org/docs/guides/guards.html).
+If a transition definition contains an `if` clause, it becomes a [→"guarded" (conditional) transition](https://xstate.js.org/docs/guides/guards.html).
 The condition can be either the name of a (globally predefined) guard 
 or any JS expression referring to the current Flow variables
 ```swift
 after 2min if someCondition -> Target // this will only transition if `someCondition` evaluates to true
 on MY_EVENT if a == 3 || userName != 'phil' -> Target // assuming `a` is defined somewhere
+
 ```
 
 Replacing `if` by `when` + a state node reference will check if that state is (also) selected; only then the transition will happen
@@ -222,6 +249,7 @@ after 1s
 State B
 on PLAY if x < 0.5
 State C
+
 ```
 
 The above is equivalent to the more verbose definition
@@ -247,9 +275,10 @@ Next to child state nodes and transitions, you can also define that certain acti
 once a state is reached. This can be done through Flow *directives*, which are single-word commands
 (similar to function names in other programming languages) preceded by a leading dot:
 ```swift
-Beware of the dog! {
+beware of the dog! {
     .biteUser
 }
+
 ```
 
 Many times, directives have *arguments* that modify or specify its behavior. Everything following a
@@ -260,8 +289,9 @@ one for its specific use-case. Here are some examples:
 ```swift
 .showApp Dictionary
 .loadChallenge Drone
-.let VZ appear in Wire
-.let VZ jump
+.have VZ appear in Wire
+.have VZ jump
+
 ```
 
 It is possible to place directives directly after `on` or `after` statements (without the
@@ -274,6 +304,7 @@ Beware of the dog! {
     after 3s .bark louder
     on SELF_DEFENSE .bite burglar
 }
+
 ```
 
 Here is a list of all directives currently supported by the Mastory app.
@@ -290,13 +321,12 @@ Ensures that `AppName` is visible for the user, switching the "currently selecte
 
 #### `.inChallenge`
 ```swift
-.inChallenge [Character] EventName OptionsObject
+.inChallenge EventName OptionsObject
 ```
 
-- `Character` *optional* – the name of an NPC (`Nick`, `VZ`, `Alicia`, or `Professor`) which will be merged with any options passed in the `OptionsObject` and can be used by the Challenge State Machine to implement an animation that pretends that NPC interacting with the challenge UI. Will match character names case-insensitively.
 - `EventName` – the name of an event that can be interpreted by the currently loaded challenge state machine.
 - `OptionsObject` – a JavaScript object of the form `{option1: value1, option2: value2, ...}` containing any
-additional event-related data to be forwarded to the Challenge State Machine. If a `Character` argument is given, then the options object will contain an additional key `_pretendCausedByNpc` with the name of that NPC (normalized with respect to casing).
+additional event-related data to be forwarded to the challenge state machine.
 
 This directive can be used to dynamically influence the current challenge from the Flow script.
 Each challenge defines the unique list of events that its [→Challenge State Machine](https://github.com/mastoryberlin/app/tree/master/challenges)
@@ -351,63 +381,48 @@ Talkative {
     ... "I'm not so good today😞" // a shortcut meaning "same sender + default timeout"
     on USER_REACTION
     Alicia "Thank you for listening to me, $userName!" // Within message texts, you can inject the values of contextual variables using $ + varname
-```
-
-Besides $userName, you can use $className and $teacherName
-```swift
+                                                                                                 // Besides $userName, you can use $className and $teacherName
     on RESTART -> @how
 }
+
 ```
 
 Interactive conversations ("NLU contexts") can be defined by adding a state node called ? as the initial child of a compound state:
 ```swift
-Victoria "Hi, did you also get Alicia's messages?" {
+VZ "Hi, did you also get Alicia's messages?" {
     ? // This will wait for user input, process it, and select the best match among the provided intents
     "yes" {
         -> @omg // This is an "always transition": As soon as the state is entered, it is "redirected" to @omg
     }
     "no" {
-        Victoria "Here, look."
-        .. Victoria AUDIO "Challenge intro 1" // This syntax indicates an audio message to be added later through the visual Content Editor.
-```
-
-The quoted string is just an (optional) description in this case.
-Once the media source is added, the above line of code will be changed into something like:
-.. Victoria http://url-to-audio-file.mp3 "Challenge intro 1"
-(the fact that is it an AUDIO source will then be derived from the URL file extension)
-```swift
+        VZ "Here, look."
+        .. VZ AUDIO "Challenge intro 1" // This syntax indicates an audio message to be added later through the visual Content Editor.
+                                                                        // The quoted string is just an (optional) description in this case.
+                                                                        // Once the media source is added, the above line of code will be changed into something like:
+                                                                        // .. VZ http://url-to-audio-file.mp3 "Challenge intro 1"
+                                                                        // (the fact that is it an AUDIO source will then be derived from the URL file extension)
         after 5s
-        Victoria IMAGE "cloud message" // ... same thing can be done for an image source ...
+        VZ IMAGE "cloud message" // ... same thing can be done for an image source ...
         after 5s
         _
-```
-
-... and a video message:
-```swift
-        Victoria VIDEO "Challenge intro 2" = introVideo {
-```
-
-with the "= ..." syntax, the media file / URL is linked with an identifier (constant) for reference
-wherever the assigned identifier appears throughout the flow script, it will be replaced by the actual URL
-```swift
+        // ... and a video message:
+        VZ VIDEO "Challenge intro 2" = introVideo {
+            // with the "= ..." syntax, the media file / URL is linked with an identifier (constant) for reference
+            // wherever the assigned identifier appears throughout the flow script, it will be replaced by the actual URL
             _ // auxiliary child states are needed to chain multiple transitions - it is recommended to call them _, __, ___
             on PLAY if lastPlayedMedia == introVideo
             __
             after length(introVideo) + 5s -> @omg // you can use the length() pseudo-function to refer to the duration of an audio or video file
-```
-
-if needed, combine it with a fixed time span via + ... or - ...
-```swift
+                                                                                        // if needed, combine it with a fixed time span via + ... or - ...
         }
     }
     * -> ?    // An optional wildcard state * within a conversation context provides a catch-all option,
-```
-
-which is selected when the user input doesn't match any of the other.
-```swift
+                    // which is selected when the user input doesn't match any of the other.
 }
-@omg Victoria "OMG!"
+@omg VZ "OMG!"
+
 on SOME_EVENT // transition shortcuts also work on the root level: on the SOME_EVENT event, transition to the next state node
+
 ```
 
 In conversations, regular expressions can also be used as "intents" - those will be tested before any NLU processing takes place
@@ -415,19 +430,13 @@ In conversations, regular expressions can also be used as "intents" - those will
 Nick "Any idea what point this could be?"
 .. @askPoint _ {
     ?
-```
-
-Match tuples of the form (x, y) where x and y are both numbers.
-In case of a match, parts of the input can be retrieved using named capturing groups:
-```swift
+    // Match tuples of the form (x, y) where x and y are both numbers.
+    // In case of a match, parts of the input can be retrieved using named capturing groups:
     /\((?<x>[-+]?[0-9.])\s*,\s*(?<y>[-+]?[0-9.])\)/ {
         _
         after 30s
         __ {
-```
-
-After a regexp match, the retrieved variables can be accessed e.g. in conditional transitions
-```swift
+            // After a regexp match, the retrieved variables can be accessed e.g. in conditional transitions
             if x == 2.5 && y == -1 -> @correct
             -> @wrong // "else" transition
         }
@@ -443,6 +452,7 @@ After a regexp match, the retrieved variables can be accessed e.g. in conditiona
         }
     }
 }
+
 ```
 
 Values of captured/set variables can also be used in (message) strings with the $ + identifier syntax:
@@ -450,21 +460,16 @@ Values of captured/set variables can also be used in (message) strings with the 
 @correct Nick "Okay, I'll check the point ($x, $y)!"
 after 1s
 @wrong Nick "Hmm, that didn't really work out. Any other ideas?" -> 
+
 ```
 
 To avoid repetitive responses, we can define a compound state with a sequence of "time of re-entry" children:
 ```swift
 Greeting {
-```
-
-Re-entry substates have just a plain integer as their name
-```swift
+    // Re-entry substates have just a plain integer as their name
     1 { "Hi!" } // This child state will be selected when Greeting is entered for the first time ...
     2 { "Great to meet you." } // ... for the second time ...
     * { "Welcome." } // ... and any subsequent times (optional)
-```
-
-If no * default substate is provided, the sequence will start over after the last child (1 -> 2 -> 1 -> 2 ...)
-```swift
+    // If no * default substate is provided, the sequence will start over after the last child (1 -> 2 -> 1 -> 2 ...)
 }
 ```

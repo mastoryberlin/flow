@@ -1,7 +1,11 @@
 import type * as vscode from './vscode'
 
+export type Range = vscode.Range
+export type Position = vscode.Position
+export type Uri = vscode.Uri
+
 export interface SemanticUnit {
-  range: vscode.Range
+  range: Range
   offset: number
 }
 
@@ -20,7 +24,7 @@ export interface TextMessage extends BaseMessage {
 
 export interface MediaMessage extends BaseMessage {
   title: string
-  source?: vscode.Uri
+  source?: Uri
 }  
 
 export type Message = TextMessage | MediaMessage

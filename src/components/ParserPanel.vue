@@ -23,14 +23,9 @@ watch(focusNode, selected => {
 </script>
 
 <template>
-  <div class="wrapper">
-    <CstTreeView :cst="cst" v-model="focusNode" />
-    <CstDetailView v-if="details" v-model="details" />
-  </div>
+  <CstTreeView :cst="cst" v-model="focusNode" />
+  <CstDetailView v-if="details" v-model="details" />
 </template>
 
 <style scoped>
-.wrapper {
-  
-}
 </style>

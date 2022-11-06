@@ -22,7 +22,7 @@ const currentPanel = computed(() => panels[currentPanelId.value])
 </script>
 
 <template>
-  <div class="results-pane">
+  <div>
     <nav>
       <select v-model="currentPanelId">
         <option v-for="(p, k, i) in panels" :value="k">{{p.displayTitle}}</option>
@@ -36,7 +36,4 @@ const currentPanel = computed(() => panels[currentPanelId.value])
 </template>
 
 <style scoped>
-.results-pane {
-  
-}
 </style>

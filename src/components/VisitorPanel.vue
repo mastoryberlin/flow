@@ -18,7 +18,7 @@ const allStateNodes = ref<StateNode[]>(props.visitor.allStateNodes() || [])
 </script>
 
 <template>
-  <div class="wrapper">
+  <div>
     <h3>State Nodes</h3>
     <select class="state-nodes-list" size="10">
       <option v-for="s in allStateNodes" :value="s.path">{{s.path.join(' | ')}}</option>
@@ -27,9 +27,6 @@ const allStateNodes = ref<StateNode[]>(props.visitor.allStateNodes() || [])
 </template>
 
 <style scoped>
-.wrapper {
-  
-}
 .state-nodes-list {
   width: 100%;
 }

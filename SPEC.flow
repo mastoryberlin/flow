@@ -115,10 +115,10 @@ Beware of the dog! {
 // Many times, directives have *arguments* that modify or specify its behavior. Everything following a
 // directive's name on the same line (except comments) is considered its argument(s), but the concrete format and meaning
 // depends entirely on the directive in question. This is much like the way command-line tools work: Each
-// one has its own way of interpreting the command line, and ideally, that way is the most convenient
-// one for its specific use-case. Here are some examples:
+// command has its own way of interpreting the command line, and ideally, that way is the most convenient
+// one for its specific use-case. Here are some examples for directives with arguments:
 .showApp Dictionary
-.loadChallenge Drone
+.loadChallenge Drone {droneProp: 3.5}
 .let VZ appear in Wire
 .let VZ jump
 

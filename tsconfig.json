@@ -2,7 +2,7 @@
   "extends": "@vue/tsconfig/tsconfig.web.json",
   "include": [
     "src/**/*"
-, "gen-spec.ts"  ],
+, "gen-spec.ts", "gen-types.ts"  ],
   "exclude": [
     "node_modules",
     "**/*.spec.ts"
@@ -23,12 +23,6 @@
   "references": [
     {
       "path": "./tsconfig.config.json"
-    },
-    {
-      "path": "./tsconfig.app.json"
-    },
-    {
-      "path": "./tsconfig.vitest.json"
     }
   ]
 }

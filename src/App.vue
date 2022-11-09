@@ -7,20 +7,26 @@ import type { TopLevelSequenceCstNode } from './chevrotain/types';
 import ResultsPane from './components/ResultsPane.vue';
 import { useVisitor } from './chevrotain/Visitor';
 
-const code = ref(`App [
-  Messenger {
-    Start
-    RC Helpers {
-    Open Wire {
-      _
-      .focusApp wire
-    }
-    Load the Challenge {
-      _
-      .loadChallenge Drone
-    }
+const code = ref(`Nick "Hey, what do you think?" {
+  ? {
+    // Waiting for user input
   }
-]`)
+  "I think A" {
+    // do A
+  }
+  "I think B" {
+    // do B
+  } 
+  * {
+    // do default stuff
+  }
+}
+Helpers {
+  Open Wire {
+    _
+    .focusApp wire
+  }
+}`)
 
 const parser = useParser()
 const visitor = useVisitor()

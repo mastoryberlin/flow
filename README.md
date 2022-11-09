@@ -48,7 +48,7 @@ To define a [→state node](https://xstate.js.org/docs/guides/statenodes.html), 
 Names of state nodes may contain any word, non-word or whitespace characters except `|`, `{`, `[`.
 Special syntax like `//` or `->` is also not permitted.
 ```swift
-My 1st State (couldn't think of a "better" name) // normal parentheses and quotation marks are allowed, too
+My 1st State (couldn't think of a better name) // normal parentheses are allowed, too
 
 ```
 
@@ -284,13 +284,13 @@ beware of the dog! {
 Many times, directives have *arguments* that modify or specify its behavior. Everything following a
 directive's name on the same line (except comments) is considered its argument(s), but the concrete format and meaning
 depends entirely on the directive in question. This is much like the way command-line tools work: Each
-one has its own way of interpreting the command line, and ideally, that way is the most convenient
-one for its specific use-case. Here are some examples:
+command has its own way of interpreting the command line, and ideally, that way is the most convenient
+one for its specific use-case. Here are some examples for directives with arguments:
 ```swift
 .showApp Dictionary
-.loadChallenge Drone
-.have VZ appear in Wire
-.have VZ jump
+.loadChallenge Drone {droneProp: 3.5}
+.let VZ appear in Wire
+.let VZ jump
 
 ```
 

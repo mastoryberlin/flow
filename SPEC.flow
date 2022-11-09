@@ -7,7 +7,7 @@
 // To define a [→state node](https://xstate.js.org/docs/guides/statenodes.html), just write its name on a line of its own.
 // Names of state nodes may contain any word, non-word or whitespace characters except `|`, `{`, `[`.
 // Special syntax like `//` or `->` is also not permitted.
-My 1st State (couldn't think of a "better" name) // normal parentheses and quotation marks are allowed, too
+My 1st State (couldn't think of a better name) // normal parentheses are allowed, too
 
 // A [→compound state](https://xstate.js.org/docs/guides/hierarchical.html) is denoted by a pair of braces {}.
 // State nodes nested inside the braces are considered child nodes

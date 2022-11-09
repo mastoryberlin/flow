@@ -11,7 +11,7 @@ import Tree from "vue3-treeview"
 
 const props = defineProps<{
   cst: TopLevelSequenceCstNode
-  modelValue: string | null
+  modelValue?: string | null
 }>()
 
 const emit = defineEmits<{

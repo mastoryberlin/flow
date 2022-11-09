@@ -43,7 +43,7 @@ onMounted(() => {parse(code.value)})
 
 <template>
   <FlowCodeInput v-model="code" @update="parse" />
-  <ResultsPane v-if="cst" :cst="cst" :visitor="visitor" />
+  <ResultsPane v-if="cst" :cst="cst" :visitor="visitor" :flow="code" />
 </template>
 
 <style scoped>

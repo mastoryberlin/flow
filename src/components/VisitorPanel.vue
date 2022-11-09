@@ -23,7 +23,7 @@ const currentStateNodePath = ref<string | null>(null)
   <div>
     <h3>State Nodes</h3>
     <select class="state-nodes-list" size="10" v-model="currentStateNodePath">
-      <option v-for="s in allStateNodes" :value="s.path">{{s.path.join(' | ')}}</option>
+      <option v-for="s in allStateNodes" :value="s.path.join('.')">{{s.path.join('.')}}</option>
     </select>
     <StateNodeDetailView v-if="currentStateNodePath" :path="currentStateNodePath" :visitor="visitor" />
   </div>

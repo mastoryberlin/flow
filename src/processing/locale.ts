@@ -4,133 +4,128 @@ import type * as dsl from '../dsl/types'
 const rootName = 'Current Episode'
 const parser = useParser()
 const visitor = useVisitor()
-
-export function useFlowToLocale(flow: string) {
-  parser.parse(flow)
-  visitor.visit(parser.cst)
-  const json = { flow: { messages: {} } }
-  json.flow.messages = rootCase(visitor.allStateNodes())
-  return json
+const pathsArray = {}
+const intentsArray = {}
+export function useFlowToLocale(flow) {
+  parser.parse(flow);
+  visitor.visit(parser.cst);
+  const json = { flow: { messages: {}, buttonIntents: {} } }
+  json.flow.messages = pathsArray
+  json.flow.buttonIntents = intentsArray
+  const entry = stateNodeToJsonRecursive(rootName)
+  console.log('entryPaths', pathsArray)
+  return json;
 }
 
-function visitorAll(allStateNodes: any, path: string[]) {
-  for (const stateNode of allStateNodes) {
-    console.log('IFS', stateNode.path.join('.'), path.join('.'))
-    if (stateNode.path.join('.') === path.join('.')) {
-      console.log('StateNodePath')
-      if (stateNode.message && stateNode.message.type === 'text') {
-        console.log('TypeMessage')
-        return stateNode.message.text
+
+
+function recursionButtonIntents(node) {
+  if (node.childNodes && Object.values(node.childNodes)[0] && Object.entries(Object.values(node.childNodes)[0])[0][1] === '?') {
+    console.log('NODA NAME', node.name)
+    for (const i of node.childNodes) {
+      if (i.name === '*' || i.name === '?') {
+        continue
       }
-      const json: any = {}
-      for (const child of stateNode.childNodes) {
-        json[child.name] = visitorAll(allStateNodes, [...path, child.name])
-      }
-      return json
+      console.log('---------------name---------------', i.name)
+
+      // for (const interval of i.childNodes) {
+      //     if (interval.childNodes && Object.values(interval.childNodes)[0] && Object.entries(Object.values(interval.childNodes)[0])[0][1] === '?') {
+      //         recursionButtonIntents(interval)
+      //     }
+      // }
+      intentsArray[i.path.join('.')] = i.name.replaceAll('"', '')
+
 
     }
   }
-}
-
-function rootCase(allStateNodes: any) {
-  const json: any = {}
-  for (const stateNode of allStateNodes) {
-    console.log('IFS', stateNode.path.join('.'))
-    if (stateNode.path.length === 2) {
-      console.log('StateNodePath')
-      if (stateNode.message && stateNode.message.type === 'text') {
-        console.log('TypeMessage')
-        json[stateNode.path[1]] = stateNode.message.text
-      }
-      for (const child of stateNode.childNodes) {
-        json[child.name] = visitorAll(allStateNodes, child.path)
-      }
-
-    }
+  else {
+    return
   }
-  return json
 }
 
-
-function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode): any {
-  console.log(`stateNodeToJsonRecursive called - fqPath=${fqPath}`)
-  let children
+function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode) {
+  // console.log(`stateNodeToJsonRecursive called - fqPath=${JSON.stringify(node)}`);
+  let children;
   if (node) {
-    children = node.childNodes
-  } else {
-    // Root Node --> take top-level nodes as "children of root"
-    children = visitor.allStateNodes().filter(n => n.path.length === 2)
+    children = node.childNodes;
+    if (node.message) {
+      pathsArray[fqPath] = node.message.text
+      // console.log('node.childNodes',node.childNodes)
+    }
+
+    recursionButtonIntents(node)
+
+
+
+  }
+  else {
+    children = visitor.allStateNodes().filter(n => n.path.length === 2);
     if (!children.length) {
-      console.warn('Flow script contains no root state nodes, so I will output an empty JSON object which XState won\'t be able to load as a statechart.')
-      return { id: rootName }
+      console.warn('Flow script contains no root state nodes, so I will output an empty JSON object which XState won\'t be able to load as a statechart.');
+      return { id: rootName };
     }
   }
   const childStates = Object.fromEntries(children.map(childNode => {
-    const sub = stateNodeToJsonRecursive(`${fqPath}.${childNode.name}`, childNode)
-    return [childNode.name, sub]
-  }))
-
+    const sub = stateNodeToJsonRecursive(`${fqPath}.${childNode.name}`, childNode);
+    return [childNode.name, sub];
+  }));
   if (node) {
-    const json: any = {}
+    const json = {};
     if (children.length) {
       if (node.parallel) {
-        json.type = 'parallel'
-      } else {
-        json.initial = children[0].name
+        json.type = 'parallel';
       }
-      json.states = childStates
+      else {
+        json.initial = children[0].name;
+      }
+      json.states = childStates;
     }
-
-    const transitions = visitor.transitionsBySourcePath[fqPath] // node.transitions is currently empty
+    const transitions = visitor.transitionsBySourcePath[fqPath];
     if (transitions) {
-      const eventTransitions = transitions.filter(t => t.type === 'event') as dsl.EventTransition[]
-      const afterTransitions = transitions.filter(t => t.type === 'after') as dsl.AfterTransition[]
-      const alwaysTransitions = transitions.filter(t => t.type === 'always') as dsl.AlwaysTransition[]
+      const eventTransitions = transitions.filter(t => t.type === 'event');
+      const afterTransitions = transitions.filter(t => t.type === 'after');
+      const alwaysTransitions = transitions.filter(t => t.type === 'always');
       if (eventTransitions.length) {
         json.on = Object.fromEntries(eventTransitions.map(t => ([t.eventName, {
           target: t.target ? '#' + t.target.path?.join('.') : undefined,
-          // guard: ...
-        }])))
+        }])));
       }
       if (afterTransitions.length) {
         json.after = Object.fromEntries(afterTransitions.map(t => ([t.timeout, {
           target: t.target ? '#' + t.target.path?.join('.') : undefined,
-          // guard: ...
-        }])))
+        }])));
       }
       if (alwaysTransitions.length) {
         json.always = alwaysTransitions.map(t => ({
           target: t.target ? '#' + t.target.path?.join('.') : undefined,
-          // guard: ...
-        }))
+        }));
       }
     }
-
-    const actions = node.actions
+    const actions = node.actions;
     if (actions) {
       const supportedNames = [
         'focusApp',
         'loadChallenge',
         'unloadChallenge',
-      ]
-      const supported = actions.filter(a => supportedNames.includes(a.name))
+      ];
+      const supported = actions.filter(a => supportedNames.includes(a.name));
       if (supported.length) {
         json.entry = supported.map(a => {
           switch (a.name) {
-            case 'focusApp': return { type: 'FOCUS_APP', appId: a.arg.toLowerCase() }
-            case 'loadChallenge': return { type: 'LOAD_CHALLENGE', challengeId: a.arg }
-            case 'unloadChallenge': return { type: 'UNLOAD_CHALLENGE' }
+            case 'focusApp': return { type: 'FOCUS_APP', appId: a.arg.toLowerCase() };
+            case 'loadChallenge': return { type: 'LOAD_CHALLENGE', challengeId: a.arg };
+            case 'unloadChallenge': return { type: 'UNLOAD_CHALLENGE' };
           }
-        })
+        });
       }
     }
-    return json
-  } else {
-    // Root Node
+    return json;
+  }
+  else {
     return {
       id: rootName,
       initial: children[0].name,
       states: childStates
-    }
+    };
   }
 }

@@ -6,7 +6,9 @@ const parser = useParser()
 const visitor = useVisitor()
 const pathsArray = {}
 const intentsArray = {}
-export function useFlowToLocale(flow) {
+
+
+export function useFlowToLocale(flow:string) {
   parser.parse(flow);
   visitor.visit(parser.cst);
   const json = { flow: { messages: {}, buttonIntents: {} } }
@@ -19,7 +21,7 @@ export function useFlowToLocale(flow) {
 
 
 
-function recursionButtonIntents(node) {
+function recursionButtonIntents(node:any) {
   if (node.childNodes && Object.values(node.childNodes)[0] && Object.entries(Object.values(node.childNodes)[0])[0][1] === '?') {
     console.log('NODA NAME', node.name)
     for (const i of node.childNodes) {

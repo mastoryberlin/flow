@@ -82,46 +82,44 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode): any {
       }
     }
 
-    const actions = node.actions
-    if (actions) {
+    const directive = node.directive
+    if (directive) {
       const supportedNames = [
         'focusApp',
         'loadChallenge',
         'unloadChallenge',
         'inChallenge',
       ]
-      const supported = actions.filter(a => supportedNames.includes(a.name))
-      if (supported.length) {
+      const supported = supportedNames.includes(directive.name)
+      if (supported) {
         json.entry = [] as any
-        supported.forEach(a => {
-          switch (a.name) {
-            case 'focusApp': json.entry.push({ type: 'FOCUS_APP', appId: a.arg.toLowerCase() }); break
-            case 'loadChallenge': json.entry.push({ type: 'SET_CHALLENGE', challengeId: a.arg.replace('\r', '') }); break
-            case 'unloadChallenge': json.entry.push({ type: 'UNLOAD_CHALLENGE_COMPONENT' }); break
-            case 'inChallenge':
-              {
-                if (!a.arg) { throw new Error('.inChallenge directive must have at least one argument: eventName') }
-                let args = a.arg.replace(" ", '&.&').split('&.&')
+        switch (directive.name) {
+          case 'focusApp': json.entry.push({ type: 'FOCUS_APP', appId: directive.arg.toLowerCase() }); break
+          case 'loadChallenge': json.entry.push({ type: 'SET_CHALLENGE', challengeId: directive.arg.replace('\r', '') }); break
+          case 'unloadChallenge': json.entry.push({ type: 'UNLOAD_CHALLENGE_COMPONENT' }); break
+          case 'inChallenge':
+            {
+              if (!directive.arg) { throw new Error('.inChallenge directive must have at least one argument: eventName') }
+              let args = directive.arg.replace(" ", '&.&').split('&.&')
 
-                const character = allNpcs.find(c => c.toLowerCase() === args[0].toLowerCase())
-                if (character) {
-                  args = args[1].replace(" ", '&.&').split('&.&')
-                }
-                let eventName = args[0]
-
-                let eventData = "{}"
-                if (args.length > 1) {
-                  eventData = args[1]
-                }
-                eventName = eventName.replace('\r', '')
-                eventData = eventData.replace('\r', '')
-                if (character) { eventData = eventData.replace('{', `{_pretendCausedByNpc:"${character}",`) }
-                json.entry.push({ type: 'IN_CHALLENGE', eventName, eventData }); break
+              const character = allNpcs.find(c => c.toLowerCase() === args[0].toLowerCase())
+              if (character) {
+                args = args[1].replace(" ", '&.&').split('&.&')
               }
+              let eventName = args[0]
+
+              let eventData = "{}"
+              if (args.length > 1) {
+                eventData = args[1]
+              }
+              eventName = eventName.replace('\r', '')
+              eventData = eventData.replace('\r', '')
+              if (character) { eventData = eventData.replace('{', `{_pretendCausedByNpc:"${character}",`) }
+              json.entry.push({ type: 'IN_CHALLENGE', eventName, eventData }); break
+            }
 
 
-          }
-        })
+        }
       }
     }
     return json

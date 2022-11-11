@@ -1,10 +1,11 @@
 import * as vscode from "../dsl/vscode";
 
-import type { StateNodeCstChildren, TopLevelSequenceCstChildren, AlwaysTransitionCstChildren, SequenceCstChildren, TransitionTargetCstNode, TransitionTargetCstChildren, TransitionCstChildren, AlwaysTransitionCstNode, StateNodePathCstNode, ActionCstChildren } from "./types";
+import type { StateNodeCstChildren, TopLevelSequenceCstChildren, AlwaysTransitionCstChildren, SequenceCstChildren, TransitionTargetCstNode, TransitionTargetCstChildren, TransitionCstChildren, AlwaysTransitionCstNode, StateNodePathCstNode, DirectiveCstChildren } from "./types";
 import { useParser } from "./Parser";
 import type * as dsl from "../dsl/types"
 import type { CstNodeLocation } from "chevrotain";
 import type { NLUContext } from "../dsl/types";
+import { escapeDots } from "../util";
 
 const parser = useParser()
 
@@ -17,7 +18,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
   stateNodeByLabel = {} as Record<string, dsl.StateNode>
   transitionsBySourcePath = {} as Record<string, dsl.Transition[]>
   childrenByPath = {} as Record<string, dsl.StateNode[]>
-  actionsByPath = {} as Record<string, dsl.Action[]>
+  actionsByPath = {} as Record<string, dsl.Directive[]>
   path = [ROOT_NODE_ID]
 
   constructor() {
@@ -26,9 +27,13 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
   }
 
   private getStateNodeNameDefinition(stateNode: StateNodeCstChildren) {
-    const ch = stateNode.stateNodeName[0].children
-    const stateNodeNameDefinition = ch.StateNodeName || ch.EventName || ch.NumberLiteral
-    return stateNodeNameDefinition![0]
+    if (stateNode.Directive) {
+      return stateNode.Directive[0]
+    } else /* if (stateNode.stateNodeName) */ {
+      const ch = stateNode.stateNodeName![0].children
+      const stateNodeNameDefinition = ch.StateNodeName || ch.EventName || ch.NumberLiteral
+      return stateNodeNameDefinition![0]
+    }
   }
 
   allStateNodes() { return Object.values(this.stateNodeByPath) }
@@ -48,16 +53,14 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
   sequence(ctx: SequenceCstChildren) {
     // console.log('Entering sequence', ctx)
     if (ctx.stateNode) { ctx.stateNode.forEach(n => { this.visit(n) }) }
-    if (ctx.action) { ctx.action.forEach(n => { this.visit(n) }) }
     if (ctx.transition) { ctx.transition.forEach(n => { this.visit(n) }) }
   }
 
   stateNode(ctx: StateNodeCstChildren) {
-    console.log('Visiting stateNode', ctx)
     const nameDef = this.getStateNodeNameDefinition(ctx)
 
     // Get the name and full path ...
-    const name = nameDef.image
+    const name = escapeDots(nameDef.image)
     const curPath = [...this.path]
     const fullPath = curPath.join('.') + '.' + name
     this.path.push(name)
@@ -69,81 +72,88 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     // ... the label if applicable ...
     const label = ctx.Label ? ctx.Label[0].image.substring(1) : undefined
 
-    // ... message details if applicable ...
-    const npcNames = ['nick', 'alicia', 'professor', 'victoria', 'maive']
-    const mediaTypes = ['image', 'audio', 'video']
-    const urlPattern = '\w+://\S+'
-    const messagePattern = new RegExp(
-      `(?:(${npcNames.join('|')})\\s+)?` +
-      `(?:(${mediaTypes.join('|')}|${urlPattern})\\s+)?` +
-      `"([^"]*)"\\W*$`,
-      'i'
-    )
-    let message
-    const messageMatch = name.match(messagePattern)
-    if (messageMatch) { 
-      const [_, senderString, mediaTypeOrUrl, textOrPlaceholder] = messageMatch
-      const sender = senderString ? (senderString.substring(0, 1).toUpperCase() + senderString.substring(1)) as dsl.NPC : undefined
+    // ... directive details if applicable ...
+    let directive, nluContext, message
+    if (ctx.Directive) {
+      directive = ctx.Directive[0].payload
+    } else {  
+      // ... message details if applicable ...
+      const npcNames = ['nick', 'alicia', 'professor', 'victoria', 'maive']
+      const mediaTypes = ['image', 'audio', 'video']
+      const urlPattern = '\w+://\S+'
+      const messagePattern = new RegExp(
+        `(?:(${npcNames.join('|')})\\s+)?` +
+        `(?:(${mediaTypes.join('|')}|${urlPattern})\\s+)?` +
+        `"([^"]*)"\\W*$`,
+        'i'
+      )
+      let message
+      const messageMatch = name.match(messagePattern)
+      if (messageMatch) { 
+        const [_, senderString, mediaTypeOrUrl, textOrPlaceholder] = messageMatch
+        const sender = senderString ? (senderString.substring(0, 1).toUpperCase() + senderString.substring(1)) as dsl.NPC : undefined
 
-      if (mediaTypeOrUrl) {
-        let type: dsl.MessageType, source: vscode.Uri | undefined
-        // Media message
-        if (mediaTypes.includes(mediaTypeOrUrl?.toLowerCase())) {
-          type = mediaTypeOrUrl?.toLowerCase() as dsl.MessageType
-        } else {
-          type = 'image' // fallback unless overwritten
-          const extension = mediaTypeOrUrl.match(/\.(\w+)$/)
-          if (extension && extension[1]) {
-            if (['png', 'jpg', 'gif'].includes(extension[1])) { type = 'image' }
-            else if (['mp3', 'ogg', 'wav'].includes(extension[1])) { type = 'audio' }
-            else if (['mp4'].includes(extension[1])) { type = 'video' }
+        if (mediaTypeOrUrl) {
+          let type: dsl.MessageType, source: vscode.Uri | undefined
+          // Media message
+          if (mediaTypes.includes(mediaTypeOrUrl?.toLowerCase())) {
+            type = mediaTypeOrUrl?.toLowerCase() as dsl.MessageType
+          } else {
+            type = 'image' // fallback unless overwritten
+            const extension = mediaTypeOrUrl.match(/\.(\w+)$/)
+            if (extension && extension[1]) {
+              if (['png', 'jpg', 'gif'].includes(extension[1])) { type = 'image' }
+              else if (['mp3', 'ogg', 'wav'].includes(extension[1])) { type = 'audio' }
+              else if (['mp4'].includes(extension[1])) { type = 'video' }
+            }
+            source = vscode.Uri.parse(mediaTypeOrUrl)
           }
-          source = vscode.Uri.parse(mediaTypeOrUrl)
+          message = { sender, type, source, title: textOrPlaceholder }
+        } else {
+          // Text message
+          message = { sender, type: 'text' as dsl.MessageType, text: textOrPlaceholder }
         }
-        message = { sender, type, source, title: textOrPlaceholder }
-      } else {
-        // Text message
-        message = { sender, type: 'text' as dsl.MessageType, text: textOrPlaceholder }
+      }
+
+      // ... NLU context details if applicable ...
+      let nluContext: NLUContext | undefined
+      if (ctx.LCurly && ctx.sequence) {
+        const ch = ctx.sequence[0].children
+        const subNodes = ch.stateNode
+        if (subNodes) {
+          const firstSubNodeNameDef = this.getStateNodeNameDefinition(subNodes[0].children)
+          if (firstSubNodeNameDef.image === '?') {
+            const subNodeNameStrings = subNodes.slice(1)
+            .map(s => this.getStateNodeNameDefinition(s.children).image)
+
+            const intentPattern = /^"([^"]+)"$/
+            const intents = subNodeNameStrings
+              .filter(s => intentPattern.test(s))
+              .map(s => s.match(intentPattern)![1])
+
+            const regExpPattern = /^\/([^\/]+)\/$/
+            const regExps = subNodeNameStrings
+              .filter(s => regExpPattern.test(s))
+              .map(s => new RegExp(s.match(regExpPattern)![1]))
+
+            nluContext = {
+              intents,
+              regExps,
+              includes: []
+            }
+          }
+        }  
+      }  
+      
+      if (ctx.sequence && ctx.sequence.length) {
+        this.visit(ctx.sequence[0])
       }
     }
-
-    // ... NLU context details if applicable ...
-    let nluContext: NLUContext | undefined
-    if (ctx.LCurly && ctx.sequence) {
-      const ch = ctx.sequence[0].children
-      const subNodes = ch.stateNode
-      if (subNodes) {
-        const firstSubNodeNameDef = this.getStateNodeNameDefinition(subNodes[0].children)
-        if (firstSubNodeNameDef.image === '?') {
-          const subNodeNameStrings = subNodes.slice(1)
-          .map(s => this.getStateNodeNameDefinition(s.children).image)
-
-          const intentPattern = /^"([^"]+)"$/
-          const intents = subNodeNameStrings
-            .filter(s => intentPattern.test(s))
-            .map(s => s.match(intentPattern)![1])
-
-          const regExpPattern = /^\/([^\/]+)\/$/
-          const regExps = subNodeNameStrings
-            .filter(s => regExpPattern.test(s))
-            .map(s => new RegExp(s.match(regExpPattern)![1]))
-
-          nluContext = {
-            intents,
-            regExps,
-            includes: []
-          }
-        }
-      }  
-    }  
-    
-    if (ctx.sequence && ctx.sequence.length) { this.visit(ctx.sequence[0]) }
 
     const stateNode: dsl.StateNode = {
       name,
       label,
-      // TODO:
-      actions: this.actionsByPath[fullPath] || undefined,
+      directive,
       nluContext,
       message,
       // regExp,
@@ -171,7 +181,6 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
   }
 
   transition(ctx: TransitionCstChildren) {
-    console.log('Visiting transition', ctx)
     const fullPath = this.path.join('.')
     // console.log('Entering transition', ctx, fullPath)
     let loc: any
@@ -288,17 +297,6 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
       } else {
         this.transitionsBySourcePath[fullPath] = [transition]
       }
-    }
-  }
-
-  action(ctx: ActionCstChildren) {
-    console.log('Visiting directive', ctx)
-    const fullPath = this.path.join('.')
-    const action = ctx.Action[0].payload
-    if (this.actionsByPath[fullPath]) {
-      this.actionsByPath[fullPath].push(action)
-    } else {
-      this.actionsByPath[fullPath] = [action]
     }
   }
 }

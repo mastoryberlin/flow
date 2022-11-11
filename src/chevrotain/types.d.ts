@@ -23,7 +23,6 @@ export interface SequenceCstNode extends CstNode {
 export type SequenceCstChildren = {
   stateNode?: StateNodeCstNode[];
   transition?: TransitionCstNode[];
-  action?: ActionCstNode[];
   blanks?: BlanksCstNode[];
 };
 
@@ -34,7 +33,8 @@ export interface StateNodeCstNode extends CstNode {
 
 export type StateNodeCstChildren = {
   Label?: IToken[];
-  stateNodeName: StateNodeNameCstNode[];
+  Directive?: IToken[];
+  stateNodeName?: StateNodeNameCstNode[];
   LCurly?: IToken[];
   blanks?: (BlanksCstNode)[];
   sequence?: (SequenceCstNode)[];
@@ -63,15 +63,6 @@ export interface StateNodePathCstNode extends CstNode {
 export type StateNodePathCstChildren = {
   stateNodeName: (StateNodeNameCstNode)[];
   Pipe?: IToken[];
-};
-
-export interface ActionCstNode extends CstNode {
-  name: "action";
-  children: ActionCstChildren;
-}
-
-export type ActionCstChildren = {
-  Action: IToken[];
 };
 
 export interface GuardCstNode extends CstNode {
@@ -179,7 +170,6 @@ export interface ICstNodeVisitor<IN, OUT> extends ICstVisitor<IN, OUT> {
   stateNode(children: StateNodeCstChildren, param?: IN): OUT;
   stateNodeName(children: StateNodeNameCstChildren, param?: IN): OUT;
   stateNodePath(children: StateNodePathCstChildren, param?: IN): OUT;
-  action(children: ActionCstChildren, param?: IN): OUT;
   guard(children: GuardCstChildren, param?: IN): OUT;
   transition(children: TransitionCstChildren, param?: IN): OUT;
   transitionTarget(children: TransitionTargetCstChildren, param?: IN): OUT;

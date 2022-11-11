@@ -42,7 +42,7 @@ export interface VariableAssignment {
   value: string
 }
 
-export interface Action {
+export interface Directive {
   name: string
   arg: string
 }
@@ -50,12 +50,12 @@ export interface Action {
 export interface StateNode extends SemanticUnit {
   name: string
   path: FqStateNodePath
-  label?: string
-  message?: Message
   parallel: boolean
-  regExp?: RegExp
+  label?: string
+  directive?: Directive
   assignVariables?: VariableAssignment[]
-  actions?: Action[]
+  message?: Message
+  regExp?: RegExp
   nluContext?: NLUContext
   childNodes: StateNode[]
   transitions: Transition[]

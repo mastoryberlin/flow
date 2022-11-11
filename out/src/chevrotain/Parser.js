@@ -19,7 +19,7 @@ exports.useParser = void 0;
 var chevrotain_1 = require("chevrotain");
 var Lexer_1 = require("./Lexer");
 var tokens = (0, Lexer_1.useTokens)();
-var WhiteSpace = tokens[0], LineComment = tokens[1], LCurly = tokens[2], RCurly = tokens[3], LSquare = tokens[4], RSquare = tokens[5], Pipe = tokens[6], Newline = tokens[7], Ellipsis = tokens[8], Arrow = tokens[9], NumberLiteral = tokens[10], TimeSpan = tokens[11], LengthFunction = tokens[12], After = tokens[13], On = tokens[14], If = tokens[15], When = tokens[16], Label = tokens[17], Action = tokens[18], EventName = tokens[19], StateNodeName = tokens[20];
+var WhiteSpace = tokens[0], LineComment = tokens[1], LCurly = tokens[2], RCurly = tokens[3], LSquare = tokens[4], RSquare = tokens[5], Pipe = tokens[6], Newline = tokens[7], Ellipsis = tokens[8], Arrow = tokens[9], NumberLiteral = tokens[10], TimeSpan = tokens[11], LengthFunction = tokens[12], After = tokens[13], On = tokens[14], If = tokens[15], When = tokens[16], Label = tokens[17], Directive = tokens[18], EventName = tokens[19], StateNodeName = tokens[20];
 var Parser = /** @class */ (function (_super) {
     __extends(Parser, _super);
     function Parser() {
@@ -42,32 +42,38 @@ var Parser = /** @class */ (function (_super) {
                 return $.OR([
                     { ALT: function () { return $.SUBRULE($.stateNode); } },
                     { ALT: function () { return $.SUBRULE($.transition); } },
-                    { ALT: function () { return $.SUBRULE($.action); } },
                     { ALT: function () { return $.SUBRULE($.blanks); } },
                 ]);
             });
         });
         $.RULE("stateNode", function () {
             $.OPTION(function () { return $.CONSUME(Label); });
-            $.SUBRULE($.stateNodeName);
-            $.OPTION2(function () {
-                $.OR([
-                    { ALT: function () {
-                            $.CONSUME(LCurly);
-                            $.SUBRULE($.blanks);
-                            $.SUBRULE($.sequence);
-                            $.CONSUME(RCurly);
-                            $.SUBRULE2($.blanks);
-                        } },
-                    { ALT: function () {
-                            $.CONSUME(LSquare);
-                            $.SUBRULE3($.blanks);
-                            $.SUBRULE2($.sequence);
-                            $.CONSUME(RSquare);
-                            $.SUBRULE4($.blanks);
-                        } }
-                ]);
-            });
+            $.OR([
+                { ALT: function () { return $.CONSUME(Directive); } },
+                {
+                    ALT: function () {
+                        $.SUBRULE($.stateNodeName);
+                        $.OPTION2(function () {
+                            $.OR2([
+                                { ALT: function () {
+                                        $.CONSUME(LCurly);
+                                        $.SUBRULE($.blanks);
+                                        $.SUBRULE($.sequence);
+                                        $.CONSUME(RCurly);
+                                        $.SUBRULE2($.blanks);
+                                    } },
+                                { ALT: function () {
+                                        $.CONSUME(LSquare);
+                                        $.SUBRULE3($.blanks);
+                                        $.SUBRULE2($.sequence);
+                                        $.CONSUME(RSquare);
+                                        $.SUBRULE4($.blanks);
+                                    } }
+                            ]);
+                        });
+                    }
+                }
+            ]);
         });
         $.RULE("stateNodeName", function () { return $.OR([
             { ALT: function () { return $.CONSUME(StateNodeName); } },
@@ -81,9 +87,6 @@ var Parser = /** @class */ (function (_super) {
                 $.CONSUME(Pipe);
                 $.SUBRULE2($.stateNodeName);
             });
-        });
-        $.RULE("action", function () {
-            $.CONSUME(Action);
         });
         $.RULE("guard", function () {
             $.OR([

@@ -8,6 +8,7 @@ import StateNodeDetailView from './StateNodeDetailView.vue';
 const props = defineProps<{
   cst: TopLevelSequenceCstNode
   visitor: DslVisitorWithDefaults
+  flow: string
 }>()
 
 const cstProp = computed(() => props.cst)

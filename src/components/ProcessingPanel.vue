@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import type { DslVisitorWithDefaults } from '../chevrotain';
+import type { TopLevelSequenceCstNode } from '../chevrotain/types';
 import { useFlowToLocale } from '../processing/locale';
 
 import { useFlowToStatechart } from '../processing/statechart';
 
 const props = defineProps<{
+  cst: TopLevelSequenceCstNode
+  visitor: DslVisitorWithDefaults
   flow: string
 }>()
 

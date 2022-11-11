@@ -45,7 +45,7 @@ function stateNodeToJsonRecursive(fqPath, node) {
     if (node) {
         children = node.childNodes;
         if (node.message) {
-            if (node.message.type === 'text' && node.message.text && node.name !== '*') {
+            if (node.message.type === 'text' && node.message.text && node.name !== '*{}' && node.name !== '*') {
                 pathsArray[fqPath] = node.message.text.replaceAll("|", ".");
             }
             // console.log('node.childNodes',node.childNodes)

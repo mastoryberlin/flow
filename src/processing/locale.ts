@@ -35,7 +35,7 @@ function recursionButtonIntents(node:any) {
       //         recursionButtonIntents(interval)
       //     }
       // }
-      intentsArray[i.path.join('.')] = i.name.replaceAll('"', '')
+      intentsArray[i.path.join('.')] = i.name.replaceAll('"', '').replaceAll("|",".")
 
 
     }
@@ -51,7 +51,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode) {
   if (node) {
     children = node.childNodes;
     if (node.message) {
-      pathsArray[fqPath] = node.message.text
+      pathsArray[fqPath] = node.message.text.replaceAll("|",".")
       // console.log('node.childNodes',node.childNodes)
     }
 

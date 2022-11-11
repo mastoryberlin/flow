@@ -24,6 +24,6 @@ var Visitor_1 = require("./src/chevrotain/Visitor");
 exports.useVisitor = Visitor_1.useVisitor;
 var statechart_1 = require("./src/processing/statechart");
 exports.useFlowToStatechart = statechart_1.useFlowToStatechart;
-var locales_1 = require("./src/processing/locales");
-exports.useFlowToLocale = locales_1["default"];
+var locale_1 = require("./src/processing/locale");
+exports.useFlowToLocale = locale_1.useFlowToLocale;
 __exportStar(require("./src/dsl/types"), exports);

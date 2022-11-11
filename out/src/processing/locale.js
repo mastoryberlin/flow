@@ -45,7 +45,9 @@ function stateNodeToJsonRecursive(fqPath, node) {
     if (node) {
         children = node.childNodes;
         if (node.message) {
-            pathsArray[fqPath] = node.message.text.replaceAll("|", ".");
+            if (node.message.type === 'text') {
+                pathsArray[fqPath] = node.message.text.replaceAll("|", ".");
+            }
             // console.log('node.childNodes',node.childNodes)
         }
         recursionButtonIntents(node);

@@ -35,7 +35,9 @@ function recursionButtonIntents(node:any) {
       //         recursionButtonIntents(interval)
       //     }
       // }
-      intentsArray[i.path.join('.')] = i.name.replaceAll('"', '').replaceAll("|",".")
+      if(i.name !== '*{}' && i.name !== '*'){
+        intentsArray[i.path.join('.')] = i.name.replaceAll('"', '').replaceAll("|",".")
+      }
 
 
     }

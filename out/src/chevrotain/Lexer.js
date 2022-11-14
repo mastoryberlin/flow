@@ -27,12 +27,12 @@ var StateNodeName = (0, chevrotain_1.createToken)({
     },
     line_breaks: false
 });
-var actionRegex = /\.(\w+)(?: +([^\n]*))?/y;
-var Action = (0, chevrotain_1.createToken)({
-    name: 'Action',
+var directiveRegex = /\.(\w+)(?: +([^\n]*))?/y;
+var Directive = (0, chevrotain_1.createToken)({
+    name: 'Directive',
     pattern: function (text, startOffset) {
-        actionRegex.lastIndex = startOffset;
-        var execResult = actionRegex.exec(text);
+        directiveRegex.lastIndex = startOffset;
+        var execResult = directiveRegex.exec(text);
         if (execResult !== null) {
             var ret = execResult;
             ret.payload = {
@@ -54,7 +54,7 @@ var tokenDefinitions = {
     Pipe: /\|/,
     Newline: /\n/,
     Arrow: /->/,
-    Ellipsis: /\.{2,4}\s/,
+    Ellipsis: /\.{2,4}/,
     LengthFunction: /\blength\([^)]*\)\s*(?:[-+]\s*)?/,
     After: /\bafter\b/,
     On: /\bon\b/,
@@ -70,7 +70,7 @@ var dslTokens = Object.fromEntries(Object.entries(tokenDefinitions).map(function
     var name = _a[0], definition = _a[1];
     return [name, (0, chevrotain_1.createToken)(__assign({ name: name }, (definition.constructor === RegExp ? { pattern: definition } : definition)))];
 }));
-var LCurly = dslTokens.LCurly, RCurly = dslTokens.RCurly, LSquare = dslTokens.LSquare, RSquare = dslTokens.RSquare, Pipe = dslTokens.Pipe, Newline = dslTokens.Newline, Arrow = dslTokens.Arrow, Ellipsis = dslTokens.Ellipsis, LengthFunction = dslTokens.LengthFunction, After = dslTokens.After, On = dslTokens.On, If = dslTokens.If, When = dslTokens.When, Label = dslTokens.Label, NumberLiteral = dslTokens.NumberLiteral, /* TimeSpan, StateNodeName, Action, */ EventName = dslTokens.EventName, LineComment = dslTokens.LineComment, WhiteSpace = dslTokens.WhiteSpace;
+var LCurly = dslTokens.LCurly, RCurly = dslTokens.RCurly, LSquare = dslTokens.LSquare, RSquare = dslTokens.RSquare, Pipe = dslTokens.Pipe, Newline = dslTokens.Newline, Arrow = dslTokens.Arrow, Ellipsis = dslTokens.Ellipsis, LengthFunction = dslTokens.LengthFunction, After = dslTokens.After, On = dslTokens.On, If = dslTokens.If, When = dslTokens.When, Label = dslTokens.Label, NumberLiteral = dslTokens.NumberLiteral, /* TimeSpan, StateNodeName, Directive, */ EventName = dslTokens.EventName, LineComment = dslTokens.LineComment, WhiteSpace = dslTokens.WhiteSpace;
 // Labels only affect error messages and Diagrams.
 LCurly.LABEL = "'{'";
 RCurly.LABEL = "'}'";
@@ -82,7 +82,7 @@ var allTokens = [
     LCurly, RCurly, LSquare, RSquare, Pipe, Newline,
     Ellipsis, Arrow, NumberLiteral, TimeSpan,
     LengthFunction,
-    After, On, If, When, Label, Action, EventName, StateNodeName,
+    After, On, If, When, Label, Directive, EventName, StateNodeName,
 ];
 var useTokens = function () { return allTokens; };
 exports.useTokens = useTokens;

@@ -7,7 +7,7 @@ const [
   LCurly, RCurly, LSquare, RSquare, Pipe, Newline,
   Ellipsis, Arrow, NumberLiteral, TimeSpan,
   LengthFunction,
-  After, On, If, When, Label, Action, EventName, StateNodeName
+  After, On, If, When, Label, Directive, EventName, StateNodeName
 ] = tokens
 
 class Parser extends CstParser {
@@ -35,7 +35,6 @@ class Parser extends CstParser {
         $.OR([
           { ALT: () => $.SUBRULE($.stateNode) },
           { ALT: () => $.SUBRULE($.transition) },
-          { ALT: () => $.SUBRULE($.action) },
           { ALT: () => $.SUBRULE($.blanks) },
         ])
       )
@@ -43,25 +42,31 @@ class Parser extends CstParser {
 
     $.RULE("stateNode", () => {
       $.OPTION(() => $.CONSUME(Label))
-      $.SUBRULE($.stateNodeName)
-      $.OPTION2(() => {
-        $.OR([
-          {ALT: () => {
-            $.CONSUME(LCurly)
-            $.SUBRULE($.blanks)
-            $.SUBRULE($.sequence)
-            $.CONSUME(RCurly)
-            $.SUBRULE2($.blanks)
-          }},
-          {ALT: () => {
-            $.CONSUME(LSquare)
-            $.SUBRULE3($.blanks)
-            $.SUBRULE2($.sequence)
-            $.CONSUME(RSquare)
-            $.SUBRULE4($.blanks)
-          }}
-        ])
-      })
+      $.OR([
+        { ALT: () => $.CONSUME(Directive) },
+        {
+          ALT: () => {
+            $.SUBRULE($.stateNodeName)
+            $.OPTION2(() => {
+              $.OR2([
+                {ALT: () => {
+                  $.CONSUME(LCurly)
+                  $.SUBRULE($.blanks)
+                  $.SUBRULE($.sequence)
+                  $.CONSUME(RCurly)
+                  $.SUBRULE2($.blanks)
+                }},
+                {ALT: () => {
+                  $.CONSUME(LSquare)
+                  $.SUBRULE3($.blanks)
+                  $.SUBRULE2($.sequence)
+                  $.CONSUME(RSquare)
+                  $.SUBRULE4($.blanks)
+                }}
+              ])
+            })
+        }}
+      ])
     })
 
     $.RULE("stateNodeName", () => $.OR([
@@ -77,10 +82,6 @@ class Parser extends CstParser {
         $.CONSUME(Pipe)
         $.SUBRULE2($.stateNodeName)
       })
-    })
-
-    $.RULE("action", () => {
-      $.CONSUME(Action)
     })
 
     $.RULE("guard", () => {

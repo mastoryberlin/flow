@@ -2,11 +2,14 @@
 import { ref, watch } from 'vue';
 import { dig } from "../util";
 import type { TopLevelSequenceCstNode } from '../chevrotain/types';
+import type { DslVisitorWithDefaults } from '../chevrotain';
 import CstTreeView from './CstTreeView.vue';
 import CstDetailView from './CstDetailView.vue';
 
 const props = defineProps<{
   cst: TopLevelSequenceCstNode
+  visitor: DslVisitorWithDefaults
+  flow: string
 }>()
 
 const focusNode = ref<string | null>(null)

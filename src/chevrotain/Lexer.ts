@@ -8,19 +8,19 @@ const StateNodeName = createToken({
     const execResult = stateNodeNameRegex.exec(text)
     if (execResult !== null) { 
       let matched = execResult[0]
-      return [matched.trim().replace(/\./g, '|')]
+      return [matched.trim()]
     }
     return null
   },
   line_breaks: false
 })
 
-const actionRegex = /\.(\w+)(?: +([^\n]*))?/y
-const Action = createToken({
-  name: 'Action',
+const directiveRegex = /\.(\w+)(?: +([^\n]*))?/y
+const Directive = createToken({
+  name: 'Directive',
   pattern: (text: string, startOffset: number) => {
-    actionRegex.lastIndex = startOffset
-    const execResult = actionRegex.exec(text)
+    directiveRegex.lastIndex = startOffset
+    const execResult = directiveRegex.exec(text)
     if (execResult !== null) {
       const ret = execResult as unknown as CustomPatternMatcherReturn
       ret.payload = {
@@ -44,7 +44,7 @@ const tokenDefinitions = {
   Pipe: /\|/,
   Newline: /\n/,
   Arrow: /->/,
-  Ellipsis: /\.{2,4}\s/,
+  Ellipsis: /\.{2,4}/,
   LengthFunction: /\blength\([^)]*\)\s*(?:[-+]\s*)?/,
   After: /\bafter\b/,
   On: /\bon\b/,
@@ -62,7 +62,7 @@ const dslTokens = Object.fromEntries(
     [name, createToken({ name, ...(definition.constructor === RegExp ? { pattern: definition } : definition) })])
 )
 
-const { LCurly, RCurly, LSquare, RSquare, Pipe, Newline, Arrow, Ellipsis, LengthFunction, After, On, If, When, Label, NumberLiteral, /* TimeSpan, StateNodeName, Action, */ EventName, LineComment, WhiteSpace } = dslTokens
+const { LCurly, RCurly, LSquare, RSquare, Pipe, Newline, Arrow, Ellipsis, LengthFunction, After, On, If, When, Label, NumberLiteral, /* TimeSpan, StateNodeName, Directive, */ EventName, LineComment, WhiteSpace } = dslTokens
 
 // Labels only affect error messages and Diagrams.
 LCurly.LABEL = "'{'";
@@ -76,7 +76,7 @@ const allTokens = [
   LCurly, RCurly, LSquare, RSquare, Pipe, Newline,
   Ellipsis, Arrow, NumberLiteral, TimeSpan,
   LengthFunction,
-  After, On, If, When, Label, Action, EventName, StateNodeName,
+  After, On, If, When, Label, Directive, EventName, StateNodeName,
 ]
 export const useTokens = () => allTokens
 

@@ -1,4 +1,4 @@
-import type { StateNodeCstChildren, TopLevelSequenceCstChildren, SequenceCstChildren, TransitionCstChildren, ActionCstChildren } from "./types";
+import type { StateNodeCstChildren, TopLevelSequenceCstChildren, SequenceCstChildren, TransitionCstChildren } from "./types";
 import type * as dsl from "../dsl/types";
 declare const BaseVisitorWithDefaults: new (...args: any[]) => import("chevrotain").ICstVisitor<any, any>;
 export declare class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
@@ -6,7 +6,7 @@ export declare class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     stateNodeByLabel: Record<string, dsl.StateNode>;
     transitionsBySourcePath: Record<string, dsl.Transition[]>;
     childrenByPath: Record<string, dsl.StateNode[]>;
-    actionsByPath: Record<string, dsl.Action[]>;
+    actionsByPath: Record<string, dsl.Directive[]>;
     path: string[];
     constructor();
     private getStateNodeNameDefinition;
@@ -16,7 +16,6 @@ export declare class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     sequence(ctx: SequenceCstChildren): void;
     stateNode(ctx: StateNodeCstChildren): void;
     transition(ctx: TransitionCstChildren): void;
-    action(ctx: ActionCstChildren): void;
 }
 export declare const useVisitor: () => DslVisitorWithDefaults;
 export {};

@@ -1,11 +1,12 @@
 import { useParser, useVisitor } from '../chevrotain'
 import type * as dsl from '../dsl/types'
+import { unescapeDots } from '../util'
 
 const rootName = 'Current Episode'
 const parser = useParser()
 const visitor = useVisitor()
-const pathsArray = {}
-const intentsArray = {}
+const pathsArray = {} as Record<string, string>
+const intentsArray = {} as Record<string, string>
 
 
 export function useFlowToLocale(flow:string) {
@@ -21,9 +22,9 @@ export function useFlowToLocale(flow:string) {
 
 
 
-function recursionButtonIntents(node:any) {
+function recursionButtonIntents(node: dsl.StateNode) {
   if (node.childNodes && Object.values(node.childNodes)[0] && Object.entries(Object.values(node.childNodes)[0])[0][1] === '?') {
-    console.log('NODA NAME', node.name)
+    console.log('NODE NAME', node.name)
     for (const i of node.childNodes) {
       if (i.name === '*' || i.name === '?') {
         continue
@@ -35,11 +36,9 @@ function recursionButtonIntents(node:any) {
       //         recursionButtonIntents(interval)
       //     }
       // }
-      if(i.name !== '*{}' && i.name !== '*'){
-        intentsArray[i.path.join('.')] = i.name.replaceAll('"', '').replaceAll("|",".")
+      if (i.name !== '*') {
+        intentsArray[i.path.join('.')] = unescapeDots(i.name.replace(/^"([^"]|\\")*"$/g, '$1'))
       }
-
-
     }
   }
   else {
@@ -52,17 +51,14 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode) {
   let children;
   if (node) {
     children = node.childNodes;
-    if (node.message) {
-      if(node.message.type==='text' && node.message.text && node.message.text !== '*{}' && node.message.text !== '*'){
-        pathsArray[fqPath] = node.message.text.replaceAll("|",".")
+    if (node.message && node.message.type === 'text') {
+      const text = (node.message as dsl.TextMessage).text
+      if(text){
+        pathsArray[fqPath] = unescapeDots(text)
       }
       // console.log('node.childNodes',node.childNodes)
     }
-
     recursionButtonIntents(node)
-
-
-
   }
   else {
     children = visitor.allStateNodes().filter(n => n.path.length === 2);
@@ -71,12 +67,12 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode) {
       return { id: rootName };
     }
   }
-  const childStates = Object.fromEntries(children.map(childNode => {
+  const childStates: any = Object.fromEntries(children.map(childNode => {
     const sub = stateNodeToJsonRecursive(`${fqPath}.${childNode.name}`, childNode);
     return [childNode.name, sub];
   }));
   if (node) {
-    const json = {};
+    const json = {} as any;
     if (children.length) {
       if (node.parallel) {
         json.type = 'parallel';
@@ -86,46 +82,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode) {
       }
       json.states = childStates;
     }
-    const transitions = visitor.transitionsBySourcePath[fqPath];
-    if (transitions) {
-      const eventTransitions = transitions.filter(t => t.type === 'event');
-      const afterTransitions = transitions.filter(t => t.type === 'after');
-      const alwaysTransitions = transitions.filter(t => t.type === 'always');
-      if (eventTransitions.length) {
-        json.on = Object.fromEntries(eventTransitions.map(t => ([t.eventName, {
-          target: t.target ? '#' + t.target.path?.join('.') : undefined,
-        }])));
-      }
-      if (afterTransitions.length) {
-        json.after = Object.fromEntries(afterTransitions.map(t => ([t.timeout, {
-          target: t.target ? '#' + t.target.path?.join('.') : undefined,
-        }])));
-      }
-      if (alwaysTransitions.length) {
-        json.always = alwaysTransitions.map(t => ({
-          target: t.target ? '#' + t.target.path?.join('.') : undefined,
-        }));
-      }
-    }
-    const actions = node.actions;
-    if (actions) {
-      const supportedNames = [
-        'focusApp',
-        'loadChallenge',
-        'unloadChallenge',
-      ];
-      const supported = actions.filter(a => supportedNames.includes(a.name));
-      if (supported.length) {
-        json.entry = supported.map(a => {
-          switch (a.name) {
-            case 'focusApp': return { type: 'FOCUS_APP', appId: a.arg.toLowerCase() };
-            case 'loadChallenge': return { type: 'LOAD_CHALLENGE', challengeId: a.arg };
-            case 'unloadChallenge': return { type: 'UNLOAD_CHALLENGE' };
-          }
-        });
-      }
-    }
-    return json;
+    return json
   }
   else {
     return {

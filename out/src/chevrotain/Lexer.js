@@ -21,7 +21,7 @@ var StateNodeName = (0, chevrotain_1.createToken)({
         var execResult = stateNodeNameRegex.exec(text);
         if (execResult !== null) {
             var matched = execResult[0];
-            return [matched.trim().replace(/\./g, '|')];
+            return [matched.trim()];
         }
         return null;
     },

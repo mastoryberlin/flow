@@ -36,18 +36,18 @@ function stateNodeToJsonRecursive(fqPath, node) {
         return [childNode.name, sub];
     }));
     if (node) {
-        var json_1 = {};
+        var json = {};
         if (children.length) {
             if (node.parallel) {
-                json_1.type = 'parallel';
+                json.type = 'parallel';
             }
             else {
-                json_1.initial = children[0].name;
+                json.initial = children[0].name;
             }
-            json_1.states = childStates;
+            json.states = childStates;
         }
         if (node.label) {
-            json_1.id = node.label;
+            json.id = node.label;
         }
         var transitions = visitor.transitionsBySourcePath[fqPath]; // node.transitions is currently empty
         if (transitions) {
@@ -60,71 +60,69 @@ function stateNodeToJsonRecursive(fqPath, node) {
                     : '#' + (t.target.label || t.target.path.join('.')))
                 : undefined; };
             if (eventTransitions.length) {
-                json_1.on = Object.fromEntries(eventTransitions.map(function (t) { return ([t.eventName, {
+                json.on = Object.fromEntries(eventTransitions.map(function (t) { return ([t.eventName, {
                         target: getTransitionTarget_1(t)
                     }]); }));
             }
             if (afterTransitions.length) {
-                json_1.after = Object.fromEntries(afterTransitions.map(function (t) { return ([t.timeout, {
+                json.after = Object.fromEntries(afterTransitions.map(function (t) { return ([t.timeout, {
                         target: getTransitionTarget_1(t)
                     }]); }));
             }
             if (alwaysTransitions.length) {
-                json_1.always = alwaysTransitions.map(function (t) { return ({
+                json.always = alwaysTransitions.map(function (t) { return ({
                     target: getTransitionTarget_1(t)
                 }); });
             }
         }
-        var actions = node.actions;
-        if (actions) {
-            var supportedNames_1 = [
+        var directive = node.directive;
+        if (directive) {
+            var supportedNames = [
                 'focusApp',
                 'loadChallenge',
                 'unloadChallenge',
                 'inChallenge',
             ];
-            var supported = actions.filter(function (a) { return supportedNames_1.includes(a.name); });
-            if (supported.length) {
-                json_1.entry = [];
-                supported.forEach(function (a) {
-                    switch (a.name) {
-                        case 'focusApp':
-                            json_1.entry.push({ type: 'FOCUS_APP', appId: a.arg.toLowerCase() });
-                            break;
-                        case 'loadChallenge':
-                            json_1.entry.push({ type: 'SET_CHALLENGE', challengeId: a.arg.replace('\r', '') });
-                            break;
-                        case 'unloadChallenge':
-                            json_1.entry.push({ type: 'UNLOAD_CHALLENGE_COMPONENT' });
-                            break;
-                        case 'inChallenge':
-                            {
-                                if (!a.arg) {
-                                    throw new Error('.inChallenge directive must have at least one argument: eventName');
-                                }
-                                var args_1 = a.arg.replace(" ", '&.&').split('&.&');
-                                var character = constants_1.allNpcs.find(function (c) { return c.toLowerCase() === args_1[0].toLowerCase(); });
-                                if (character) {
-                                    args_1 = args_1[1].replace(" ", '&.&').split('&.&');
-                                }
-                                var eventName = args_1[0];
-                                var eventData = "{}";
-                                if (args_1.length > 1) {
-                                    eventData = args_1[1];
-                                }
-                                eventName = eventName.replace('\r', '');
-                                eventData = eventData.replace('\r', '');
-                                if (character) {
-                                    eventData = eventData.replace('{', "{_pretendCausedByNpc:\"".concat(character, "\","));
-                                }
-                                json_1.entry.push({ type: 'IN_CHALLENGE', eventName: eventName, eventData: eventData });
-                                break;
+            var supported = supportedNames.includes(directive.name);
+            if (supported) {
+                json.entry = [];
+                switch (directive.name) {
+                    case 'focusApp':
+                        json.entry.push({ type: 'FOCUS_APP', appId: directive.arg.toLowerCase() });
+                        break;
+                    case 'loadChallenge':
+                        json.entry.push({ type: 'SET_CHALLENGE', challengeId: directive.arg.replace('\r', '') });
+                        break;
+                    case 'unloadChallenge':
+                        json.entry.push({ type: 'UNLOAD_CHALLENGE_COMPONENT' });
+                        break;
+                    case 'inChallenge':
+                        {
+                            if (!directive.arg) {
+                                throw new Error('.inChallenge directive must have at least one argument: eventName');
                             }
-                    }
-                });
+                            var args_1 = directive.arg.replace(" ", '&.&').split('&.&');
+                            var character = constants_1.allNpcs.find(function (c) { return c.toLowerCase() === args_1[0].toLowerCase(); });
+                            if (character) {
+                                args_1 = args_1[1].replace(" ", '&.&').split('&.&');
+                            }
+                            var eventName = args_1[0];
+                            var eventData = "{}";
+                            if (args_1.length > 1) {
+                                eventData = args_1[1];
+                            }
+                            eventName = eventName.replace('\r', '');
+                            eventData = eventData.replace('\r', '');
+                            if (character) {
+                                eventData = eventData.replace('{', "{_pretendCausedByNpc:\"".concat(character, "\","));
+                            }
+                            json.entry.push({ type: 'IN_CHALLENGE', eventName: eventName, eventData: eventData });
+                            break;
+                        }
+                }
             }
         }
-        return json_1;
+        return json;
     }
     else {
         // Root Node

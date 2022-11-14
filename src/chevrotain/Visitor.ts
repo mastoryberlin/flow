@@ -1,6 +1,6 @@
 import * as vscode from "../dsl/vscode";
 
-import type { StateNodeCstChildren, TopLevelSequenceCstChildren, AlwaysTransitionCstChildren, SequenceCstChildren, TransitionTargetCstNode, TransitionTargetCstChildren, TransitionCstChildren, AlwaysTransitionCstNode, StateNodePathCstNode, DirectiveCstChildren } from "./types";
+import type { StateNodeCstChildren, TopLevelSequenceCstChildren, AlwaysTransitionCstChildren, SequenceCstChildren, TransitionTargetCstNode, TransitionTargetCstChildren, TransitionCstChildren, AlwaysTransitionCstNode, StateNodePathCstNode } from "./types";
 import { useParser } from "./Parser";
 import type * as dsl from "../dsl/types"
 import type { CstNodeLocation } from "chevrotain";
@@ -76,7 +76,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     let directive, nluContext, message
     if (ctx.Directive) {
       directive = ctx.Directive[0].payload
-    } else {  
+    } else {
       // ... message details if applicable ...
       const npcNames = ['nick', 'alicia', 'professor', 'victoria', 'maive']
       const mediaTypes = ['image', 'audio', 'video']
@@ -87,7 +87,6 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
         `"([^"]*)"\\W*$`,
         'i'
       )
-      let message
       const messageMatch = name.match(messagePattern)
       if (messageMatch) { 
         const [_, senderString, mediaTypeOrUrl, textOrPlaceholder] = messageMatch

@@ -2,6 +2,7 @@
 exports.__esModule = true;
 exports.useFlowToLocale = void 0;
 var chevrotain_1 = require("../chevrotain");
+var util_1 = require("../util");
 var rootName = 'Current Episode';
 var parser = (0, chevrotain_1.useParser)();
 var visitor = (0, chevrotain_1.useVisitor)();
@@ -20,7 +21,7 @@ function useFlowToLocale(flow) {
 exports.useFlowToLocale = useFlowToLocale;
 function recursionButtonIntents(node) {
     if (node.childNodes && Object.values(node.childNodes)[0] && Object.entries(Object.values(node.childNodes)[0])[0][1] === '?') {
-        console.log('NODA NAME', node.name);
+        console.log('NODE NAME', node.name);
         for (var _i = 0, _a = node.childNodes; _i < _a.length; _i++) {
             var i = _a[_i];
             if (i.name === '*' || i.name === '?') {
@@ -32,8 +33,8 @@ function recursionButtonIntents(node) {
             //         recursionButtonIntents(interval)
             //     }
             // }
-            if (i.name !== '*{}' && i.name !== '*') {
-                intentsArray[i.path.join('.')] = i.name.replaceAll('"', '').replaceAll("|", ".");
+            if (i.name !== '*') {
+                intentsArray[i.path.join('.')] = (0, util_1.unescapeDots)(i.name.replace(/^"([^"]|\\")*"$/g, '$1'));
             }
         }
     }
@@ -46,9 +47,10 @@ function stateNodeToJsonRecursive(fqPath, node) {
     var children;
     if (node) {
         children = node.childNodes;
-        if (node.message) {
-            if (node.message.type === 'text' && node.message.text && node.message.text !== '*{}' && node.message.text !== '*') {
-                pathsArray[fqPath] = node.message.text.replaceAll("|", ".");
+        if (node.message && node.message.type === 'text') {
+            var text = node.message.text;
+            if (text) {
+                pathsArray[fqPath] = (0, util_1.unescapeDots)(text);
             }
             // console.log('node.childNodes',node.childNodes)
         }
@@ -75,54 +77,6 @@ function stateNodeToJsonRecursive(fqPath, node) {
                 json.initial = children[0].name;
             }
             json.states = childStates;
-        }
-        var transitions = visitor.transitionsBySourcePath[fqPath];
-        if (transitions) {
-            var eventTransitions = transitions.filter(function (t) { return t.type === 'event'; });
-            var afterTransitions = transitions.filter(function (t) { return t.type === 'after'; });
-            var alwaysTransitions = transitions.filter(function (t) { return t.type === 'always'; });
-            if (eventTransitions.length) {
-                json.on = Object.fromEntries(eventTransitions.map(function (t) {
-                    var _a;
-                    return ([t.eventName, {
-                            target: t.target ? '#' + ((_a = t.target.path) === null || _a === void 0 ? void 0 : _a.join('.')) : undefined
-                        }]);
-                }));
-            }
-            if (afterTransitions.length) {
-                json.after = Object.fromEntries(afterTransitions.map(function (t) {
-                    var _a;
-                    return ([t.timeout, {
-                            target: t.target ? '#' + ((_a = t.target.path) === null || _a === void 0 ? void 0 : _a.join('.')) : undefined
-                        }]);
-                }));
-            }
-            if (alwaysTransitions.length) {
-                json.always = alwaysTransitions.map(function (t) {
-                    var _a;
-                    return ({
-                        target: t.target ? '#' + ((_a = t.target.path) === null || _a === void 0 ? void 0 : _a.join('.')) : undefined
-                    });
-                });
-            }
-        }
-        var actions = node.actions;
-        if (actions) {
-            var supportedNames_1 = [
-                'focusApp',
-                'loadChallenge',
-                'unloadChallenge',
-            ];
-            var supported = actions.filter(function (a) { return supportedNames_1.includes(a.name); });
-            if (supported.length) {
-                json.entry = supported.map(function (a) {
-                    switch (a.name) {
-                        case 'focusApp': return { type: 'FOCUS_APP', appId: a.arg.toLowerCase() };
-                        case 'loadChallenge': return { type: 'LOAD_CHALLENGE', challengeId: a.arg };
-                        case 'unloadChallenge': return { type: 'UNLOAD_CHALLENGE' };
-                    }
-                });
-            }
         }
         return json;
     }

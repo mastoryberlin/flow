@@ -27,6 +27,7 @@ exports.__esModule = true;
 exports.useVisitor = exports.DslVisitorWithDefaults = void 0;
 var vscode = require("../dsl/vscode");
 var Parser_1 = require("./Parser");
+var util_1 = require("../util");
 var parser = (0, Parser_1.useParser)();
 var BaseVisitorWithDefaults = parser.getBaseCstVisitorConstructorWithDefaults();
 var ROOT_NODE_ID = 'Current Episode';
@@ -44,9 +45,14 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
         return _this;
     }
     DslVisitorWithDefaults.prototype.getStateNodeNameDefinition = function (stateNode) {
-        var ch = stateNode.stateNodeName[0].children;
-        var stateNodeNameDefinition = ch.StateNodeName || ch.EventName || ch.NumberLiteral;
-        return stateNodeNameDefinition[0];
+        if (stateNode.Directive) {
+            return stateNode.Directive[0];
+        }
+        else /* if (stateNode.stateNodeName) */ {
+            var ch = stateNode.stateNodeName[0].children;
+            var stateNodeNameDefinition = ch.StateNodeName || ch.EventName || ch.NumberLiteral;
+            return stateNodeNameDefinition[0];
+        }
     };
     DslVisitorWithDefaults.prototype.allStateNodes = function () { return Object.values(this.stateNodeByPath); };
     DslVisitorWithDefaults.prototype.allTransitions = function () { return Object.values(this.transitionsBySourcePath).flat(); };
@@ -66,19 +72,15 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
         if (ctx.stateNode) {
             ctx.stateNode.forEach(function (n) { _this.visit(n); });
         }
-        if (ctx.action) {
-            ctx.action.forEach(function (n) { _this.visit(n); });
-        }
         if (ctx.transition) {
             ctx.transition.forEach(function (n) { _this.visit(n); });
         }
     };
     DslVisitorWithDefaults.prototype.stateNode = function (ctx) {
         var _this = this;
-        console.log('Visiting stateNode', ctx);
         var nameDef = this.getStateNodeNameDefinition(ctx);
         // Get the name and full path ...
-        var name = nameDef.image;
+        var name = (0, util_1.escapeDots)(nameDef.image);
         var curPath = __spreadArray([], this.path, true);
         var fullPath = curPath.join('.') + '.' + name;
         this.path.push(name);
@@ -87,83 +89,88 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
         var range = new vscode.Range(startLine || 0, startColumn || 0, endLine || 0, endColumn || 0);
         // ... the label if applicable ...
         var label = ctx.Label ? ctx.Label[0].image.substring(1) : undefined;
-        // ... message details if applicable ...
-        var npcNames = ['nick', 'alicia', 'professor', 'victoria', 'maive'];
-        var mediaTypes = ['image', 'audio', 'video'];
-        var urlPattern = '\w+://\S+';
-        var messagePattern = new RegExp("(?:(".concat(npcNames.join('|'), ")\\s+)?") +
-            "(?:(".concat(mediaTypes.join('|'), "|").concat(urlPattern, ")\\s+)?") +
-            "\"([^\"]*)\"\\W*$", 'i');
-        var message;
-        var messageMatch = name.match(messagePattern);
-        if (messageMatch) {
-            var _ = messageMatch[0], senderString = messageMatch[1], mediaTypeOrUrl = messageMatch[2], textOrPlaceholder = messageMatch[3];
-            var sender = senderString ? (senderString.substring(0, 1).toUpperCase() + senderString.substring(1)) : undefined;
-            if (mediaTypeOrUrl) {
-                var type = void 0, source 
-                // Media message
-                = void 0;
-                // Media message
-                if (mediaTypes.includes(mediaTypeOrUrl === null || mediaTypeOrUrl === void 0 ? void 0 : mediaTypeOrUrl.toLowerCase())) {
-                    type = mediaTypeOrUrl === null || mediaTypeOrUrl === void 0 ? void 0 : mediaTypeOrUrl.toLowerCase();
+        // ... directive details if applicable ...
+        var directive, nluContext, message;
+        if (ctx.Directive) {
+            directive = ctx.Directive[0].payload;
+        }
+        else {
+            // ... message details if applicable ...
+            var npcNames = ['nick', 'alicia', 'professor', 'victoria', 'maive'];
+            var mediaTypes = ['image', 'audio', 'video'];
+            var urlPattern = '\w+://\S+';
+            var messagePattern = new RegExp("(?:(".concat(npcNames.join('|'), ")\\s+)?") +
+                "(?:(".concat(mediaTypes.join('|'), "|").concat(urlPattern, ")\\s+)?") +
+                "\"([^\"]*)\"\\W*$", 'i');
+            var messageMatch = name.match(messagePattern);
+            if (messageMatch) {
+                var _ = messageMatch[0], senderString = messageMatch[1], mediaTypeOrUrl = messageMatch[2], textOrPlaceholder = messageMatch[3];
+                var sender = senderString ? (senderString.substring(0, 1).toUpperCase() + senderString.substring(1)) : undefined;
+                if (mediaTypeOrUrl) {
+                    var type = void 0, source 
+                    // Media message
+                    = void 0;
+                    // Media message
+                    if (mediaTypes.includes(mediaTypeOrUrl === null || mediaTypeOrUrl === void 0 ? void 0 : mediaTypeOrUrl.toLowerCase())) {
+                        type = mediaTypeOrUrl === null || mediaTypeOrUrl === void 0 ? void 0 : mediaTypeOrUrl.toLowerCase();
+                    }
+                    else {
+                        type = 'image'; // fallback unless overwritten
+                        var extension = mediaTypeOrUrl.match(/\.(\w+)$/);
+                        if (extension && extension[1]) {
+                            if (['png', 'jpg', 'gif'].includes(extension[1])) {
+                                type = 'image';
+                            }
+                            else if (['mp3', 'ogg', 'wav'].includes(extension[1])) {
+                                type = 'audio';
+                            }
+                            else if (['mp4'].includes(extension[1])) {
+                                type = 'video';
+                            }
+                        }
+                        source = vscode.Uri.parse(mediaTypeOrUrl);
+                    }
+                    message = { sender: sender, type: type, source: source, title: textOrPlaceholder };
                 }
                 else {
-                    type = 'image'; // fallback unless overwritten
-                    var extension = mediaTypeOrUrl.match(/\.(\w+)$/);
-                    if (extension && extension[1]) {
-                        if (['png', 'jpg', 'gif'].includes(extension[1])) {
-                            type = 'image';
-                        }
-                        else if (['mp3', 'ogg', 'wav'].includes(extension[1])) {
-                            type = 'audio';
-                        }
-                        else if (['mp4'].includes(extension[1])) {
-                            type = 'video';
-                        }
+                    // Text message
+                    message = { sender: sender, type: 'text', text: textOrPlaceholder };
+                }
+            }
+            // ... NLU context details if applicable ...
+            var nluContext_1;
+            if (ctx.LCurly && ctx.sequence) {
+                var ch = ctx.sequence[0].children;
+                var subNodes = ch.stateNode;
+                if (subNodes) {
+                    var firstSubNodeNameDef = this.getStateNodeNameDefinition(subNodes[0].children);
+                    if (firstSubNodeNameDef.image === '?') {
+                        var subNodeNameStrings = subNodes.slice(1)
+                            .map(function (s) { return _this.getStateNodeNameDefinition(s.children).image; });
+                        var intentPattern_1 = /^"([^"]+)"$/;
+                        var intents = subNodeNameStrings
+                            .filter(function (s) { return intentPattern_1.test(s); })
+                            .map(function (s) { return s.match(intentPattern_1)[1]; });
+                        var regExpPattern_1 = /^\/([^\/]+)\/$/;
+                        var regExps = subNodeNameStrings
+                            .filter(function (s) { return regExpPattern_1.test(s); })
+                            .map(function (s) { return new RegExp(s.match(regExpPattern_1)[1]); });
+                        nluContext_1 = {
+                            intents: intents,
+                            regExps: regExps,
+                            includes: []
+                        };
                     }
-                    source = vscode.Uri.parse(mediaTypeOrUrl);
-                }
-                message = { sender: sender, type: type, source: source, title: textOrPlaceholder };
-            }
-            else {
-                // Text message
-                message = { sender: sender, type: 'text', text: textOrPlaceholder };
-            }
-        }
-        // ... NLU context details if applicable ...
-        var nluContext;
-        if (ctx.LCurly && ctx.sequence) {
-            var ch = ctx.sequence[0].children;
-            var subNodes = ch.stateNode;
-            if (subNodes) {
-                var firstSubNodeNameDef = this.getStateNodeNameDefinition(subNodes[0].children);
-                if (firstSubNodeNameDef.image === '?') {
-                    var subNodeNameStrings = subNodes.slice(1)
-                        .map(function (s) { return _this.getStateNodeNameDefinition(s.children).image; });
-                    var intentPattern_1 = /^"([^"]+)"$/;
-                    var intents = subNodeNameStrings
-                        .filter(function (s) { return intentPattern_1.test(s); })
-                        .map(function (s) { return s.match(intentPattern_1)[1]; });
-                    var regExpPattern_1 = /^\/([^\/]+)\/$/;
-                    var regExps = subNodeNameStrings
-                        .filter(function (s) { return regExpPattern_1.test(s); })
-                        .map(function (s) { return new RegExp(s.match(regExpPattern_1)[1]); });
-                    nluContext = {
-                        intents: intents,
-                        regExps: regExps,
-                        includes: []
-                    };
                 }
             }
-        }
-        if (ctx.sequence && ctx.sequence.length) {
-            this.visit(ctx.sequence[0]);
+            if (ctx.sequence && ctx.sequence.length) {
+                this.visit(ctx.sequence[0]);
+            }
         }
         var stateNode = {
             name: name,
             label: label,
-            // TODO:
-            actions: this.actionsByPath[fullPath] || undefined,
+            directive: directive,
             nluContext: nluContext,
             message: message,
             // regExp,
@@ -188,7 +195,6 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
         this.path = curPath;
     };
     DslVisitorWithDefaults.prototype.transition = function (ctx) {
-        console.log('Visiting transition', ctx);
         var fullPath = this.path.join('.');
         // console.log('Entering transition', ctx, fullPath)
         var loc;
@@ -307,17 +313,6 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
             else {
                 this.transitionsBySourcePath[fullPath] = [transition];
             }
-        }
-    };
-    DslVisitorWithDefaults.prototype.action = function (ctx) {
-        console.log('Visiting directive', ctx);
-        var fullPath = this.path.join('.');
-        var action = ctx.Action[0].payload;
-        if (this.actionsByPath[fullPath]) {
-            this.actionsByPath[fullPath].push(action);
-        }
-        else {
-            this.actionsByPath[fullPath] = [action];
         }
     };
     return DslVisitorWithDefaults;

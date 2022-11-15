@@ -18,6 +18,7 @@ function useFlowToStatechart(flow, type) {
 }
 exports.useFlowToStatechart = useFlowToStatechart;
 function stateNodeToJsonRecursive(fqPath, node) {
+    var _a;
     // console.log(`stateNodeToJsonRecursive called - fqPath=${fqPath}`)
     var children;
     if (node) {
@@ -78,7 +79,7 @@ function stateNodeToJsonRecursive(fqPath, node) {
         }
         var directive = node.directive;
         if (directive) {
-            directive.arg = directive.arg.replace(/\\r/g, '');
+            directive.arg = (_a = directive.arg) === null || _a === void 0 ? void 0 : _a.replace(/\\r/g, '');
             var sepHelper = '&.&';
             json.entry = [];
             var invoke = {
@@ -141,6 +142,11 @@ function stateNodeToJsonRecursive(fqPath, node) {
                     __DIRECTIVE_ACTIVE__: { invoke: invoke },
                     __DIRECTIVE_DONE__: { on: on, after: after, always: always }
                 };
+            }
+            else {
+                json.on = on;
+                json.after = after;
+                json.always = always;
             }
         }
         else {

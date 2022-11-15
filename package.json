@@ -23,9 +23,11 @@
     "build-only": "vite build",
     "build-module": "tsc --declaration --outDir out ./index.ts",
     "type-check": "vue-tsc --noEmit -p tsconfig.vitest.json --composite false",
-    "build:scripts": "tsc --outDir out ./gen-spec ./gen-types",
+    "build:scripts": "tsc --outDir out ./gen-spec ./gen-types ./bump-version",
     "gen-spec": "node out/gen-spec",
-    "gen-types": "node out/gen-types"
+    "gen-types": "node out/gen-types",
+    "bump-version": "node out/bump-version",
+    "release": "yarn gen-spec && yarn gen-types && yarn build-module && yarn bump-version"
   },
   "dependencies": {
     "chevrotain": "^10.4.1",

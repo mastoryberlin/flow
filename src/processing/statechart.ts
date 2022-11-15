@@ -138,6 +138,10 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode): any {
           __DIRECTIVE_ACTIVE__: { invoke },
           __DIRECTIVE_DONE__: { on, after, always },
         } as any
+      } else {
+        json.on = on
+        json.after = after
+        json.always = always
       }
     } else {
       json.on = on

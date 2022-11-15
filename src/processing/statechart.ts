@@ -85,7 +85,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode): any {
 
     const directive = node.directive
     if (directive) {
-      directive.arg = directive.arg.replace(/\\r/g, '')
+      directive.arg = directive.arg?.replace(/\\r/g, '')
       const sepHelper = '&.&'
       json.entry = [] as any
       const invoke = {

@@ -50,6 +50,7 @@ function stateNodeToJsonRecursive(fqPath, node) {
             json.id = node.label;
         }
         var transitions = visitor.transitionsBySourcePath[fqPath]; // node.transitions is currently empty
+        var on = void 0, after = void 0, always = void 0;
         if (transitions) {
             var eventTransitions = transitions.filter(function (t) { return t.type === 'event'; });
             var afterTransitions = transitions.filter(function (t) { return t.type === 'after'; });
@@ -60,67 +61,92 @@ function stateNodeToJsonRecursive(fqPath, node) {
                     : '#' + (t.target.label || t.target.path.join('.')))
                 : undefined; };
             if (eventTransitions.length) {
-                json.on = Object.fromEntries(eventTransitions.map(function (t) { return ([t.eventName, {
+                on = Object.fromEntries(eventTransitions.map(function (t) { return ([t.eventName, {
                         target: getTransitionTarget_1(t)
                     }]); }));
             }
             if (afterTransitions.length) {
-                json.after = Object.fromEntries(afterTransitions.map(function (t) { return ([t.timeout, {
+                after = Object.fromEntries(afterTransitions.map(function (t) { return ([t.timeout, {
                         target: getTransitionTarget_1(t)
                     }]); }));
             }
             if (alwaysTransitions.length) {
-                json.always = alwaysTransitions.map(function (t) { return ({
+                always = alwaysTransitions.map(function (t) { return ({
                     target: getTransitionTarget_1(t)
                 }); });
             }
         }
         var directive = node.directive;
         if (directive) {
-            var supportedNames = [
-                'focusApp',
-                'loadChallenge',
-                'unloadChallenge',
-                'inChallenge',
-            ];
-            var supported = supportedNames.includes(directive.name);
-            if (supported) {
-                json.entry = [];
-                switch (directive.name) {
-                    case 'focusApp':
-                        json.entry.push({ type: 'FOCUS_APP', appId: directive.arg.toLowerCase() });
-                        break;
-                    case 'loadChallenge':
-                        json.entry.push({ type: 'SET_CHALLENGE', challengeId: directive.arg.replace('\r', '') });
-                        break;
-                    case 'unloadChallenge':
-                        json.entry.push({ type: 'UNLOAD_CHALLENGE_COMPONENT' });
-                        break;
-                    case 'inChallenge':
-                        {
-                            if (!directive.arg) {
-                                throw new Error('.inChallenge directive must have at least one argument: eventName');
-                            }
-                            var args_1 = directive.arg.replace(" ", '&.&').split('&.&');
-                            var character = constants_1.allNpcs.find(function (c) { return c.toLowerCase() === args_1[0].toLowerCase(); });
-                            if (character) {
-                                args_1 = args_1[1].replace(" ", '&.&').split('&.&');
-                            }
-                            var eventName = args_1[0];
-                            var eventData = "{}";
-                            if (args_1.length > 1) {
-                                eventData = args_1[1];
-                            }
-                            eventName = eventName.replace('\r', '');
-                            eventData = eventData.replace('\r', '');
-                            if (character) {
-                                eventData = eventData.replace('{', "{_pretendCausedByNpc:\"".concat(character, "\","));
-                            }
-                            json.entry.push({ type: 'IN_CHALLENGE', eventName: eventName, eventData: eventData });
-                            break;
+            directive.arg = directive.arg.replace(/\\r/g, '');
+            var sepHelper = '&.&';
+            json.entry = [];
+            var invoke = {
+                onDone: '__DIRECTIVE_DONE__'
+            };
+            switch (directive.name) {
+                case 'focusApp':
+                    json.entry.push({ type: 'FOCUS_APP', appId: directive.arg.toLowerCase() });
+                    break;
+                case 'loadChallenge':
+                    json.entry.push({ type: 'SET_CHALLENGE', challengeId: directive.arg });
+                    break;
+                case 'unloadChallenge':
+                    json.entry.push({ type: 'UNLOAD_CHALLENGE_COMPONENT' });
+                    break;
+                case 'inChallenge':
+                    {
+                        if (!directive.arg) {
+                            throw new Error('.inChallenge directive must have at least one argument: eventName');
                         }
-                }
+                        var args_1 = directive.arg.replace(" ", sepHelper).split(sepHelper);
+                        var character = constants_1.allNpcs.find(function (c) { return c.toLowerCase() === args_1[0].toLowerCase(); });
+                        if (character) {
+                            args_1 = args_1[1].replace(" ", sepHelper).split(sepHelper);
+                        }
+                        var eventName = args_1[0];
+                        var eventData = "{}";
+                        if (args_1.length > 1) {
+                            eventData = args_1[1];
+                        }
+                        eventName = eventName;
+                        eventData = eventData;
+                        if (character) {
+                            eventData = eventData.replace('{', "{_pretendCausedByNpc:\"".concat(character, "\","));
+                        }
+                        json.entry.push({ type: 'IN_CHALLENGE', eventName: eventName, eventData: eventData });
+                    }
+                    break;
+                case 'cinema':
+                    invoke.src = {
+                        type: 'cinema',
+                        source: directive.arg
+                    };
+                    break;
+                case 'alert':
+                    if (!directive.arg) {
+                        throw new Error('.alert directive must have an object argument: {title: ..., text: ...}');
+                    }
+                    invoke.src = {
+                        type: 'alert',
+                        alertData: directive.arg
+                    };
+                    break;
+                default:
+                    throw new Error("Unknown directive .".concat(directive.name, " at ").concat(fqPath));
             }
+            if (invoke.src) {
+                json.initial = '__DIRECTIVE_ACTIVE__';
+                json.states = {
+                    __DIRECTIVE_ACTIVE__: { invoke: invoke },
+                    __DIRECTIVE_DONE__: { on: on, after: after, always: always }
+                };
+            }
+        }
+        else {
+            json.on = on;
+            json.after = after;
+            json.always = always;
         }
         return json;
     }

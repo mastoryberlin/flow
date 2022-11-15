@@ -12,19 +12,43 @@ const props = defineProps<{
   flow: string
 }>()
 
-const statechartOutput = computed(() => useFlowToStatechart(props.flow, 'episode'))
-const localeOutput = computed(() => JSON.stringify(useFlowToLocale(props.flow), null, 2))
+const statechart = computed(() => {
+  try {
+    return {
+      json: useFlowToStatechart(props.flow, 'episode'),
+      error: ''
+    }
+  } catch (e) {
+    return {
+      error: e
+    }
+  }
+})
+const locale = computed(() => {
+  try {
+    return {
+      json: useFlowToLocale(props.flow),
+      error: ''
+    }
+  } catch (e) {
+    return {
+      error: e
+    }
+  }
+})
 </script>
 
 <template>
   <div class="panel">
     <h3>Statechart JSON</h3>
     <div class="wrapper">
-      <textarea class="output-code" rows="20" readonly>{{ statechartOutput }}</textarea>
+      <textarea class="output-code" rows="20" readonly>{{ statechart.json }}</textarea>
+      <div class="error">{{ statechart.error }}</div>
     </div>
     <h3>Default Locale JSON</h3>
     <div class="wrapper">
-      <textarea class="output-code" rows="20" readonly>{{ localeOutput }}</textarea>
+      <textarea class="output-code" rows="20" readonly>{{ locale.json }}</textarea>
+      <div class="error">{{ locale.error }}</div>
     </div>
   </div>
 </template>
@@ -43,5 +67,8 @@ const localeOutput = computed(() => JSON.stringify(useFlowToLocale(props.flow), 
   height: 40%;
   box-sizing: border-box;
   font-size: 12pt;
+}
+.error {
+  color: red;
 }
 </style>

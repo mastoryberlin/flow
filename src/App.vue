@@ -7,25 +7,19 @@ import type { TopLevelSequenceCstNode } from './chevrotain/types';
 import ResultsPane from './components/ResultsPane.vue';
 import { useVisitor } from './chevrotain/Visitor';
 
-const code = ref(`Nick "Hey, what do you think?" {
-  ? {
-    // Waiting for user input
+const code = ref(`A {
+  on myEvent -> B
+}
+B {
+  B1 {
+    after 3sec -> C
   }
-  "I think A" {
-    // do A
-  }
-  "I think B" {
-    // do B
-  } 
-  * {
-    // do default stuff
+  C {
+    // This should be selected
   }
 }
-Helpers {
-  Open Wire {
-    _
-    .focusApp wire
-  }
+C {
+  // This should never be selected
 }`)
 
 const parser = useParser()

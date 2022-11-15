@@ -6,10 +6,10 @@ export declare class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     stateNodeByLabel: Record<string, dsl.StateNode>;
     transitionsBySourcePath: Record<string, dsl.Transition[]>;
     childrenByPath: Record<string, dsl.StateNode[]>;
-    actionsByPath: Record<string, dsl.Directive[]>;
     path: string[];
     constructor();
     private getStateNodeNameDefinition;
+    private fixTransitionTargets;
     allStateNodes(): dsl.StateNode[];
     allTransitions(): dsl.Transition[];
     topLevelSequence(ctx: TopLevelSequenceCstChildren): void;

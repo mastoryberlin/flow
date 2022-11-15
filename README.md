@@ -310,6 +310,34 @@ Beware of the dog! {
 Here is a list of all directives currently supported by the Mastory app.
 Optional arguments are denoted by [brackets]; all other listed arguments are mandatory.
 
+- [alert](#alert)
+- [cinema](#cinema)
+- [focusApp](#focusapp)
+- [inChallenge](#inchallenge)
+- [loadChallenge](#loadchallenge)
+- [unloadChallenge](#unloadchallenge)
+
+#### `.cinema`
+```swift
+.cinema VideoUrl
+```
+
+- `VideoUrl` – a URL pointing to a video file.
+
+Loads the video specified with `VideoUrl` and displays it in "cinema mode", i.e. in a full-screen overlay that essentially blocks all other interaction with the app and requires the user's undivided attention. 
+
+Although the video can be jumped using a slider bar (to re-watch missed parts, for example), there is no close button provided and the overlay remains open until the video was watched to the end.
+
+#### `.alert`
+```swift
+.alert {text: MessageText, title: PopupWindowTitle}
+```
+
+- `MessageText` – a string to be displayed by the alert overlay.
+- `PopupWindowTitle` – the overlay popup window's title.
+
+Displays a popup overlay dialog with a title and a (text) message, similar to JS's native `alert()` function.
+
 #### `.focusApp`
 ```swift
 .focusApp AppName

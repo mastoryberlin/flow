@@ -1,3 +1,10 @@
+// ========================================================================================================================
+// The Flow DSL Visitor adds a layer of semantic meaning on top of the Concrete Syntax Tree (CST) returned by the Parser.
+// Where the output of the Parser is a tree of matched rules which as such don't provide much useful information on a piece
+// of Flow DSL code beyond its syntactical correctness, the Visitor translates this tree into a set of easy-to-use fields 
+// and functions, like `allStateNodes()` or `transitionBySourcePath`.
+// ========================================================================================================================
+
 import * as vscode from "../dsl/vscode";
 
 import type { StateNodeCstChildren, TopLevelSequenceCstChildren, AlwaysTransitionCstChildren, SequenceCstChildren, TransitionTargetCstNode, TransitionTargetCstChildren, TransitionCstChildren, AlwaysTransitionCstNode, StateNodePathCstNode } from "./types";
@@ -18,8 +25,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
   stateNodeByLabel = {} as Record<string, dsl.StateNode>
   transitionsBySourcePath = {} as Record<string, dsl.Transition[]>
   childrenByPath = {} as Record<string, dsl.StateNode[]>
-  actionsByPath = {} as Record<string, dsl.Directive[]>
-  path = [ROOT_NODE_ID]
+  path = [ROOT_NODE_ID] // array to internally keep track of the currently traversed state node path
 
   constructor() {
     super()
@@ -36,8 +42,62 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     }
   }
 
-  allStateNodes() { return Object.values(this.stateNodeByPath) }
-  allTransitions() { return Object.values(this.transitionsBySourcePath).flat() }
+  private fixTransitionTargets() {
+    for (const [sourcePathAsString, transitions] of Object.entries(this.transitionsBySourcePath)) {
+      const sourcePath = sourcePathAsString.split('.')
+      for (const t of transitions) {
+        if (t.target && t.target.unknown) {
+          if (t.target.path) {
+            const relative = t.target.path
+            // Determine absolute path from this relative one
+            const firstPart = relative[0]
+            // console.log('DETERMINING TRANSITION TARGET', sourcePath, relative, firstPart)
+            let absolute = [] as Array<string>
+            for (let i = sourcePath.length; i > 0; i--) {
+              const prefix = sourcePath.slice(0, i)
+              const asString = prefix.join('.')
+              const ch = this.childrenByPath[asString]
+              // console.log(`Iterating through path - i=${i}, path asString=${asString}, ch=`, ch)
+              if (ch && ch.some(s => s.name === firstPart)) {
+                absolute = sourcePath.slice(0, i)
+                // console.log(`Found a match for prefix ${prefix} - setting absolute=`, absolute)
+                t.target.path = [...absolute, ...relative]
+                t.target.unknown = false
+                break
+              }
+            }
+          } else {
+            const line = t.range.start.line
+            console.log('PROCESSING SHORTCUT TRANSITION', sourcePathAsString, line)
+            const precedingStateNode = this.allStateNodes().find(s => s.range.end.line === line - 1 || (s.range.end.line === line && s.range.end.character < t.range.start.character))
+            const followingStateNode = this.allStateNodes().find(s => (s.range.start.line === line && s.range.start.character > t.range.end.character) || s.range.start.line === line + 1)
+            if (precedingStateNode && followingStateNode) {
+              console.log('SETTING THE SOURCE TO', precedingStateNode.path)
+              t.sourcePath = precedingStateNode.path
+              console.log('SETTING THE TARGET TO', followingStateNode.path)
+              t.target.path = followingStateNode.path
+              t.target.unknown = false
+              const asString = t.sourcePath.join('.')
+              if (this.transitionsBySourcePath[asString]) {
+                this.transitionsBySourcePath[asString].push(t)
+              } else {
+                this.transitionsBySourcePath[asString] = [t]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  allStateNodes() { return Object.values(this.stateNodeByPath) as dsl.StateNode[] }
+  allTransitions() {
+    const withSource = Object.fromEntries(
+      Object.entries(this.transitionsBySourcePath)
+        .filter(([k]) => k !== '')
+    )
+    return Object.values(withSource).flat() as dsl.Transition[]
+  }
 
   topLevelSequence(ctx: TopLevelSequenceCstChildren) {
     this.stateNodeByPath = {}
@@ -45,9 +105,8 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     this.transitionsBySourcePath = {}
     this.path = [ROOT_NODE_ID]
     this.childrenByPath = {}
-    this.actionsByPath = {}
-    // console.log('Entering topLevelSequence', ctx)
     this.visit(ctx.sequence)
+    this.fixTransitionTargets()
   }
 
   sequence(ctx: SequenceCstChildren) {
@@ -66,7 +125,12 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     this.path.push(name)
 
     // ... the range of the name definition ...
-    const { startOffset, startLine, startColumn, endLine, endColumn } = nameDef
+    let { startOffset, startLine, startColumn, endLine, endColumn } = nameDef
+    const closing = ctx.RCurly || ctx.RSquare
+    if (closing) {
+      endLine = closing[0].endLine
+      endColumn = closing[0].endColumn
+    }
     const range = new vscode.Range(startLine || 0, startColumn || 0, endLine || 0, endColumn || 0)
     
     // ... the label if applicable ...
@@ -159,10 +223,10 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
       parallel: !!ctx.LSquare,
       path: [...this.path],
       childNodes: this.childrenByPath[fullPath] || [],
-      transitions: [],
+      transitions: this.transitionsBySourcePath[fullPath] || [],
       range,
       offset: startOffset
-    }  
+    }
 
     this.stateNodeByPath[fullPath] = stateNode
     if (label) {
@@ -180,27 +244,29 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
   }
 
   transition(ctx: TransitionCstChildren) {
-    const fullPath = this.path.join('.')
-    // console.log('Entering transition', ctx, fullPath)
-    let loc: any
     const type: dsl.TransitionType = ctx.eventTransition ? 'event' : ctx.afterTransition ? 'after' : 'always'
-
     const eventOrAfterTransition = ctx.eventTransition || ctx.afterTransition
-    const isShortcutSyntax = eventOrAfterTransition && undefined === eventOrAfterTransition[0].children.transitionTargetOrShortcutSyntax[0].children.Arrow
+    const loc = (eventOrAfterTransition || ctx.alwaysTransition!)[0].location!
+    const isShortcutSyntax = eventOrAfterTransition && eventOrAfterTransition[0].children.transitionTargetOrShortcutSyntax?.[0].children.Arrow === undefined
+    let sourcePath: dsl.FqStateNodePath | undefined
+    let target: dsl.TransitionTarget
+    let byPathKey: string
     if (isShortcutSyntax) {
-      // console.log('Encountered shortcut transition - skipping for now')
+      target = {
+        unknown: true,
+        range: new vscode.Range(0, 0, 0, 0),
+        offset: 0,
+      }
+      byPathKey = ''
     } else {
-      // console.log('Encountered -> transition:', fullPath, eventOrAfterTransition, isShortcutSyntax)
+      sourcePath = this.path
+      byPathKey = sourcePath.join('.')
       let ch: TransitionTargetCstChildren
       if (eventOrAfterTransition) {
-        ch = (eventOrAfterTransition[0].children.transitionTargetOrShortcutSyntax[0].children.transitionTarget as TransitionTargetCstNode[])[0].children
-        loc = eventOrAfterTransition[0].location
+        ch = eventOrAfterTransition[0].children.transitionTargetOrShortcutSyntax[0].children.transitionTarget![0].children
       } else {
-        const alwaysTransition = (ctx.alwaysTransition as AlwaysTransitionCstNode[])[0]
-        ch = alwaysTransition.children.transitionTarget[0].children
-        loc = alwaysTransition.location
+        ch = ctx.alwaysTransition![0].children.transitionTarget[0].children
       }
-      let target: dsl.TransitionTarget
       if (ch.Label) {
         const l = ch.Label[0]
         target = {
@@ -217,23 +283,11 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
           return t ? t[0].image : ''
         })
         
-        // Determine absolute path from this relative one
-        const firstPart = relative[0]
-        let absolute = [] as Array<string>
-        for (let i = this.path.length; i > 1; i--) {
-          const prefix = this.path.slice(0, i)
-          const asString = prefix.join('.')
-          const ch = this.childrenByPath[asString]
-          if (ch && ch.some(s => s.name === firstPart)) {
-            absolute = this.path.slice(0, i)
-          }
-        }
-
         const first = p[0].location as CstNodeLocation, last = p[p.length - 1].location as CstNodeLocation
         target = {
-          path: [...absolute, ...relative],
-          unknown: absolute.length < 1,
-          range: new vscode.Range(first.startLine || 0, first.startColumn || 0, last.endLine || 0, last.endColumn || 0),
+          path: relative,
+          unknown: true,
+          range: new vscode.Range(first.startLine!, first.startColumn!, last.endLine!, last.endColumn!),
           offset: first.startOffset
         }
       } else {
@@ -243,59 +297,59 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
           offset: 0,
         }
       }
+    }
 
-      const range = new vscode.Range(loc.startLine, loc.startColumn, loc.endLine, loc.endColumn)
-      const transition = {
-        type,
-        sourcePath: this.path,
-        target,
-        offset: loc.startOffset,
-        range
-      } as dsl.Transition
+    const range = new vscode.Range(loc.startLine!, loc.startColumn!, loc.endLine!, loc.endColumn!)
+    const transition = {
+      type,
+      sourcePath,
+      target,
+      offset: loc.startOffset,
+      range
+    } as dsl.Transition
 
-      switch (type) {
-        case 'event':
-          (transition as dsl.EventTransition).eventName = ctx.eventTransition![0].children.EventName[0].image
-          break
-        case 'after':
-          {
-            const c = ctx.afterTransition![0].children
-            let ms = 3000 // fallback
-            if (c.Ellipsis) {
-              // Set timeout to multiple of 4sec, depending on the number of dots in the ellipsis
-              ms = (c.Ellipsis[0].image.length - 1) * 4000
-            } else if (c.LengthFunction) {
-              // !!! TBD !!!
-            } else if (c.NumberLiteral) {
-              ms = parseInt(c.NumberLiteral[0].image)
-            } else if (c.TimeSpan) {
-              const image = c.TimeSpan[0].image
-              const m = image.match(
-                /(0|[1-9]\d*):(\d{2})|(0|[1-9]\d*)(\.\d+)?(?:\s*(?:(ms|milli(?:seconds?)?)|(s(?:ec(?:onds?)?)?)|(m(?:in(?:utes?)?)?)|(h(?:ours?)?))?\b)?/
-              )
-              if (m) {
-                if (m[1] && m[2]) {
-                  ms = (parseInt(m[1]) * 60 + parseInt(m[2])) * 1000
-                } else if (m[3]) {
-                  const v = parseFloat(m[3] + (m[4] || ''))
-                  const factor = m[5] ? 1 : m[6] ? 1000 : m[7] ? 60000 : m[8] ? 3600000 : 1
-                  ms = Math.floor(v * factor)
-                }
-              } else {
-                ms = parseInt(image)
+    switch (type) {
+      case 'event':
+        (transition as dsl.EventTransition).eventName = ctx.eventTransition![0].children.EventName[0].image
+        break
+      case 'after':
+        {
+          const c = ctx.afterTransition![0].children
+          let ms = 3000 // fallback
+          if (c.Ellipsis) {
+            // Set timeout to multiple of 4sec, depending on the number of dots in the ellipsis
+            ms = (c.Ellipsis[0].image.length - 1) * 4000
+          } else if (c.LengthFunction) {
+            // !!! TBD !!!
+          } else if (c.NumberLiteral) {
+            ms = parseInt(c.NumberLiteral[0].image)
+          } else if (c.TimeSpan) {
+            const image = c.TimeSpan[0].image
+            const m = image.match(
+              /(0|[1-9]\d*):(\d{2})|(0|[1-9]\d*)(\.\d+)?(?:\s*(?:(ms|milli(?:seconds?)?)|(s(?:ec(?:onds?)?)?)|(m(?:in(?:utes?)?)?)|(h(?:ours?)?))?\b)?/
+            )
+            if (m) {
+              if (m[1] && m[2]) {
+                ms = (parseInt(m[1]) * 60 + parseInt(m[2])) * 1000
+              } else if (m[3]) {
+                const v = parseFloat(m[3] + (m[4] || ''))
+                const factor = m[5] ? 1 : m[6] ? 1000 : m[7] ? 60000 : m[8] ? 3600000 : 1
+                ms = Math.floor(v * factor)
               }
+            } else {
+              ms = parseInt(image)
             }
-            (transition as dsl.AfterTransition).timeout = ms
           }
-          break
-        default: break
-      }
+          (transition as dsl.AfterTransition).timeout = ms
+        }
+        break
+      default: break
+    }
 
-      if (this.transitionsBySourcePath[fullPath]) {
-        this.transitionsBySourcePath[fullPath].push(transition)
-      } else {
-        this.transitionsBySourcePath[fullPath] = [transition]
-      }
+    if (this.transitionsBySourcePath[byPathKey]) {
+      this.transitionsBySourcePath[byPathKey].push(transition)
+    } else {
+      this.transitionsBySourcePath[byPathKey] = [transition]
     }
   }
 }

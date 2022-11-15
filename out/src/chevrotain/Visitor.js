@@ -1,4 +1,10 @@
 "use strict";
+// ========================================================================================================================
+// The Flow DSL Visitor adds a layer of semantic meaning on top of the Concrete Syntax Tree (CST) returned by the Parser.
+// Where the output of the Parser is a tree of matched rules which as such don't provide much useful information on a piece
+// of Flow DSL code beyond its syntactical correctness, the Visitor translates this tree into a set of easy-to-use fields 
+// and functions, like `allStateNodes()` or `transitionBySourcePath`.
+// ========================================================================================================================
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -39,8 +45,7 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
         _this.stateNodeByLabel = {};
         _this.transitionsBySourcePath = {};
         _this.childrenByPath = {};
-        _this.actionsByPath = {};
-        _this.path = [ROOT_NODE_ID];
+        _this.path = [ROOT_NODE_ID]; // array to internally keep track of the currently traversed state node path
         _this.validateVisitor();
         return _this;
     }
@@ -54,17 +59,78 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
             return stateNodeNameDefinition[0];
         }
     };
+    DslVisitorWithDefaults.prototype.fixTransitionTargets = function () {
+        for (var _i = 0, _a = Object.entries(this.transitionsBySourcePath); _i < _a.length; _i++) {
+            var _b = _a[_i], sourcePathAsString = _b[0], transitions = _b[1];
+            var sourcePath = sourcePathAsString.split('.');
+            var _loop_1 = function (t) {
+                if (t.target && t.target.unknown) {
+                    if (t.target.path) {
+                        var relative = t.target.path;
+                        // Determine absolute path from this relative one
+                        var firstPart_1 = relative[0];
+                        // console.log('DETERMINING TRANSITION TARGET', sourcePath, relative, firstPart)
+                        var absolute = [];
+                        for (var i = sourcePath.length; i > 0; i--) {
+                            var prefix = sourcePath.slice(0, i);
+                            var asString = prefix.join('.');
+                            var ch = this_1.childrenByPath[asString];
+                            // console.log(`Iterating through path - i=${i}, path asString=${asString}, ch=`, ch)
+                            if (ch && ch.some(function (s) { return s.name === firstPart_1; })) {
+                                absolute = sourcePath.slice(0, i);
+                                // console.log(`Found a match for prefix ${prefix} - setting absolute=`, absolute)
+                                t.target.path = __spreadArray(__spreadArray([], absolute, true), relative, true);
+                                t.target.unknown = false;
+                                break;
+                            }
+                        }
+                    }
+                    else {
+                        var line_1 = t.range.start.line;
+                        console.log('PROCESSING SHORTCUT TRANSITION', sourcePathAsString, line_1);
+                        var precedingStateNode = this_1.allStateNodes().find(function (s) { return s.range.end.line === line_1 - 1 || (s.range.end.line === line_1 && s.range.end.character < t.range.start.character); });
+                        var followingStateNode = this_1.allStateNodes().find(function (s) { return (s.range.start.line === line_1 && s.range.start.character > t.range.end.character) || s.range.start.line === line_1 + 1; });
+                        if (precedingStateNode && followingStateNode) {
+                            console.log('SETTING THE SOURCE TO', precedingStateNode.path);
+                            t.sourcePath = precedingStateNode.path;
+                            console.log('SETTING THE TARGET TO', followingStateNode.path);
+                            t.target.path = followingStateNode.path;
+                            t.target.unknown = false;
+                            var asString = t.sourcePath.join('.');
+                            if (this_1.transitionsBySourcePath[asString]) {
+                                this_1.transitionsBySourcePath[asString].push(t);
+                            }
+                            else {
+                                this_1.transitionsBySourcePath[asString] = [t];
+                            }
+                        }
+                    }
+                }
+            };
+            var this_1 = this;
+            for (var _c = 0, transitions_1 = transitions; _c < transitions_1.length; _c++) {
+                var t = transitions_1[_c];
+                _loop_1(t);
+            }
+        }
+    };
     DslVisitorWithDefaults.prototype.allStateNodes = function () { return Object.values(this.stateNodeByPath); };
-    DslVisitorWithDefaults.prototype.allTransitions = function () { return Object.values(this.transitionsBySourcePath).flat(); };
+    DslVisitorWithDefaults.prototype.allTransitions = function () {
+        var withSource = Object.fromEntries(Object.entries(this.transitionsBySourcePath)
+            .filter(function (_a) {
+            var k = _a[0];
+            return k !== '';
+        }));
+        return Object.values(withSource).flat();
+    };
     DslVisitorWithDefaults.prototype.topLevelSequence = function (ctx) {
         this.stateNodeByPath = {};
         this.stateNodeByLabel = {};
         this.transitionsBySourcePath = {};
         this.path = [ROOT_NODE_ID];
         this.childrenByPath = {};
-        this.actionsByPath = {};
-        // console.log('Entering topLevelSequence', ctx)
         this.visit(ctx.sequence);
+        this.fixTransitionTargets();
     };
     DslVisitorWithDefaults.prototype.sequence = function (ctx) {
         var _this = this;
@@ -86,6 +152,11 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
         this.path.push(name);
         // ... the range of the name definition ...
         var startOffset = nameDef.startOffset, startLine = nameDef.startLine, startColumn = nameDef.startColumn, endLine = nameDef.endLine, endColumn = nameDef.endColumn;
+        var closing = ctx.RCurly || ctx.RSquare;
+        if (closing) {
+            endLine = closing[0].endLine;
+            endColumn = closing[0].endColumn;
+        }
         var range = new vscode.Range(startLine || 0, startColumn || 0, endLine || 0, endColumn || 0);
         // ... the label if applicable ...
         var label = ctx.Label ? ctx.Label[0].image.substring(1) : undefined;
@@ -177,7 +248,7 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
             parallel: !!ctx.LSquare,
             path: __spreadArray([], this.path, true),
             childNodes: this.childrenByPath[fullPath] || [],
-            transitions: [],
+            transitions: this.transitionsBySourcePath[fullPath] || [],
             range: range,
             offset: startOffset
         };
@@ -195,28 +266,32 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
         this.path = curPath;
     };
     DslVisitorWithDefaults.prototype.transition = function (ctx) {
-        var fullPath = this.path.join('.');
-        // console.log('Entering transition', ctx, fullPath)
-        var loc;
+        var _a;
         var type = ctx.eventTransition ? 'event' : ctx.afterTransition ? 'after' : 'always';
         var eventOrAfterTransition = ctx.eventTransition || ctx.afterTransition;
-        var isShortcutSyntax = eventOrAfterTransition && undefined === eventOrAfterTransition[0].children.transitionTargetOrShortcutSyntax[0].children.Arrow;
+        var loc = (eventOrAfterTransition || ctx.alwaysTransition)[0].location;
+        var isShortcutSyntax = eventOrAfterTransition && ((_a = eventOrAfterTransition[0].children.transitionTargetOrShortcutSyntax) === null || _a === void 0 ? void 0 : _a[0].children.Arrow) === undefined;
+        var sourcePath;
+        var target;
+        var byPathKey;
         if (isShortcutSyntax) {
-            // console.log('Encountered shortcut transition - skipping for now')
+            target = {
+                unknown: true,
+                range: new vscode.Range(0, 0, 0, 0),
+                offset: 0
+            };
+            byPathKey = '';
         }
         else {
-            // console.log('Encountered -> transition:', fullPath, eventOrAfterTransition, isShortcutSyntax)
+            sourcePath = this.path;
+            byPathKey = sourcePath.join('.');
             var ch = void 0;
             if (eventOrAfterTransition) {
                 ch = eventOrAfterTransition[0].children.transitionTargetOrShortcutSyntax[0].children.transitionTarget[0].children;
-                loc = eventOrAfterTransition[0].location;
             }
             else {
-                var alwaysTransition = ctx.alwaysTransition[0];
-                ch = alwaysTransition.children.transitionTarget[0].children;
-                loc = alwaysTransition.location;
+                ch = ctx.alwaysTransition[0].children.transitionTarget[0].children;
             }
-            var target = void 0;
             if (ch.Label) {
                 var l = ch.Label[0];
                 target = {
@@ -233,22 +308,11 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                     var t = c.StateNodeName || c.EventName || c.TimeSpan || c.NumberLiteral;
                     return t ? t[0].image : '';
                 });
-                // Determine absolute path from this relative one
-                var firstPart_1 = relative[0];
-                var absolute = [];
-                for (var i = this.path.length; i > 1; i--) {
-                    var prefix = this.path.slice(0, i);
-                    var asString = prefix.join('.');
-                    var ch_1 = this.childrenByPath[asString];
-                    if (ch_1 && ch_1.some(function (s) { return s.name === firstPart_1; })) {
-                        absolute = this.path.slice(0, i);
-                    }
-                }
                 var first = p[0].location, last = p[p.length - 1].location;
                 target = {
-                    path: __spreadArray(__spreadArray([], absolute, true), relative, true),
-                    unknown: absolute.length < 1,
-                    range: new vscode.Range(first.startLine || 0, first.startColumn || 0, last.endLine || 0, last.endColumn || 0),
+                    path: relative,
+                    unknown: true,
+                    range: new vscode.Range(first.startLine, first.startColumn, last.endLine, last.endColumn),
                     offset: first.startOffset
                 };
             }
@@ -259,60 +323,60 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                     offset: 0
                 };
             }
-            var range = new vscode.Range(loc.startLine, loc.startColumn, loc.endLine, loc.endColumn);
-            var transition = {
-                type: type,
-                sourcePath: this.path,
-                target: target,
-                offset: loc.startOffset,
-                range: range
-            };
-            switch (type) {
-                case 'event':
-                    transition.eventName = ctx.eventTransition[0].children.EventName[0].image;
-                    break;
-                case 'after':
-                    {
-                        var c = ctx.afterTransition[0].children;
-                        var ms = 3000; // fallback
-                        if (c.Ellipsis) {
-                            // Set timeout to multiple of 4sec, depending on the number of dots in the ellipsis
-                            ms = (c.Ellipsis[0].image.length - 1) * 4000;
-                        }
-                        else if (c.LengthFunction) {
-                            // !!! TBD !!!
-                        }
-                        else if (c.NumberLiteral) {
-                            ms = parseInt(c.NumberLiteral[0].image);
-                        }
-                        else if (c.TimeSpan) {
-                            var image = c.TimeSpan[0].image;
-                            var m = image.match(/(0|[1-9]\d*):(\d{2})|(0|[1-9]\d*)(\.\d+)?(?:\s*(?:(ms|milli(?:seconds?)?)|(s(?:ec(?:onds?)?)?)|(m(?:in(?:utes?)?)?)|(h(?:ours?)?))?\b)?/);
-                            if (m) {
-                                if (m[1] && m[2]) {
-                                    ms = (parseInt(m[1]) * 60 + parseInt(m[2])) * 1000;
-                                }
-                                else if (m[3]) {
-                                    var v = parseFloat(m[3] + (m[4] || ''));
-                                    var factor = m[5] ? 1 : m[6] ? 1000 : m[7] ? 60000 : m[8] ? 3600000 : 1;
-                                    ms = Math.floor(v * factor);
-                                }
-                            }
-                            else {
-                                ms = parseInt(image);
-                            }
-                        }
-                        transition.timeout = ms;
+        }
+        var range = new vscode.Range(loc.startLine, loc.startColumn, loc.endLine, loc.endColumn);
+        var transition = {
+            type: type,
+            sourcePath: sourcePath,
+            target: target,
+            offset: loc.startOffset,
+            range: range
+        };
+        switch (type) {
+            case 'event':
+                transition.eventName = ctx.eventTransition[0].children.EventName[0].image;
+                break;
+            case 'after':
+                {
+                    var c = ctx.afterTransition[0].children;
+                    var ms = 3000; // fallback
+                    if (c.Ellipsis) {
+                        // Set timeout to multiple of 4sec, depending on the number of dots in the ellipsis
+                        ms = (c.Ellipsis[0].image.length - 1) * 4000;
                     }
-                    break;
-                default: break;
-            }
-            if (this.transitionsBySourcePath[fullPath]) {
-                this.transitionsBySourcePath[fullPath].push(transition);
-            }
-            else {
-                this.transitionsBySourcePath[fullPath] = [transition];
-            }
+                    else if (c.LengthFunction) {
+                        // !!! TBD !!!
+                    }
+                    else if (c.NumberLiteral) {
+                        ms = parseInt(c.NumberLiteral[0].image);
+                    }
+                    else if (c.TimeSpan) {
+                        var image = c.TimeSpan[0].image;
+                        var m = image.match(/(0|[1-9]\d*):(\d{2})|(0|[1-9]\d*)(\.\d+)?(?:\s*(?:(ms|milli(?:seconds?)?)|(s(?:ec(?:onds?)?)?)|(m(?:in(?:utes?)?)?)|(h(?:ours?)?))?\b)?/);
+                        if (m) {
+                            if (m[1] && m[2]) {
+                                ms = (parseInt(m[1]) * 60 + parseInt(m[2])) * 1000;
+                            }
+                            else if (m[3]) {
+                                var v = parseFloat(m[3] + (m[4] || ''));
+                                var factor = m[5] ? 1 : m[6] ? 1000 : m[7] ? 60000 : m[8] ? 3600000 : 1;
+                                ms = Math.floor(v * factor);
+                            }
+                        }
+                        else {
+                            ms = parseInt(image);
+                        }
+                    }
+                    transition.timeout = ms;
+                }
+                break;
+            default: break;
+        }
+        if (this.transitionsBySourcePath[byPathKey]) {
+            this.transitionsBySourcePath[byPathKey].push(transition);
+        }
+        else {
+            this.transitionsBySourcePath[byPathKey] = [transition];
         }
     };
     return DslVisitorWithDefaults;

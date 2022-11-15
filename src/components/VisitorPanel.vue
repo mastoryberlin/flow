@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import type { TopLevelSequenceCstNode } from '../chevrotain/types';
 import type { DslVisitorWithDefaults } from '../chevrotain/Visitor';
-import type { StateNode } from '../dsl/types';
+import type { StateNode, Transition } from '../dsl/types';
 import StateNodeDetailView from './StateNodeDetailView.vue';
 
 const props = defineProps<{
@@ -14,24 +14,33 @@ const props = defineProps<{
 const cstProp = computed(() => props.cst)
 watch(cstProp, () => {
   allStateNodes.value = props.visitor.allStateNodes()
+  allTransitions.value = props.visitor.allTransitions()
 })
 
-const allStateNodes = ref<StateNode[]>(props.visitor.allStateNodes() || [])
+const allStateNodes = ref<StateNode[]>(props.visitor.allStateNodes())
+const allTransitions = ref<Transition[]>(props.visitor.allTransitions())
 const currentStateNodePath = ref<string | null>(null)
+const currentTransitionNumber = ref<number | null>(null)
 </script>
 
 <template>
   <div>
     <h3>State Nodes</h3>
-    <select class="state-nodes-list" size="10" v-model="currentStateNodePath">
+    <select class="state-nodes list" size="10" v-model="currentStateNodePath">
       <option v-for="s in allStateNodes" :value="s.path.join('.')">{{s.path.join('.')}}</option>
     </select>
     <StateNodeDetailView v-if="currentStateNodePath" :path="currentStateNodePath" :visitor="visitor" />
-  </div>
+
+    <h3>Transitions</h3>
+    <select class="transitions list" size="10" v-model="currentTransitionNumber">
+      <option v-for="t, i in allTransitions" :value="i">{{t.sourcePath?.join('.')}} -> {{t.target?.path?.join('.')}} ({{t.type}})</option>
+    </select>
+    <!-- <StateNodeDetailView v-if="currentStateNodePath" :path="currentStateNodePath" :visitor="visitor" /> -->
+</div>
 </template>
 
 <style scoped>
-.state-nodes-list {
+.list {
   width: 100%;
 }
 </style>

@@ -84,7 +84,7 @@ export type TransitionType = 'event' | 'after' | 'always'
 
 export interface BaseTransition extends SemanticUnit {
   type: TransitionType
-  sourcePath: FqStateNodePath
+  sourcePath?: FqStateNodePath
   target?: TransitionTarget
   guard?: TransitionGuard
 }

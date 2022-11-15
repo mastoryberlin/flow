@@ -53,6 +53,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode): any {
     }
 
     const transitions = visitor.transitionsBySourcePath[fqPath] // node.transitions is currently empty
+    let on, after, always
     if (transitions) {
       const eventTransitions = transitions.filter(t => t.type === 'event') as dsl.EventTransition[]
       const afterTransitions = transitions.filter(t => t.type === 'after') as dsl.AfterTransition[]
@@ -63,19 +64,19 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode): any {
           : '#' + (t.target.label || t.target.path!.join('.')))
         : undefined
       if (eventTransitions.length) {
-        json.on = Object.fromEntries(eventTransitions.map(t => ([t.eventName, {
+        on = Object.fromEntries(eventTransitions.map(t => ([t.eventName, {
           target: getTransitionTarget(t),
           // guard: ...
         }])))
       }
       if (afterTransitions.length) {
-        json.after = Object.fromEntries(afterTransitions.map(t => ([t.timeout, {
+        after = Object.fromEntries(afterTransitions.map(t => ([t.timeout, {
           target: getTransitionTarget(t),
           // guard: ...
         }])))
       }
       if (alwaysTransitions.length) {
-        json.always = alwaysTransitions.map(t => ({
+        always = alwaysTransitions.map(t => ({
           target: getTransitionTarget(t),
           // guard: ...
         }))
@@ -84,43 +85,64 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode): any {
 
     const directive = node.directive
     if (directive) {
-      const supportedNames = [
-        'focusApp',
-        'loadChallenge',
-        'unloadChallenge',
-        'inChallenge',
-      ]
-      const supported = supportedNames.includes(directive.name)
-      if (supported) {
-        json.entry = [] as any
-        switch (directive.name) {
-          case 'focusApp': json.entry.push({ type: 'FOCUS_APP', appId: directive.arg.toLowerCase() }); break
-          case 'loadChallenge': json.entry.push({ type: 'SET_CHALLENGE', challengeId: directive.arg.replace('\r', '') }); break
-          case 'unloadChallenge': json.entry.push({ type: 'UNLOAD_CHALLENGE_COMPONENT' }); break
-          case 'inChallenge':
-            {
-              if (!directive.arg) { throw new Error('.inChallenge directive must have at least one argument: eventName') }
-              let args = directive.arg.replace(" ", '&.&').split('&.&')
+      directive.arg = directive.arg.replace(/\\r/g, '')
+      const sepHelper = '&.&'
+      json.entry = [] as any
+      const invoke = {
+        onDone: '__DIRECTIVE_DONE__'
+      } as any
+      switch (directive.name) {
+        case 'focusApp': json.entry.push({ type: 'FOCUS_APP', appId: directive.arg.toLowerCase() }); break
+        case 'loadChallenge': json.entry.push({ type: 'SET_CHALLENGE', challengeId: directive.arg }); break
+        case 'unloadChallenge': json.entry.push({ type: 'UNLOAD_CHALLENGE_COMPONENT' }); break
+        case 'inChallenge':
+          {
+            if (!directive.arg) { throw new Error('.inChallenge directive must have at least one argument: eventName') }
+            let args = directive.arg.replace(" ", sepHelper).split(sepHelper)
 
-              const character = allNpcs.find(c => c.toLowerCase() === args[0].toLowerCase())
-              if (character) {
-                args = args[1].replace(" ", '&.&').split('&.&')
-              }
-              let eventName = args[0]
-
-              let eventData = "{}"
-              if (args.length > 1) {
-                eventData = args[1]
-              }
-              eventName = eventName.replace('\r', '')
-              eventData = eventData.replace('\r', '')
-              if (character) { eventData = eventData.replace('{', `{_pretendCausedByNpc:"${character}",`) }
-              json.entry.push({ type: 'IN_CHALLENGE', eventName, eventData }); break
+            const character = allNpcs.find(c => c.toLowerCase() === args[0].toLowerCase())
+            if (character) {
+              args = args[1].replace(" ", sepHelper).split(sepHelper)
             }
+            let eventName = args[0]
 
-
-        }
+            let eventData = "{}"
+            if (args.length > 1) {
+              eventData = args[1]
+            }
+            eventName = eventName
+            eventData = eventData
+            if (character) { eventData = eventData.replace('{', `{_pretendCausedByNpc:"${character}",`) }
+            json.entry.push({ type: 'IN_CHALLENGE', eventName, eventData })
+          }
+          break
+        case 'cinema':
+          invoke.src = {
+            type: 'cinema',
+            source: directive.arg,
+          }
+          break
+        case 'alert':
+          if (!directive.arg) { throw new Error('.alert directive must have an object argument: {title: ..., text: ...}') }
+          invoke.src = {
+            type: 'alert',
+            alertData: directive.arg,
+          }
+          break
+        default:
+          throw new Error(`Unknown directive .${directive.name} at ${fqPath}`)
       }
+      if (invoke.src) {
+        json.initial = '__DIRECTIVE_ACTIVE__'
+        json.states = {
+          __DIRECTIVE_ACTIVE__: { invoke },
+          __DIRECTIVE_DONE__: { on, after, always },
+        } as any
+      }
+    } else {
+      json.on = on
+      json.after = after
+      json.always = always
     }
     return json
   } else {

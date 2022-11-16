@@ -5,31 +5,30 @@ import { unescapeDots } from '../util'
 const rootName = 'Current Episode'
 const parser = useParser()
 const visitor = useVisitor()
-const pathsArray = {} as Record<string, string>
-const intentsArray = {} as Record<string, string>
-
 
 export function useFlowToLocale(flow:string) {
   parser.parse(flow);
   visitor.visit(parser.cst);
+  const pathsArray = {} as Record<string, string>
+  const intentsArray = {} as Record<string, string>
   const json = { flow: { messages: {}, buttonIntents: {} } }
   json.flow.messages = pathsArray
   json.flow.buttonIntents = intentsArray
-  const entry = stateNodeToJsonRecursive(rootName)
-  console.log('entryPaths', pathsArray)
+  stateNodeToJsonRecursive(rootName, null, pathsArray, intentsArray)
+  // console.log('entryPaths', pathsArray)
   return json;
 }
 
 
 
-function recursionButtonIntents(node: dsl.StateNode) {
+function recursionButtonIntents(node: dsl.StateNode, intentsArray: Record<string, string>) {
   if (node.childNodes && Object.values(node.childNodes)[0] && Object.entries(Object.values(node.childNodes)[0])[0][1] === '?') {
-    console.log('NODE NAME', node.name)
+    // console.log('NODE NAME', node.name)
     for (const i of node.childNodes) {
       if (i.name === '*' || i.name === '?') {
         continue
       }
-      console.log('---------------name---------------', i.name)
+      // console.log('---------------name---------------', i.name)
 
       // for (const interval of i.childNodes) {
       //     if (interval.childNodes && Object.values(interval.childNodes)[0] && Object.entries(Object.values(interval.childNodes)[0])[0][1] === '?') {
@@ -37,7 +36,7 @@ function recursionButtonIntents(node: dsl.StateNode) {
       //     }
       // }
       if (i.name !== '*') {
-        intentsArray[i.path.join('.')] = unescapeDots(i.name.replace(/^"([^"]|\\")*"$/g, '$1'))
+        intentsArray[i.path.join('.')] = unescapeDots(i.name.replace(/^"((?:[^"]|\\")*)"$/g, '$1'))
       }
     }
   }
@@ -46,7 +45,7 @@ function recursionButtonIntents(node: dsl.StateNode) {
   }
 }
 
-function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode) {
+function stateNodeToJsonRecursive(fqPath: string, node: dsl.StateNode | null, pathsArray: Record<string, string>, intentsArray: Record<string, string>) {
   // console.log(`stateNodeToJsonRecursive called - fqPath=${JSON.stringify(node)}`);
   let children;
   if (node) {
@@ -58,7 +57,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode) {
       }
       // console.log('node.childNodes',node.childNodes)
     }
-    recursionButtonIntents(node)
+    recursionButtonIntents(node, intentsArray)
   }
   else {
     children = visitor.allStateNodes().filter(n => n.path.length === 2);
@@ -68,7 +67,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode) {
     }
   }
   const childStates: any = Object.fromEntries(children.map(childNode => {
-    const sub = stateNodeToJsonRecursive(`${fqPath}.${childNode.name}`, childNode);
+    const sub = stateNodeToJsonRecursive(`${fqPath}.${childNode.name}`, childNode, pathsArray, intentsArray);
     return [childNode.name, sub];
   }));
   if (node) {

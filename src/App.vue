@@ -7,19 +7,33 @@ import type { TopLevelSequenceCstNode } from './chevrotain/types';
 import ResultsPane from './components/ResultsPane.vue';
 import { useVisitor } from './chevrotain/Visitor';
 
-const code = ref(`A {
-  on myEvent -> B
-}
-B {
-  B1 {
-    after 3sec -> C
+const code = ref(`Start
+.. Nick "Hey, what do you think THIS is?" {
+  ?
+  @correctAnswer "a variable" {
+    Nick "That's right!"
+    .. Nick "It's indeed a variable" 
   }
-  C {
-    // This should be selected
+  "a letter" {
+    Nick "Well, yes ... but isn't there more to it?" {
+      ?
+      "yes, it's a variable" {
+        -> @correctAnswer
+      }
+      "no, I don't think so"
+      * {
+        Whatever!
+      }
+    }
   }
-}
-C {
-  // This should never be selected
+  * {
+    Fallback {
+      Nick "Now let's take a look at the Wire!"
+      .. .focusApp wire
+      after 3s
+      Nick "What do you think, huh?"
+    }
+  }
 }`)
 
 const parser = useParser()

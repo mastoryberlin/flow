@@ -6,35 +6,35 @@ var util_1 = require("../util");
 var rootName = 'Current Episode';
 var parser = (0, chevrotain_1.useParser)();
 var visitor = (0, chevrotain_1.useVisitor)();
-var pathsArray = {};
-var intentsArray = {};
 function useFlowToLocale(flow) {
     parser.parse(flow);
     visitor.visit(parser.cst);
+    var pathsArray = {};
+    var intentsArray = {};
     var json = { flow: { messages: {}, buttonIntents: {} } };
     json.flow.messages = pathsArray;
     json.flow.buttonIntents = intentsArray;
-    var entry = stateNodeToJsonRecursive(rootName);
-    console.log('entryPaths', pathsArray);
+    stateNodeToJsonRecursive(rootName, null, pathsArray, intentsArray);
+    // console.log('entryPaths', pathsArray)
     return json;
 }
 exports.useFlowToLocale = useFlowToLocale;
-function recursionButtonIntents(node) {
+function recursionButtonIntents(node, intentsArray) {
     if (node.childNodes && Object.values(node.childNodes)[0] && Object.entries(Object.values(node.childNodes)[0])[0][1] === '?') {
-        console.log('NODE NAME', node.name);
+        // console.log('NODE NAME', node.name)
         for (var _i = 0, _a = node.childNodes; _i < _a.length; _i++) {
             var i = _a[_i];
             if (i.name === '*' || i.name === '?') {
                 continue;
             }
-            console.log('---------------name---------------', i.name);
+            // console.log('---------------name---------------', i.name)
             // for (const interval of i.childNodes) {
             //     if (interval.childNodes && Object.values(interval.childNodes)[0] && Object.entries(Object.values(interval.childNodes)[0])[0][1] === '?') {
             //         recursionButtonIntents(interval)
             //     }
             // }
             if (i.name !== '*') {
-                intentsArray[i.path.join('.')] = (0, util_1.unescapeDots)(i.name.replace(/^"([^"]|\\")*"$/g, '$1'));
+                intentsArray[i.path.join('.')] = (0, util_1.unescapeDots)(i.name.replace(/^"((?:[^"]|\\")*)"$/g, '$1'));
             }
         }
     }
@@ -42,7 +42,7 @@ function recursionButtonIntents(node) {
         return;
     }
 }
-function stateNodeToJsonRecursive(fqPath, node) {
+function stateNodeToJsonRecursive(fqPath, node, pathsArray, intentsArray) {
     // console.log(`stateNodeToJsonRecursive called - fqPath=${JSON.stringify(node)}`);
     var children;
     if (node) {
@@ -54,7 +54,7 @@ function stateNodeToJsonRecursive(fqPath, node) {
             }
             // console.log('node.childNodes',node.childNodes)
         }
-        recursionButtonIntents(node);
+        recursionButtonIntents(node, intentsArray);
     }
     else {
         children = visitor.allStateNodes().filter(function (n) { return n.path.length === 2; });
@@ -64,7 +64,7 @@ function stateNodeToJsonRecursive(fqPath, node) {
         }
     }
     var childStates = Object.fromEntries(children.map(function (childNode) {
-        var sub = stateNodeToJsonRecursive("".concat(fqPath, ".").concat(childNode.name), childNode);
+        var sub = stateNodeToJsonRecursive("".concat(fqPath, ".").concat(childNode.name), childNode, pathsArray, intentsArray);
         return [childNode.name, sub];
     }));
     if (node) {

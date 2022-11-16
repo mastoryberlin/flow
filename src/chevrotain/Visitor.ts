@@ -68,13 +68,13 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
             }
           } else {
             const line = t.range.start.line
-            console.log('PROCESSING SHORTCUT TRANSITION', sourcePathAsString, line)
+            // console.log('PROCESSING SHORTCUT TRANSITION', sourcePathAsString, line)
             const precedingStateNode = this.allStateNodes().find(s => s.range.end.line === line - 1 || (s.range.end.line === line && s.range.end.character < t.range.start.character))
             const followingStateNode = this.allStateNodes().find(s => (s.range.start.line === line && s.range.start.character > t.range.end.character) || s.range.start.line === line + 1)
             if (precedingStateNode && followingStateNode) {
-              console.log('SETTING THE SOURCE TO', precedingStateNode.path)
+              // console.log('SETTING THE SOURCE TO', precedingStateNode.path)
               t.sourcePath = precedingStateNode.path
-              console.log('SETTING THE TARGET TO', followingStateNode.path)
+              // console.log('SETTING THE TARGET TO', followingStateNode.path)
               t.target.path = followingStateNode.path
               t.target.unknown = false
               const asString = t.sourcePath.join('.')

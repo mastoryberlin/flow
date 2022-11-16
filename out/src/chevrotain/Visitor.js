@@ -87,13 +87,13 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                     }
                     else {
                         var line_1 = t.range.start.line;
-                        console.log('PROCESSING SHORTCUT TRANSITION', sourcePathAsString, line_1);
+                        // console.log('PROCESSING SHORTCUT TRANSITION', sourcePathAsString, line)
                         var precedingStateNode = this_1.allStateNodes().find(function (s) { return s.range.end.line === line_1 - 1 || (s.range.end.line === line_1 && s.range.end.character < t.range.start.character); });
                         var followingStateNode = this_1.allStateNodes().find(function (s) { return (s.range.start.line === line_1 && s.range.start.character > t.range.end.character) || s.range.start.line === line_1 + 1; });
                         if (precedingStateNode && followingStateNode) {
-                            console.log('SETTING THE SOURCE TO', precedingStateNode.path);
+                            // console.log('SETTING THE SOURCE TO', precedingStateNode.path)
                             t.sourcePath = precedingStateNode.path;
-                            console.log('SETTING THE TARGET TO', followingStateNode.path);
+                            // console.log('SETTING THE TARGET TO', followingStateNode.path)
                             t.target.path = followingStateNode.path;
                             t.target.unknown = false;
                             var asString = t.sourcePath.join('.');

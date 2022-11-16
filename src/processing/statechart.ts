@@ -19,11 +19,17 @@ export function useFlowToStatechart(flow: string, type: FlowType) {
   return json
 }
 
-function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode): any {
+function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentInfo?: any): any {
   // console.log(`stateNodeToJsonRecursive called - fqPath=${fqPath}`)
   let children
+  let availableIntents: string[]
   if (node) {
     children = node.childNodes
+    if (children.length && children[0].name === '?') {
+      availableIntents = children
+        .filter(({ name }) => !['?', '*'].includes(name))       // exclude special child nodes ? and *
+        .map(i => i.name.replace(/^"((?:[^"]|\")*)"$/, '$1'))
+    }
   } else {
     // Root Node --> take top-level nodes as "children of root"
     children = visitor.allStateNodes().filter(n => n.path.length === 2)
@@ -32,8 +38,9 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode): any {
       return { id: rootName }
     }
   }
+
   const childStates = Object.fromEntries(children.map(childNode => {
-    const sub = stateNodeToJsonRecursive(`${fqPath}.${childNode.name}`, childNode)
+    const sub = stateNodeToJsonRecursive(`${fqPath}.${childNode.name}`, childNode, childNode.name === '?' ? {availableIntents} : undefined)
     return [childNode.name, sub]
   }))
 
@@ -50,6 +57,32 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode): any {
 
     if (node.label) {
       json.id = node.label
+    }
+
+    if (node.name === '?') {
+      const intents = parentInfo.availableIntents as string[]
+      // ================================================================
+      // TODO: Setting the contextId in a reasonable (non-hardcoded) way
+      //       should become a content post-production step - here it
+      //       is only done for development purposes
+      json.entry = {
+        type: 'ENTER_NLU_CONTEXT',
+        pathInFlow: fqPath.split('.').slice(0, -1),
+        contextId: '907415bb-cea1-4908-aa7c-548a27da14f2',
+        intents,
+      }
+      // ================================================================
+
+      json.on = {
+        INTENT: [
+          ...intents.map(intentName => ({
+            target: `"${intentName}"`,
+            cond: { type: 'isIntentName', intentName },
+          })),
+          { target: '*' } // fallback intent
+        ]
+      }
+
     }
 
     const transitions = visitor.transitionsBySourcePath[fqPath] // node.transitions is currently empty
@@ -139,15 +172,16 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode): any {
           __DIRECTIVE_DONE__: { on, after, always },
         } as any
       } else {
-        json.on = on
+        json.on = {...json.on, ...on}
         json.after = after
         json.always = always
       }
     } else {
-      json.on = on
+      json.on = {...json.on, ...on}
       json.after = after
       json.always = always
     }
+
     return json
   } else {
     // Root Node

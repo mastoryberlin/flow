@@ -1,4 +1,24 @@
 "use strict";
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 exports.__esModule = true;
 exports.useFlowToStatechart = void 0;
 var chevrotain_1 = require("../chevrotain");
@@ -17,12 +37,21 @@ function useFlowToStatechart(flow, type) {
     return json;
 }
 exports.useFlowToStatechart = useFlowToStatechart;
-function stateNodeToJsonRecursive(fqPath, node) {
+function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
     var _a;
     // console.log(`stateNodeToJsonRecursive called - fqPath=${fqPath}`)
     var children;
+    var availableIntents;
     if (node) {
         children = node.childNodes;
+        if (children.length && children[0].name === '?') {
+            availableIntents = children
+                .filter(function (_a) {
+                var name = _a.name;
+                return !['?', '*'].includes(name);
+            }) // exclude special child nodes ? and *
+                .map(function (i) { return i.name.replace(/^"((?:[^"]|\")*)"$/, '$1'); });
+        }
     }
     else {
         // Root Node --> take top-level nodes as "children of root"
@@ -33,7 +62,7 @@ function stateNodeToJsonRecursive(fqPath, node) {
         }
     }
     var childStates = Object.fromEntries(children.map(function (childNode) {
-        var sub = stateNodeToJsonRecursive("".concat(fqPath, ".").concat(childNode.name), childNode);
+        var sub = stateNodeToJsonRecursive("".concat(fqPath, ".").concat(childNode.name), childNode, childNode.name === '?' ? { availableIntents: availableIntents } : undefined);
         return [childNode.name, sub];
     }));
     if (node) {
@@ -49,6 +78,28 @@ function stateNodeToJsonRecursive(fqPath, node) {
         }
         if (node.label) {
             json.id = node.label;
+        }
+        if (node.name === '?') {
+            var intents = parentInfo.availableIntents;
+            // ================================================================
+            // TODO: Setting the contextId in a reasonable (non-hardcoded) way
+            //       should become a content post-production step - here it
+            //       is only done for development purposes
+            json.entry = {
+                type: 'ENTER_NLU_CONTEXT',
+                pathInFlow: fqPath.split('.').slice(0, -1),
+                contextId: '907415bb-cea1-4908-aa7c-548a27da14f2',
+                intents: intents
+            };
+            // ================================================================
+            json.on = {
+                INTENT: __spreadArray(__spreadArray([], intents.map(function (intentName) { return ({
+                    target: "\"".concat(intentName, "\""),
+                    cond: { type: 'isIntentName', intentName: intentName }
+                }); }), true), [
+                    { target: '*' } // fallback intent
+                ], false)
+            };
         }
         var transitions = visitor.transitionsBySourcePath[fqPath]; // node.transitions is currently empty
         var on = void 0, after = void 0, always = void 0;
@@ -144,13 +195,13 @@ function stateNodeToJsonRecursive(fqPath, node) {
                 };
             }
             else {
-                json.on = on;
+                json.on = __assign(__assign({}, json.on), on);
                 json.after = after;
                 json.always = always;
             }
         }
         else {
-            json.on = on;
+            json.on = __assign(__assign({}, json.on), on);
             json.after = after;
             json.always = always;
         }

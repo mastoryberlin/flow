@@ -95,6 +95,7 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
             json.on = {
                 INTENT: __spreadArray(__spreadArray([], intents.map(function (intentName) { return ({
                     target: "\"".concat(intentName, "\""),
+                    internal: true,
                     cond: { type: 'isIntentName', intentName: intentName }
                 }); }), true), [
                     { target: '*' } // fallback intent
@@ -114,17 +115,20 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                 : undefined; };
             if (eventTransitions.length) {
                 on = Object.fromEntries(eventTransitions.map(function (t) { return ([t.eventName, {
-                        target: getTransitionTarget_1(t)
+                        target: getTransitionTarget_1(t),
+                        internal: true
                     }]); }));
             }
             if (afterTransitions.length) {
                 after = Object.fromEntries(afterTransitions.map(function (t) { return ([t.timeout, {
-                        target: getTransitionTarget_1(t)
+                        target: getTransitionTarget_1(t),
+                        internal: true
                     }]); }));
             }
             if (alwaysTransitions.length) {
                 always = alwaysTransitions.map(function (t) { return ({
-                    target: getTransitionTarget_1(t)
+                    target: getTransitionTarget_1(t),
+                    internal: true
                 }); });
             }
         }
@@ -195,13 +199,13 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                 };
             }
             else {
-                json.on = __assign(__assign({}, json.on), on);
+                json.on = __assign(__assign(__assign({}, json.on), on), { internal: true });
                 json.after = after;
                 json.always = always;
             }
         }
         else {
-            json.on = __assign(__assign({}, json.on), on);
+            json.on = __assign(__assign(__assign({}, json.on), on), { internal: true });
             json.after = after;
             json.always = always;
         }

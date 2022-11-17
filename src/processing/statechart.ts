@@ -77,6 +77,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
         INTENT: [
           ...intents.map(intentName => ({
             target: `"${intentName}"`,
+            internal: true,
             cond: { type: 'isIntentName', intentName },
           })),
           { target: '*' } // fallback intent
@@ -99,18 +100,21 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
       if (eventTransitions.length) {
         on = Object.fromEntries(eventTransitions.map(t => ([t.eventName, {
           target: getTransitionTarget(t),
+          internal: true,
           // guard: ...
         }])))
       }
       if (afterTransitions.length) {
         after = Object.fromEntries(afterTransitions.map(t => ([t.timeout, {
           target: getTransitionTarget(t),
+          internal: true,
           // guard: ...
         }])))
       }
       if (alwaysTransitions.length) {
         always = alwaysTransitions.map(t => ({
           target: getTransitionTarget(t),
+          internal: true,
           // guard: ...
         }))
       }
@@ -172,12 +176,12 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
           __DIRECTIVE_DONE__: { on, after, always },
         } as any
       } else {
-        json.on = {...json.on, ...on}
+        json.on = {...json.on, ...on, internal: true}
         json.after = after
         json.always = always
       }
     } else {
-      json.on = {...json.on, ...on}
+      json.on = {...json.on, ...on, internal: true}
       json.after = after
       json.always = always
     }

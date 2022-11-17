@@ -199,13 +199,13 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                 };
             }
             else {
-                json.on = __assign(__assign(__assign({}, json.on), on), { internal: true });
+                json.on = __assign(__assign({}, json.on), on);
                 json.after = after;
                 json.always = always;
             }
         }
         else {
-            json.on = __assign(__assign(__assign({}, json.on), on), { internal: true });
+            json.on = __assign(__assign({}, json.on), on);
             json.after = after;
             json.always = always;
         }

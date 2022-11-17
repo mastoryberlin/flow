@@ -144,6 +144,7 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
     };
     DslVisitorWithDefaults.prototype.stateNode = function (ctx) {
         var _this = this;
+        var _a;
         var nameDef = this.getStateNodeNameDefinition(ctx);
         // Get the name and full path ...
         var name = (0, util_1.escapeDots)(nameDef.image);
@@ -167,27 +168,36 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
         }
         else {
             // ... message details if applicable ...
-            var npcNames = ['nick', 'alicia', 'professor', 'victoria', 'maive'];
+            var allSenderAliases = {
+                'Nick': ['nick'],
+                'Alicia': ['alicia'],
+                'VZ': ['vz', 'victoria'],
+                'Professor': ['dr camarena', 'prof', 'professor']
+            };
             var mediaTypes = ['image', 'audio', 'video'];
-            var urlPattern = '\w+://\S+';
-            var messagePattern = new RegExp("(?:(".concat(npcNames.join('|'), ")\\s+)?") +
+            var urlPattern = '\\w+://\\S+';
+            var messagePattern = new RegExp("(?:(".concat(Object.values(allSenderAliases).flat().join('|'), ")\\s+)?") +
                 "(?:(".concat(mediaTypes.join('|'), "|").concat(urlPattern, ")\\s+)?") +
-                "\"([^\"]*)\"\\W*$", 'i');
+                "\"([^\"]*)\"$", 'i');
             var messageMatch = name.match(messagePattern);
             if (messageMatch) {
-                var _ = messageMatch[0], senderString = messageMatch[1], mediaTypeOrUrl = messageMatch[2], textOrPlaceholder = messageMatch[3];
-                var sender = senderString ? (senderString.substring(0, 1).toUpperCase() + senderString.substring(1)) : undefined;
+                var _ = messageMatch[0], alias_1 = messageMatch[1], mediaTypeOrUrl = messageMatch[2], textOrPlaceholder = messageMatch[3];
+                var sender = alias_1 ? (_a = Object.entries(allSenderAliases).find(function (_a) {
+                    var _ = _a[0], aliases = _a[1];
+                    return aliases.includes(alias_1.toLowerCase());
+                })) === null || _a === void 0 ? void 0 : _a[0] : undefined;
                 if (mediaTypeOrUrl) {
                     var type = void 0, source 
                     // Media message
                     = void 0;
                     // Media message
-                    if (mediaTypes.includes(mediaTypeOrUrl === null || mediaTypeOrUrl === void 0 ? void 0 : mediaTypeOrUrl.toLowerCase())) {
-                        type = mediaTypeOrUrl === null || mediaTypeOrUrl === void 0 ? void 0 : mediaTypeOrUrl.toLowerCase();
+                    if (mediaTypes.includes(mediaTypeOrUrl.toLowerCase())) {
+                        type = mediaTypeOrUrl.toLowerCase();
                     }
                     else {
                         type = 'image'; // fallback unless overwritten
-                        var extension = mediaTypeOrUrl.match(/\.(\w+)$/);
+                        var url = (0, util_1.unescapeDots)(mediaTypeOrUrl);
+                        var extension = url.match(/\.(\w+)$/);
                         if (extension && extension[1]) {
                             if (['png', 'jpg', 'gif'].includes(extension[1])) {
                                 type = 'image';
@@ -199,13 +209,13 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                                 type = 'video';
                             }
                         }
-                        source = vscode.Uri.parse(mediaTypeOrUrl);
+                        source = vscode.Uri.parse(url);
                     }
-                    message = { sender: sender, type: type, source: source, title: textOrPlaceholder };
+                    message = { sender: sender, type: type, source: source, title: (0, util_1.unescapeDots)(textOrPlaceholder) };
                 }
                 else {
                     // Text message
-                    message = { sender: sender, type: 'text', text: textOrPlaceholder };
+                    message = { sender: sender, type: 'text', text: (0, util_1.unescapeDots)(textOrPlaceholder) };
                 }
             }
             // ... NLU context details if applicable ...

@@ -7,8 +7,14 @@ import type { TopLevelSequenceCstNode } from './chevrotain/types';
 import ResultsPane from './components/ResultsPane.vue';
 import { useVisitor } from './chevrotain/Visitor';
 
-const code = ref(`Start
-.. Nick "Hey, what do you think THIS is?" {
+const code = ref(`Nick https://storage.googleapis.com/content_storage/episodes/e1_test1/SOS_Message.mp4 "SOS call"
+after 1min
+Victoria "I transfered the data to you."
+.. .loadChallenge Drone
+.. Alicia "Please take a look at it in the Wire."
+.. .focusApp Wire
+.. Prof "I really count on your help, guys!"
+.. VZ "Hey, what do you think THIS is?" {
   ?
   @correctAnswer "a variable" {
     Nick "That's right!"

@@ -115,9 +115,9 @@ var Uri = /** @class */ (function () {
     };
     Uri.parse = function (value, strict) {
         // We assume strict to always be `true`
-        var m = value.match(/([a-z]+):\/\/([^/]*)([^?#]*)(?:\?([^#]+))?(?:#(.+))/);
+        var m = value.match(/([a-z]+):\/\/([^/?#]*)([^?#]*)(?:\?([^#]+))?(?:#(.+))?/);
         if (m) {
-            return new Uri(m[1], m[2], m[3], m[4], m[5]);
+            return new Uri(m[1], m[2], m[3] || '/', m[4], m[5]);
         }
         else {
             throw new Error("Unable to parse Uri from string ".concat(value));
@@ -134,11 +134,12 @@ var Uri = /** @class */ (function () {
         };
     };
     Uri.prototype.toString = function (skipEncoding) {
+        var _a, _b;
         var s = "".concat(this.scheme, "://").concat(this.authority).concat(this.path);
-        if (this.query.length) {
+        if ((_a = this.query) === null || _a === void 0 ? void 0 : _a.length) {
             s += '?' + this.query;
         }
-        if (this.fragment.length) {
+        if ((_b = this.fragment) === null || _b === void 0 ? void 0 : _b.length) {
             s += '#' + this.fragment;
         }
         return s;

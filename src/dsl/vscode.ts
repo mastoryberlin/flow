@@ -112,9 +112,9 @@ export class Uri {
   }
   static parse(value: string, strict?: boolean) {
     // We assume strict to always be `true`
-    const m = value.match(/([a-z]+):\/\/([^/]*)([^?#]*)(?:\?([^#]+))?(?:#(.+))/)
+    const m = value.match(/([a-z]+):\/\/([^/?#]*)([^?#]*)(?:\?([^#]+))?(?:#(.+))?/)
     if (m) {
-      return new Uri(m[1], m[2], m[3], m[4], m[5])
+      return new Uri(m[1], m[2], m[3] || '/', m[4], m[5])
     } else {
       throw new Error(`Unable to parse Uri from string ${value}`)
     }
@@ -139,10 +139,10 @@ export class Uri {
   }
   toString(skipEncoding?: boolean) {
     let s = `${this.scheme}://${this.authority}${this.path}`
-    if (this.query.length) {
+    if (this.query?.length) {
       s += '?' + this.query 
     }
-    if (this.fragment.length) {
+    if (this.fragment?.length) {
       s += '#' + this.fragment 
     }
     return s

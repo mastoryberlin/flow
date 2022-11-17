@@ -176,14 +176,22 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
           __DIRECTIVE_DONE__: { on, after, always },
         } as any
       } else {
-        json.on = {...json.on, ...on}
+        json.on = { ...json.on, ...on }
         json.after = after
         json.always = always
       }
     } else {
-      json.on = {...json.on, ...on}
+      json.on = { ...json.on, ...on }
       json.after = after
       json.always = always
+    }
+
+    if (node.message) {
+      const { type: kind, sender } = node.message
+      json.entry = {
+        type: 'SEND_MESSAGE', kind, sender,
+        message: kind === 'text' ? node.path.join('.') : (node.message as dsl.MediaMessage).source?.toString() || ''
+      }
     }
 
     return json

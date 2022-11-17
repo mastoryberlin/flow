@@ -38,7 +38,7 @@ function useFlowToStatechart(flow, type) {
 }
 exports.useFlowToStatechart = useFlowToStatechart;
 function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
-    var _a;
+    var _a, _b;
     // console.log(`stateNodeToJsonRecursive called - fqPath=${fqPath}`)
     var children;
     var availableIntents;
@@ -208,6 +208,15 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
             json.on = __assign(__assign({}, json.on), on);
             json.after = after;
             json.always = always;
+        }
+        if (node.message) {
+            var _c = node.message, kind = _c.type, sender = _c.sender;
+            json.entry = {
+                type: 'SEND_MESSAGE',
+                kind: kind,
+                sender: sender,
+                message: kind === 'text' ? node.path.join('.') : ((_b = node.message.source) === null || _b === void 0 ? void 0 : _b.toString()) || ''
+            };
         }
         return json;
     }

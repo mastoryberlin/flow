@@ -12,7 +12,7 @@ import { useParser } from "./Parser";
 import type * as dsl from "../dsl/types"
 import type { CstNodeLocation } from "chevrotain";
 import type { NLUContext } from "../dsl/types";
-import { escapeDots } from "../util";
+import { escapeDots, unescapeDots } from "../util";
 
 const parser = useParser()
 
@@ -142,39 +142,45 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
       directive = ctx.Directive[0].payload
     } else {
       // ... message details if applicable ...
-      const npcNames = ['nick', 'alicia', 'professor', 'victoria', 'maive']
+      const allSenderAliases = {
+        'Nick': ['nick'],
+        'Alicia': ['alicia'],
+        'VZ': ['vz', 'victoria'],
+        'Professor': ['dr camarena', 'prof', 'professor']
+      }
       const mediaTypes = ['image', 'audio', 'video']
-      const urlPattern = '\w+://\S+'
+      const urlPattern = '\\w+://\\S+'
       const messagePattern = new RegExp(
-        `(?:(${npcNames.join('|')})\\s+)?` +
+        `(?:(${Object.values(allSenderAliases).flat().join('|')})\\s+)?` +
         `(?:(${mediaTypes.join('|')}|${urlPattern})\\s+)?` +
-        `"([^"]*)"\\W*$`,
+        `"([^"]*)"$`,
         'i'
       )
       const messageMatch = name.match(messagePattern)
       if (messageMatch) { 
-        const [_, senderString, mediaTypeOrUrl, textOrPlaceholder] = messageMatch
-        const sender = senderString ? (senderString.substring(0, 1).toUpperCase() + senderString.substring(1)) as dsl.NPC : undefined
+        const [_, alias, mediaTypeOrUrl, textOrPlaceholder] = messageMatch
+        const sender = alias ? Object.entries(allSenderAliases).find(([_, aliases]) => aliases.includes(alias.toLowerCase()))?.[0] as dsl.NPC : undefined
 
         if (mediaTypeOrUrl) {
           let type: dsl.MessageType, source: vscode.Uri | undefined
           // Media message
-          if (mediaTypes.includes(mediaTypeOrUrl?.toLowerCase())) {
-            type = mediaTypeOrUrl?.toLowerCase() as dsl.MessageType
+          if (mediaTypes.includes(mediaTypeOrUrl.toLowerCase())) {
+            type = mediaTypeOrUrl.toLowerCase() as dsl.MessageType
           } else {
             type = 'image' // fallback unless overwritten
-            const extension = mediaTypeOrUrl.match(/\.(\w+)$/)
+            const url = unescapeDots(mediaTypeOrUrl)
+            const extension = url.match(/\.(\w+)$/)
             if (extension && extension[1]) {
               if (['png', 'jpg', 'gif'].includes(extension[1])) { type = 'image' }
               else if (['mp3', 'ogg', 'wav'].includes(extension[1])) { type = 'audio' }
               else if (['mp4'].includes(extension[1])) { type = 'video' }
             }
-            source = vscode.Uri.parse(mediaTypeOrUrl)
+            source = vscode.Uri.parse(url)
           }
-          message = { sender, type, source, title: textOrPlaceholder }
+          message = { sender, type, source, title: unescapeDots(textOrPlaceholder) }
         } else {
           // Text message
-          message = { sender, type: 'text' as dsl.MessageType, text: textOrPlaceholder }
+          message = { sender, type: 'text' as dsl.MessageType, text: unescapeDots(textOrPlaceholder) }
         }
       }
 

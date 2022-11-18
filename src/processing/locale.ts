@@ -53,7 +53,7 @@ function stateNodeToJsonRecursive(fqPath: string, node: dsl.StateNode | null, pa
     if (node.message && node.message.type === 'text') {
       const text = (node.message as dsl.TextMessage).text
       if(text){
-        pathsArray[fqPath] = unescapeDots(text)
+        pathsArray[fqPath] = text
       }
       // console.log('node.childNodes',node.childNodes)
     }

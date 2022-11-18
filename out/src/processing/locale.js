@@ -50,7 +50,7 @@ function stateNodeToJsonRecursive(fqPath, node, pathsArray, intentsArray) {
         if (node.message && node.message.type === 'text') {
             var text = node.message.text;
             if (text) {
-                pathsArray[fqPath] = (0, util_1.unescapeDots)(text);
+                pathsArray[fqPath] = text;
             }
             // console.log('node.childNodes',node.childNodes)
         }

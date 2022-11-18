@@ -55,7 +55,7 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
         }
         else /* if (stateNode.stateNodeName) */ {
             var ch = stateNode.stateNodeName[0].children;
-            var stateNodeNameDefinition = ch.StateNodeName || ch.EventName || ch.NumberLiteral;
+            var stateNodeNameDefinition = ch.StateNodeName || ch.NumberLiteral;
             return stateNodeNameDefinition[0];
         }
     };
@@ -276,7 +276,7 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
         this.path = curPath;
     };
     DslVisitorWithDefaults.prototype.transition = function (ctx) {
-        var _a;
+        var _a, _b;
         var type = ctx.eventTransition ? 'event' : ctx.afterTransition ? 'after' : 'always';
         var eventOrAfterTransition = ctx.eventTransition || ctx.afterTransition;
         var loc = (eventOrAfterTransition || ctx.alwaysTransition)[0].location;
@@ -315,7 +315,7 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                 var p = ch.stateNodePath[0].children.stateNodeName;
                 var relative = p.map(function (part) {
                     var c = part.children;
-                    var t = c.StateNodeName || c.EventName || c.TimeSpan || c.NumberLiteral;
+                    var t = c.StateNodeName || c.TimeSpan || c.NumberLiteral;
                     return t ? t[0].image : '';
                 });
                 var first = p[0].location, last = p[p.length - 1].location;
@@ -334,17 +334,44 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                 };
             }
         }
+        var guard;
+        var guardNode = (_b = (eventOrAfterTransition ? eventOrAfterTransition[0] : ctx.alwaysTransition[0]).children.guard) === null || _b === void 0 ? void 0 : _b[0].children;
+        if (guardNode) {
+            if (guardNode.When) {
+                if (guardNode.Label) {
+                    guard = { refState: { label: guardNode.Label[0].image.substring(1) } };
+                }
+                else if (guardNode.stateNodePath) {
+                    var ch = guardNode.stateNodePath[0].children.stateNodeName[0].children;
+                    var sub = ch.NumberLiteral || ch.TimeSpan || ch.StateNodeName;
+                    if (sub) {
+                        var path = sub[0].image.split(/\s*\|\s*/);
+                        guard = { refState: { path: path } };
+                    }
+                }
+            }
+            else if (guardNode.If && guardNode.StateNodeName) {
+                var condition = guardNode.StateNodeName[0].image;
+                guard = { condition: condition };
+            }
+        }
         var range = new vscode.Range(loc.startLine, loc.startColumn, loc.endLine, loc.endColumn);
         var transition = {
             type: type,
             sourcePath: sourcePath,
             target: target,
+            guard: guard,
             offset: loc.startOffset,
             range: range
         };
         switch (type) {
             case 'event':
-                transition.eventName = ctx.eventTransition[0].children.EventName[0].image;
+                {
+                    var m = ctx.eventTransition[0].children.OnEvent[0].image.match(/\bon\s+(\S+)\b/);
+                    if (m) {
+                        transition.eventName = m[1];
+                    }
+                }
                 break;
             case 'after':
                 {

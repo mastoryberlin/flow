@@ -50,7 +50,6 @@ export interface StateNodeNameCstNode extends CstNode {
 
 export type StateNodeNameCstChildren = {
   StateNodeName?: IToken[];
-  EventName?: IToken[];
   NumberLiteral?: IToken[];
   TimeSpan?: IToken[];
 };
@@ -72,15 +71,21 @@ export interface GuardCstNode extends CstNode {
 
 export type GuardCstChildren = {
   If?: IToken[];
-  StateNodeName?: IToken[];
-  EventName?: IToken[];
-  NumberLiteral?: IToken[];
-  TimeSpan?: IToken[];
-  LSquare?: IToken[];
-  RSquare?: IToken[];
   LCurly?: IToken[];
   RCurly?: IToken[];
-  When?: IToken[];
+  LSquare?: IToken[];
+  RSquare?: IToken[];
+  Pipe?: IToken[];
+  Ellipsis?: IToken[];
+  NumberLiteral?: IToken[];
+  TimeSpan?: IToken[];
+  LengthFunction?: IToken[];
+  After?: IToken[];
+  OnEvent?: IToken[];
+  When?: (IToken)[];
+  Label?: (IToken)[];
+  Directive?: IToken[];
+  StateNodeName?: IToken[];
   stateNodePath?: StateNodePathCstNode[];
 };
 
@@ -111,8 +116,7 @@ export interface EventTransitionCstNode extends CstNode {
 }
 
 export type EventTransitionCstChildren = {
-  On: IToken[];
-  EventName: IToken[];
+  OnEvent: IToken[];
   guard?: GuardCstNode[];
   transitionTargetOrShortcutSyntax: TransitionTargetOrShortcutSyntaxCstNode[];
 };

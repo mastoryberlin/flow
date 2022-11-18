@@ -37,7 +37,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
       return stateNode.Directive[0]
     } else /* if (stateNode.stateNodeName) */ {
       const ch = stateNode.stateNodeName![0].children
-      const stateNodeNameDefinition = ch.StateNodeName || ch.EventName || ch.NumberLiteral
+      const stateNodeNameDefinition = ch.StateNodeName || ch.NumberLiteral
       return stateNodeNameDefinition![0]
     }
   }
@@ -285,7 +285,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
         const p = (ch.stateNodePath as StateNodePathCstNode[])[0].children.stateNodeName
         const relative = p.map(part => {
           const c = part.children
-          const t = c.StateNodeName || c.EventName || c.TimeSpan || c.NumberLiteral
+          const t = c.StateNodeName || c.TimeSpan || c.NumberLiteral
           return t ? t[0].image : ''
         })
         
@@ -304,19 +304,44 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
         }
       }
     }
+    let guard: dsl.TransitionGuard | undefined
+    const guardNode = (eventOrAfterTransition ? eventOrAfterTransition[0] : ctx.alwaysTransition![0]).children.guard?.[0].children
+    if (guardNode) {
+      if (guardNode.When) {
+        if (guardNode.Label) {
+          guard = { refState: { label: guardNode.Label![0].image.substring(1) } } as dsl.WhenTransitionGuard
+        } else if (guardNode.stateNodePath) {
+          const ch = guardNode.stateNodePath[0].children.stateNodeName[0].children
+          const sub = ch.NumberLiteral || ch.TimeSpan || ch.StateNodeName
+          if (sub) {
+            const path = sub[0].image.split(/\s*\|\s*/)
+            guard = { refState: { path } } as dsl.WhenTransitionGuard
+          }
+        }
+      } else if (guardNode.If && guardNode.StateNodeName) {
+        const condition = guardNode.StateNodeName[0].image
+        guard = { condition } as dsl.IfTransitionGuard
+      }
+    }
 
     const range = new vscode.Range(loc.startLine!, loc.startColumn!, loc.endLine!, loc.endColumn!)
     const transition = {
       type,
       sourcePath,
       target,
+      guard,
       offset: loc.startOffset,
       range
     } as dsl.Transition
 
     switch (type) {
       case 'event':
-        (transition as dsl.EventTransition).eventName = ctx.eventTransition![0].children.EventName[0].image
+        {
+          const m = ctx.eventTransition![0].children.OnEvent[0].image.match(/\bon\s+(\S+)\b/)
+          if (m) {
+            (transition as dsl.EventTransition).eventName = m[1]
+          }
+        }
         break
       case 'after':
         {

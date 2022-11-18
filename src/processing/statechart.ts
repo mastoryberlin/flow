@@ -92,30 +92,40 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
       const eventTransitions = transitions.filter(t => t.type === 'event') as dsl.EventTransition[]
       const afterTransitions = transitions.filter(t => t.type === 'after') as dsl.AfterTransition[]
       const alwaysTransitions = transitions.filter(t => t.type === 'always') as dsl.AlwaysTransition[]
+      
       const getTransitionTarget = (t: dsl.BaseTransition) => t.target
         ? (t.target.unknown
           ? undefined
           : '#' + (t.target.label || t.target.path!.join('.')))
         : undefined
+      
+      const getTransitionGuard = (t: dsl.BaseTransition) => t.guard
+        ? ('condition' in t.guard)
+          ? { cond: { type: '_expressionEval_', expression: t.guard.condition } }
+          : { in: t.guard.refState.label ? '#' + t.guard.refState.label : t.guard.refState.path } //TODO: this could be a relative path!
+        : {}
+
       if (eventTransitions.length) {
         on = Object.fromEntries(eventTransitions.map(t => ([t.eventName, {
           target: getTransitionTarget(t),
           internal: true,
-          // guard: ...
+          ...getTransitionGuard(t),
         }])))
       }
+    
       if (afterTransitions.length) {
         after = Object.fromEntries(afterTransitions.map(t => ([t.timeout, {
           target: getTransitionTarget(t),
           internal: true,
-          // guard: ...
+          ...getTransitionGuard(t),
         }])))
       }
+    
       if (alwaysTransitions.length) {
         always = alwaysTransitions.map(t => ({
           target: getTransitionTarget(t),
           internal: true,
-          // guard: ...
+          ...getTransitionGuard(t),
         }))
       }
     }

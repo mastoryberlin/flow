@@ -7,7 +7,7 @@ const [
   LCurly, RCurly, LSquare, RSquare, Pipe, Newline,
   Ellipsis, Arrow, NumberLiteral, TimeSpan,
   LengthFunction,
-  After, On, If, When, Label, Directive, EventName, StateNodeName
+  After, OnEvent, If, When, Label, Directive, StateNodeName
 ] = tokens
 
 class Parser extends CstParser {
@@ -71,7 +71,6 @@ class Parser extends CstParser {
 
     $.RULE("stateNodeName", () => $.OR([
       { ALT: () => $.CONSUME(StateNodeName) },
-      { ALT: () => $.CONSUME(EventName) },
       { ALT: () => $.CONSUME(NumberLiteral) },
       { ALT: () => $.CONSUME(TimeSpan) },
     ]))
@@ -88,22 +87,32 @@ class Parser extends CstParser {
       $.OR([
         {ALT: () => {
           $.CONSUME(If)
-          $.AT_LEAST_ONE(() =>
+          $.MANY(() =>
             $.OR2([
-              { ALT: () => $.CONSUME(StateNodeName) },
-              { ALT: () => $.CONSUME(EventName) },
-              { ALT: () => $.CONSUME(NumberLiteral) },
-              { ALT: () => $.CONSUME(TimeSpan) },
-              { ALT: () => $.CONSUME(LSquare) },
-              { ALT: () => $.CONSUME(RSquare) },
               { ALT: () => $.CONSUME(LCurly) },
               { ALT: () => $.CONSUME(RCurly) },
+              { ALT: () => $.CONSUME(LSquare) },
+              { ALT: () => $.CONSUME(RSquare) },
+              { ALT: () => $.CONSUME(Pipe) },
+              { ALT: () => $.CONSUME(Ellipsis) },
+              { ALT: () => $.CONSUME(NumberLiteral) },
+              { ALT: () => $.CONSUME(TimeSpan) },
+              { ALT: () => $.CONSUME(LengthFunction) },
+              { ALT: () => $.CONSUME(After) },
+              { ALT: () => $.CONSUME(OnEvent) },
+              { ALT: () => $.CONSUME(When) },
+              { ALT: () => $.CONSUME(Label) },
+              { ALT: () => $.CONSUME(Directive) },
+              { ALT: () => $.CONSUME(StateNodeName) },
             ])
           )
         }},
         {ALT: () => {
-          $.CONSUME(When)
-          $.SUBRULE($.stateNodePath)
+          $.CONSUME2(When)
+          $.OR3 ([
+            { ALT: () => $.SUBRULE($.stateNodePath) },
+            { ALT: () => $.CONSUME2(Label) },
+          ])
         }}
       ])
     })
@@ -124,8 +133,7 @@ class Parser extends CstParser {
     })
 
     $.RULE("eventTransition", () => {
-      $.CONSUME(On)
-      $.CONSUME(EventName)
+      $.CONSUME(OnEvent)
       $.OPTION(() => $.SUBRULE($.guard))
       $.SUBRULE($.transitionTargetOrShortcutSyntax)
     })

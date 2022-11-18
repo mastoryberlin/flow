@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, Ref } from 'vue';
+import { ref, computed } from 'vue';
+import type { Ref } from 'vue';
 import { allPanelIds } from '../constants';
 import type { PanelInfo, PanelId } from '../types';
 import ParserPanel from './ParserPanel.vue'

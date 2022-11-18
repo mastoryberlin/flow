@@ -49,9 +49,11 @@ export interface StateNode extends SemanticUnit {
 }
 export declare type FqStateNodePath = Array<string>;
 export declare type Label = string;
-export interface TransitionTarget extends SemanticUnit {
+export interface TargetStateRef extends SemanticUnit {
     path?: FqStateNodePath;
     label?: Label;
+}
+export interface TransitionTarget extends TargetStateRef {
     unknown: boolean;
 }
 export declare type TransitionGuard = IfTransitionGuard | WhenTransitionGuard;
@@ -59,7 +61,7 @@ export interface IfTransitionGuard {
     condition: string;
 }
 export interface WhenTransitionGuard {
-    refState: FqStateNodePath;
+    refState: TargetStateRef;
 }
 export declare type TransitionType = 'event' | 'after' | 'always';
 export interface BaseTransition extends SemanticUnit {

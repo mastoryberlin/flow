@@ -113,23 +113,19 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                     ? undefined
                     : '#' + (t.target.label || t.target.path.join('.')))
                 : undefined; };
+            var getTransitionGuard_1 = function (t) { return t.guard
+                ? ('condition' in t.guard)
+                    ? { cond: { type: '_expressionEval_', expression: t.guard.condition } }
+                    : { "in": t.guard.refState.label ? '#' + t.guard.refState.label : t.guard.refState.path } //TODO: this could be a relative path!
+                : {}; };
             if (eventTransitions.length) {
-                on = Object.fromEntries(eventTransitions.map(function (t) { return ([t.eventName, {
-                        target: getTransitionTarget_1(t),
-                        internal: true
-                    }]); }));
+                on = Object.fromEntries(eventTransitions.map(function (t) { return ([t.eventName, __assign({ target: getTransitionTarget_1(t), internal: true }, getTransitionGuard_1(t))]); }));
             }
             if (afterTransitions.length) {
-                after = Object.fromEntries(afterTransitions.map(function (t) { return ([t.timeout, {
-                        target: getTransitionTarget_1(t),
-                        internal: true
-                    }]); }));
+                after = Object.fromEntries(afterTransitions.map(function (t) { return ([t.timeout, __assign({ target: getTransitionTarget_1(t), internal: true }, getTransitionGuard_1(t))]); }));
             }
             if (alwaysTransitions.length) {
-                always = alwaysTransitions.map(function (t) { return ({
-                    target: getTransitionTarget_1(t),
-                    internal: true
-                }); });
+                always = alwaysTransitions.map(function (t) { return (__assign({ target: getTransitionTarget_1(t), internal: true }, getTransitionGuard_1(t))); });
             }
         }
         var directive = node.directive;

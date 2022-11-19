@@ -71,6 +71,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
         contextId: '907415bb-cea1-4908-aa7c-548a27da14f2',
         intents,
       }
+      json.exit = 'LEAVE_NLU_CONTEXT'
       // ================================================================
 
       json.on = {

@@ -106,19 +106,30 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
         : {}
 
       if (eventTransitions.length) {
-        on = Object.fromEntries(eventTransitions.map(t => ([t.eventName, {
-          target: getTransitionTarget(t),
-          internal: true,
-          ...getTransitionGuard(t),
-        }])))
+        on = eventTransitions.reduce((group, t) => {
+          const { eventName } = t;
+          group[eventName] = group[eventName] ?? [];
+          group[eventName].push({
+            target: getTransitionTarget(t),
+            internal: true,
+            ...getTransitionGuard(t),
+          });
+          return group;
+        }, {} as any)
       }
     
       if (afterTransitions.length) {
-        after = Object.fromEntries(afterTransitions.map(t => ([t.timeout, {
-          target: getTransitionTarget(t),
-          internal: true,
-          ...getTransitionGuard(t),
-        }])))
+        after = afterTransitions.reduce((group, t) => {
+          const { timeout } = t;
+          const key = timeout.toString()
+          group[key] = group[key] ?? [];
+          group[key].push({
+            target: getTransitionTarget(t),
+            internal: true,
+            ...getTransitionGuard(t),
+          });
+          return group;
+        }, {} as any)
       }
     
       if (alwaysTransitions.length) {

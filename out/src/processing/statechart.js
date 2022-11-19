@@ -119,10 +119,23 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                     : { "in": t.guard.refState.label ? '#' + t.guard.refState.label : t.guard.refState.path } //TODO: this could be a relative path!
                 : {}; };
             if (eventTransitions.length) {
-                on = Object.fromEntries(eventTransitions.map(function (t) { return ([t.eventName, __assign({ target: getTransitionTarget_1(t), internal: true }, getTransitionGuard_1(t))]); }));
+                on = eventTransitions.reduce(function (group, t) {
+                    var _a;
+                    var eventName = t.eventName;
+                    group[eventName] = (_a = group[eventName]) !== null && _a !== void 0 ? _a : [];
+                    group[eventName].push(__assign({ target: getTransitionTarget_1(t), internal: true }, getTransitionGuard_1(t)));
+                    return group;
+                }, {});
             }
             if (afterTransitions.length) {
-                after = Object.fromEntries(afterTransitions.map(function (t) { return ([t.timeout, __assign({ target: getTransitionTarget_1(t), internal: true }, getTransitionGuard_1(t))]); }));
+                after = afterTransitions.reduce(function (group, t) {
+                    var _a;
+                    var timeout = t.timeout;
+                    var key = timeout.toString();
+                    group[key] = (_a = group[key]) !== null && _a !== void 0 ? _a : [];
+                    group[key].push(__assign({ target: getTransitionTarget_1(t), internal: true }, getTransitionGuard_1(t)));
+                    return group;
+                }, {});
             }
             if (alwaysTransitions.length) {
                 always = alwaysTransitions.map(function (t) { return (__assign({ target: getTransitionTarget_1(t), internal: true }, getTransitionGuard_1(t))); });

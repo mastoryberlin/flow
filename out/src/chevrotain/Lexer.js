@@ -45,7 +45,7 @@ var Directive = (0, chevrotain_1.createToken)({
     },
     line_breaks: false
 });
-var TimeSpan = (0, chevrotain_1.createToken)({ name: 'TimeSpan', pattern: /(?:0|[1-9]\d*):\d{2}|(?:0|[1-9]\d*)(?:\.\d+)?(?:\s*(?:ms|milli(seconds?)?|s(ec(onds?)?)?|m(in(utes?)?)?|h(ours?))?\b)?/ });
+var TimeSpan = (0, chevrotain_1.createToken)({ name: 'TimeSpan', pattern: /(?:0|[1-9]\d*):\d{2}|(?:0|[1-9]\d*)(?:\.\d+)?(?:\s*(?:ms|milli(seconds?)?|s(ec(onds?)?)?|m(in(utes?)?)?|h(ours?)?)\b)?/ });
 var tokenDefinitions = {
     LCurly: /{/,
     RCurly: /}/,

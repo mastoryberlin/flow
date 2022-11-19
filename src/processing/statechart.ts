@@ -49,6 +49,27 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
     if (children.length) {
       if (node.parallel) {
         json.type = 'parallel'
+      } else if (children.every(c => /^(?:[1-9][0-9]*|\*)$/.test(c.name))) {
+        json.initial = '0'
+        childStates['0'] = { // Functional substate - only entered if the parent was re-entered the n-th time
+          always: [] as Array<any>,
+          exit: {
+            type: '_incrementReenterCounter_',
+            path: fqPath
+          }
+        }
+        for (const k of children.filter(c => c.name !== '*')) {
+          const n = Number.parseInt(k.name)
+          childStates['0'].always.push({
+            target: k.name,
+            cond: {
+              type: '_isReenterCase_',
+              number: n,
+              path: fqPath
+            }
+          })
+        }
+        childStates['0'].always.push('*')
       } else {
         json.initial = children[0].name
       }
@@ -84,7 +105,6 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
           { target: '*' } // fallback intent
         ]
       }
-
     }
 
     const transitions = visitor.transitionsBySourcePath[fqPath] // node.transitions is currently empty

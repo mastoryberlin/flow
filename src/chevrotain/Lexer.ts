@@ -34,7 +34,7 @@ const Directive = createToken({
   line_breaks: false
 })
 
-const TimeSpan = createToken({ name: 'TimeSpan', pattern: /(?:0|[1-9]\d*):\d{2}|(?:0|[1-9]\d*)(?:\.\d+)?(?:\s*(?:ms|milli(seconds?)?|s(ec(onds?)?)?|m(in(utes?)?)?|h(ours?))?\b)?/})
+const TimeSpan = createToken({ name: 'TimeSpan', pattern: /(?:0|[1-9]\d*):\d{2}|(?:0|[1-9]\d*)(?:\.\d+)?(?:\s*(?:ms|milli(seconds?)?|s(ec(onds?)?)?|m(in(utes?)?)?|h(ours?)?)\b)?/})
 
 const tokenDefinitions = {
   LCurly: /{/,

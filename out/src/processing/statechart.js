@@ -71,6 +71,29 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
             if (node.parallel) {
                 json.type = 'parallel';
             }
+            else if (children.every(function (c) { return /^(?:[1-9][0-9]*|\*)$/.test(c.name); })) {
+                json.initial = '0';
+                childStates['0'] = {
+                    always: [],
+                    exit: {
+                        type: '_incrementReenterCounter_',
+                        path: fqPath
+                    }
+                };
+                for (var _i = 0, _c = children.filter(function (c) { return c.name !== '*'; }); _i < _c.length; _i++) {
+                    var k = _c[_i];
+                    var n = Number.parseInt(k.name);
+                    childStates['0'].always.push({
+                        target: k.name,
+                        cond: {
+                            type: '_isReenterCase_',
+                            number: n,
+                            path: fqPath
+                        }
+                    });
+                }
+                childStates['0'].always.push('*');
+            }
             else {
                 json.initial = children[0].name;
             }
@@ -220,7 +243,7 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
             json.always = always;
         }
         if (node.message) {
-            var _c = node.message, kind = _c.type, sender = _c.sender;
+            var _d = node.message, kind = _d.type, sender = _d.sender;
             json.entry = {
                 type: 'SEND_MESSAGE',
                 kind: kind,

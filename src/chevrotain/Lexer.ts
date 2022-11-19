@@ -48,10 +48,9 @@ const tokenDefinitions = {
   LengthFunction: /\blength\([^)]*\)\s*(?:[-+]\s*)?/,
   After: /\bafter\b/,
   OnEvent: /\bon\s+\S+\b/,
-  If: /\bif\b/,
+  IfCondition: /\bif\b\s*(?:.(?!->))*/,
   When: /\bwhen\b/,
   Label: /@\w+\b/,
-  // EventName: { pattern: /\S+/, longer_alt: StateNodeName },
   NumberLiteral: { pattern: /(?:0|[1-9]\d*)(?:\.\d+)?/, longer_alt: TimeSpan },
   LineComment: { pattern: /\/\/.*/, group: 'comments' },
   WhiteSpace: { pattern: /[ \t]+/, group: Lexer.SKIPPED },
@@ -62,7 +61,7 @@ const dslTokens = Object.fromEntries(
     [name, createToken({ name, ...(definition.constructor === RegExp ? { pattern: definition } : definition) })])
 )
 
-const { LCurly, RCurly, LSquare, RSquare, Pipe, Newline, Arrow, Ellipsis, LengthFunction, After, OnEvent, If, When, Label, NumberLiteral, /* TimeSpan, StateNodeName, Directive, EventName, */ LineComment, WhiteSpace } = dslTokens
+const { LCurly, RCurly, LSquare, RSquare, Pipe, Newline, Arrow, Ellipsis, LengthFunction, After, OnEvent, IfCondition, When, Label, NumberLiteral, /* TimeSpan, StateNodeName, Directive, */ LineComment, WhiteSpace } = dslTokens
 
 // Labels only affect error messages and Diagrams.
 LCurly.LABEL = "'{'";
@@ -76,7 +75,7 @@ const allTokens = [
   LCurly, RCurly, LSquare, RSquare, Pipe, Newline,
   Ellipsis, Arrow, NumberLiteral, TimeSpan,
   LengthFunction,
-  After, OnEvent, If, When, Label, Directive, StateNodeName,
+  After, OnEvent, IfCondition, When, Label, Directive, StateNodeName,
 ]
 export const useTokens = () => allTokens
 

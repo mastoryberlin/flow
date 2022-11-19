@@ -8,9 +8,10 @@ import ResultsPane from './components/ResultsPane.vue';
 import { useVisitor } from './chevrotain/Visitor';
 
 const code = ref(`A {
-  on previewOpened if something === 32 -> Readme
+  if @myLabel -> B
 }
-Readme`)
+B
+@myLabel C`)
 
 const parser = useParser()
 const visitor = useVisitor()

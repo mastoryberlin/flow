@@ -318,8 +318,8 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
             guard = { refState: { path } } as dsl.WhenTransitionGuard
           }
         }
-      } else if (guardNode.If && guardNode.StateNodeName) {
-        const condition = guardNode.StateNodeName[0].image
+      } else if (guardNode.IfCondition) {
+        const condition = guardNode.IfCondition[0].image.replace(/^if\s*/, '')
         guard = { condition } as dsl.IfTransitionGuard
       }
     }

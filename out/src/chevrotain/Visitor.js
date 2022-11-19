@@ -350,8 +350,8 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                     }
                 }
             }
-            else if (guardNode.If && guardNode.StateNodeName) {
-                var condition = guardNode.StateNodeName[0].image;
+            else if (guardNode.IfCondition) {
+                var condition = guardNode.IfCondition[0].image.replace(/^if\s*/, '');
                 guard = { condition: condition };
             }
         }

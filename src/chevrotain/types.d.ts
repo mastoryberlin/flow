@@ -70,23 +70,10 @@ export interface GuardCstNode extends CstNode {
 }
 
 export type GuardCstChildren = {
-  If?: IToken[];
-  LCurly?: IToken[];
-  RCurly?: IToken[];
-  LSquare?: IToken[];
-  RSquare?: IToken[];
-  Pipe?: IToken[];
-  Ellipsis?: IToken[];
-  NumberLiteral?: IToken[];
-  TimeSpan?: IToken[];
-  LengthFunction?: IToken[];
-  After?: IToken[];
-  OnEvent?: IToken[];
-  When?: (IToken)[];
-  Label?: (IToken)[];
-  Directive?: IToken[];
-  StateNodeName?: IToken[];
+  IfCondition?: IToken[];
+  When?: IToken[];
   stateNodePath?: StateNodePathCstNode[];
+  Label?: IToken[];
 };
 
 export interface TransitionCstNode extends CstNode {

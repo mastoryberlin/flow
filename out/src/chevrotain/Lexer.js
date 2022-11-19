@@ -58,10 +58,9 @@ var tokenDefinitions = {
     LengthFunction: /\blength\([^)]*\)\s*(?:[-+]\s*)?/,
     After: /\bafter\b/,
     OnEvent: /\bon\s+\S+\b/,
-    If: /\bif\b/,
+    IfCondition: /\bif\b\s*(?:.(?!->))*/,
     When: /\bwhen\b/,
     Label: /@\w+\b/,
-    // EventName: { pattern: /\S+/, longer_alt: StateNodeName },
     NumberLiteral: { pattern: /(?:0|[1-9]\d*)(?:\.\d+)?/, longer_alt: TimeSpan },
     LineComment: { pattern: /\/\/.*/, group: 'comments' },
     WhiteSpace: { pattern: /[ \t]+/, group: chevrotain_1.Lexer.SKIPPED }
@@ -70,7 +69,7 @@ var dslTokens = Object.fromEntries(Object.entries(tokenDefinitions).map(function
     var name = _a[0], definition = _a[1];
     return [name, (0, chevrotain_1.createToken)(__assign({ name: name }, (definition.constructor === RegExp ? { pattern: definition } : definition)))];
 }));
-var LCurly = dslTokens.LCurly, RCurly = dslTokens.RCurly, LSquare = dslTokens.LSquare, RSquare = dslTokens.RSquare, Pipe = dslTokens.Pipe, Newline = dslTokens.Newline, Arrow = dslTokens.Arrow, Ellipsis = dslTokens.Ellipsis, LengthFunction = dslTokens.LengthFunction, After = dslTokens.After, OnEvent = dslTokens.OnEvent, If = dslTokens.If, When = dslTokens.When, Label = dslTokens.Label, NumberLiteral = dslTokens.NumberLiteral, /* TimeSpan, StateNodeName, Directive, EventName, */ LineComment = dslTokens.LineComment, WhiteSpace = dslTokens.WhiteSpace;
+var LCurly = dslTokens.LCurly, RCurly = dslTokens.RCurly, LSquare = dslTokens.LSquare, RSquare = dslTokens.RSquare, Pipe = dslTokens.Pipe, Newline = dslTokens.Newline, Arrow = dslTokens.Arrow, Ellipsis = dslTokens.Ellipsis, LengthFunction = dslTokens.LengthFunction, After = dslTokens.After, OnEvent = dslTokens.OnEvent, IfCondition = dslTokens.IfCondition, When = dslTokens.When, Label = dslTokens.Label, NumberLiteral = dslTokens.NumberLiteral, /* TimeSpan, StateNodeName, Directive, */ LineComment = dslTokens.LineComment, WhiteSpace = dslTokens.WhiteSpace;
 // Labels only affect error messages and Diagrams.
 LCurly.LABEL = "'{'";
 RCurly.LABEL = "'}'";
@@ -82,7 +81,7 @@ var allTokens = [
     LCurly, RCurly, LSquare, RSquare, Pipe, Newline,
     Ellipsis, Arrow, NumberLiteral, TimeSpan,
     LengthFunction,
-    After, OnEvent, If, When, Label, Directive, StateNodeName,
+    After, OnEvent, IfCondition, When, Label, Directive, StateNodeName,
 ];
 var useTokens = function () { return allTokens; };
 exports.useTokens = useTokens;

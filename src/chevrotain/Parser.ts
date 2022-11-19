@@ -7,7 +7,7 @@ const [
   LCurly, RCurly, LSquare, RSquare, Pipe, Newline,
   Ellipsis, Arrow, NumberLiteral, TimeSpan,
   LengthFunction,
-  After, OnEvent, If, When, Label, Directive, StateNodeName
+  After, OnEvent, IfCondition, When, Label, Directive, StateNodeName
 ] = tokens
 
 class Parser extends CstParser {
@@ -85,28 +85,7 @@ class Parser extends CstParser {
 
     $.RULE("guard", () => {
       $.OR([
-        {ALT: () => {
-          $.CONSUME(If)
-          $.MANY(() =>
-            $.OR2([
-              { ALT: () => $.CONSUME(LCurly) },
-              { ALT: () => $.CONSUME(RCurly) },
-              { ALT: () => $.CONSUME(LSquare) },
-              { ALT: () => $.CONSUME(RSquare) },
-              { ALT: () => $.CONSUME(Pipe) },
-              { ALT: () => $.CONSUME(Ellipsis) },
-              { ALT: () => $.CONSUME(NumberLiteral) },
-              { ALT: () => $.CONSUME(TimeSpan) },
-              { ALT: () => $.CONSUME(LengthFunction) },
-              { ALT: () => $.CONSUME(After) },
-              { ALT: () => $.CONSUME(OnEvent) },
-              { ALT: () => $.CONSUME(When) },
-              { ALT: () => $.CONSUME(Label) },
-              { ALT: () => $.CONSUME(Directive) },
-              { ALT: () => $.CONSUME(StateNodeName) },
-            ])
-          )
-        }},
+        {ALT: () => { $.CONSUME(IfCondition) }},
         {ALT: () => {
           $.CONSUME2(When)
           $.OR3 ([

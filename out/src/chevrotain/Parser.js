@@ -19,7 +19,7 @@ exports.useParser = void 0;
 var chevrotain_1 = require("chevrotain");
 var Lexer_1 = require("./Lexer");
 var tokens = (0, Lexer_1.useTokens)();
-var WhiteSpace = tokens[0], LineComment = tokens[1], LCurly = tokens[2], RCurly = tokens[3], LSquare = tokens[4], RSquare = tokens[5], Pipe = tokens[6], Newline = tokens[7], Ellipsis = tokens[8], Arrow = tokens[9], NumberLiteral = tokens[10], TimeSpan = tokens[11], LengthFunction = tokens[12], After = tokens[13], OnEvent = tokens[14], If = tokens[15], When = tokens[16], Label = tokens[17], Directive = tokens[18], StateNodeName = tokens[19];
+var WhiteSpace = tokens[0], LineComment = tokens[1], LCurly = tokens[2], RCurly = tokens[3], LSquare = tokens[4], RSquare = tokens[5], Pipe = tokens[6], Newline = tokens[7], Ellipsis = tokens[8], Arrow = tokens[9], NumberLiteral = tokens[10], TimeSpan = tokens[11], LengthFunction = tokens[12], After = tokens[13], OnEvent = tokens[14], IfCondition = tokens[15], When = tokens[16], Label = tokens[17], Directive = tokens[18], StateNodeName = tokens[19];
 var Parser = /** @class */ (function (_super) {
     __extends(Parser, _super);
     function Parser() {
@@ -89,28 +89,7 @@ var Parser = /** @class */ (function (_super) {
         });
         $.RULE("guard", function () {
             $.OR([
-                { ALT: function () {
-                        $.CONSUME(If);
-                        $.MANY(function () {
-                            return $.OR2([
-                                { ALT: function () { return $.CONSUME(LCurly); } },
-                                { ALT: function () { return $.CONSUME(RCurly); } },
-                                { ALT: function () { return $.CONSUME(LSquare); } },
-                                { ALT: function () { return $.CONSUME(RSquare); } },
-                                { ALT: function () { return $.CONSUME(Pipe); } },
-                                { ALT: function () { return $.CONSUME(Ellipsis); } },
-                                { ALT: function () { return $.CONSUME(NumberLiteral); } },
-                                { ALT: function () { return $.CONSUME(TimeSpan); } },
-                                { ALT: function () { return $.CONSUME(LengthFunction); } },
-                                { ALT: function () { return $.CONSUME(After); } },
-                                { ALT: function () { return $.CONSUME(OnEvent); } },
-                                { ALT: function () { return $.CONSUME(When); } },
-                                { ALT: function () { return $.CONSUME(Label); } },
-                                { ALT: function () { return $.CONSUME(Directive); } },
-                                { ALT: function () { return $.CONSUME(StateNodeName); } },
-                            ]);
-                        });
-                    } },
+                { ALT: function () { $.CONSUME(IfCondition); } },
                 { ALT: function () {
                         $.CONSUME2(When);
                         $.OR3([

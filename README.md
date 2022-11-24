@@ -282,9 +282,13 @@ State A
 |:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
 |◔|❌|✅|✅|✅|◔|❌|
 
-Next to child state nodes and transitions, you can also define that certain actions should be triggered
-once a state is reached. This can be done through Flow *directives*, which are single-word commands
-(similar to function names in other programming languages) preceded by a leading dot:
+When composing a flow, some state nodes are merely useful for the logical order of things while others carry out
+side effects - e.g., we can send messages and listen to user input just by following the naming conventions for
+[messenger conversations](#messenger-conversations).
+
+However, there are situations where one needs to trigger more specific side-effects, like displaying a video in full-screen
+cinema mode or loading up a math challenge in the Wire app. These and similar effects can be achieved through Flow *directives*,
+which are single-word commands (similar to function names in other programming languages) preceded by one leading dot:
 ```swift
 beware of the dog! {
     .biteUser
@@ -305,16 +309,31 @@ one for its specific use-case. Here are some examples for directives with argume
 
 ```
 
-It is possible to place directives directly after `on` or `after` statements (without the
-`->` transition marker). The event or timeout will trigger the specified action just like
-it would otherwise trigger a transition when used with a target state. Keep in mind that when using `on`
-or `after` in this way, the surrounding state will not be left! Continuing the example from above:
+Since apart from their side-effects directives are just ordinary state names, it is possible and in fact necessary to
+connect them to other states with transitions. 
+Just like with other states, shortcut syntax can be used to make the flow more readable:
 ```swift
 Beware of the dog! {
     .bark
-    after 3s .bark louder
-    on SELF_DEFENSE .bite burglar
+    after 3s
+    .bark louder
+    on SELF_DEFENSE
+    .bite burglar
 }
+
+```
+
+> Be careful when using ellipses in combination with directives! You need to separate the transition part from the directive with
+> whitespace, or else the directive will not be recognized as such.
+```swift
+.bark
+.. .bark louder // this works
+....even louder    // but this doesn't!
+```
+
+> In the example above, the 4 sequential dots will be interpreted as a shortcut for "after 4s", and the rest of the line
+> becomes an ordinary state node named "even louder", with no side-effects attached.
+```swift
 
 ```
 
@@ -397,6 +416,12 @@ a [`.focusApp`](#focusapp) directive as well.
 
 
 Unloads any currently loaded challenge, leaving the Wire app in the state where it reads "No challenge available".
+```swift
+
+```
+
+## Timing and Directives
+TBD
 
 
 ###  Messenger Conversations

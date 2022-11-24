@@ -42,7 +42,7 @@ TODO: Describe paths
 #### Implementation Status
 |Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
 |:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
-|✅|✅|✅|✅|❌|✅|❌
+|✅|✅|✅|✅|✅|✅|❌
 
 To define a [→state node](https://xstate.js.org/docs/guides/statenodes.html), just write its name on a line of its own.
 Names of state nodes may contain any word, non-word or whitespace characters except `|`, `{`, `[`.
@@ -80,7 +80,7 @@ Parallel State [
 #### Implementation Status
 |Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
 |:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
-|✅|✅|✅|✅|❌|✅|❌
+|✅|✅|✅|✅|✅|✅|❌
 
 Inside a state's braces (or brackets), use the arrow syntax `->` to define a transition to another state.
 Transition targets are looked up within the current compound state's scope first;
@@ -145,7 +145,7 @@ i.e. a reference like `-> State name | @label` will lead to an error.
 #### Implementation Status
 |Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
 |:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
-|✅|✅|✅|❌|❌|❌|❌
+|✅|✅|✅|✅|✅|❌|❌
 
 ```swift
 
@@ -154,7 +154,7 @@ i.e. a reference like `-> State name | @label` will lead to an error.
 Inside Flow scripts, you have access to three kinds of variables:
 1. [Global variables](#global-variables) like `userName`
 2. Utility variables in the current [Flow Scope](#flow-scope)
-3. Shared [Challenge Data]
+3. Shared Challenge Data
 ```swift
 
 ```
@@ -239,7 +239,7 @@ after 5min when Parallel State | I will, too | A -> Talkative
 #### Implementation Status
 |Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
 |:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
-|✅|✅|❌|❌|❌|❌|❌
+|✅|✅|✅|✅|✅|✅|❌
 
 To define a sequence of states where two subsequent states are connected by exactly one transition,
 you can use a special shortcut syntax without `->`
@@ -261,6 +261,17 @@ State B {
     on PLAY if x < 0.5 -> State C
 }
 State C
+
+```
+
+The most frequent case of timeout transitions in a flow is the "fast succession" *A, then B* - where "then"
+is a placeholder for a short period of time. For this special case, the `after` statement from above can be
+abbreviated even more to an *ellipsis prefix* of 2, 3, or 4 dots in the same line as the target state:
+```swift
+State A
+.. State B     // 2 dots means "after 2s"
+... State C    // 3 dots means "after 3s"
+.... State D // 4 dots means "after 4s"
 ```
 
 
@@ -269,7 +280,7 @@ State C
 #### Implementation Status
 |Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
 |:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
-|◔|❌|❌|❌|❌|❌|❌|
+|◔|❌|✅|✅|✅|◔|❌|
 
 Next to child state nodes and transitions, you can also define that certain actions should be triggered
 once a state is reached. This can be done through Flow *directives*, which are single-word commands
@@ -281,7 +292,7 @@ beware of the dog! {
 
 ```
 
-Many times, directives have *arguments* that modify or specify its behavior. Everything following a
+Some directives have *arguments* that modify or specify their behavior. Everything following a
 directive's name on the same line (except comments) is considered its argument(s), but the concrete format and meaning
 depends entirely on the directive in question. This is much like the way command-line tools work: Each
 command has its own way of interpreting the command line, and ideally, that way is the most convenient
@@ -393,7 +404,7 @@ Unloads any currently loaded challenge, leaving the Wire app in the state where 
 #### Implementation Status
 |Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
 |:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
-|❌|✅|❌|❌|❌|❌|❌
+|❌|✅|✅|✅|✅|✅|❌
 
 **IMPORTANT: The following specs are still in development and should not be relied on!**
 

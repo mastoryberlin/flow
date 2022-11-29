@@ -1,7 +1,8 @@
 import type { StateNodeCstChildren, TopLevelSequenceCstChildren, SequenceCstChildren, TransitionCstChildren } from "./types";
 import type * as dsl from "../dsl/types";
-declare const BaseVisitorWithDefaults: new (...args: any[]) => import("chevrotain").ICstVisitor<any, any>;
+declare const BaseVisitorWithDefaults: new (...args: any[]) => import("chevrotain").ICstVisitor<"episode" | "challenge", any>;
 export declare class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
+    rootNodeId: string;
     stateNodeByPath: Record<string, dsl.StateNode>;
     stateNodeByLabel: Record<string, dsl.StateNode>;
     transitionsBySourcePath: Record<string, dsl.Transition[]>;

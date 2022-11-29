@@ -36,16 +36,16 @@ var Parser_1 = require("./Parser");
 var util_1 = require("../util");
 var parser = (0, Parser_1.useParser)();
 var BaseVisitorWithDefaults = parser.getBaseCstVisitorConstructorWithDefaults();
-var ROOT_NODE_ID = 'Current Episode';
 var DslVisitorWithDefaults = /** @class */ (function (_super) {
     __extends(DslVisitorWithDefaults, _super);
     function DslVisitorWithDefaults() {
         var _this = _super.call(this) || this;
+        _this.rootNodeId = 'Current Episode';
         _this.stateNodeByPath = {};
         _this.stateNodeByLabel = {};
         _this.transitionsBySourcePath = {};
         _this.childrenByPath = {};
-        _this.path = [ROOT_NODE_ID]; // array to internally keep track of the currently traversed state node path
+        _this.path = [_this.rootNodeId]; // array to internally keep track of the currently traversed state node path
         _this.validateVisitor();
         return _this;
     }
@@ -127,7 +127,7 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
         this.stateNodeByPath = {};
         this.stateNodeByLabel = {};
         this.transitionsBySourcePath = {};
-        this.path = [ROOT_NODE_ID];
+        this.path = [this.rootNodeId];
         this.childrenByPath = {};
         this.visit(ctx.sequence);
         this.fixTransitionTargets();

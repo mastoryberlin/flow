@@ -10,3 +10,8 @@ export const allNpcs = [
   "VZ",
   "Professor",
 ] as const
+
+export const allFlowTypes = [
+  'episode',
+  'challenge',
+] as const

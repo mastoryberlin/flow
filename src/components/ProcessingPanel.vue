@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
+
 import type { DslVisitorWithDefaults } from '../chevrotain';
 import type { TopLevelSequenceCstNode } from '../chevrotain/types';
-import { useFlowToLocale } from '../processing/locale';
 
+import { useFlowToLocale } from '../processing/locale';
 import { useFlowToStatechart } from '../processing/statechart';
+
+import { allFlowTypes } from "../constants";
+import type { FlowType } from '../types.d';
 
 const props = defineProps<{
   cst: TopLevelSequenceCstNode
@@ -15,7 +19,7 @@ const props = defineProps<{
 const statechart = computed(() => {
   try {
     return {
-      json: useFlowToStatechart(props.flow, 'episode'),
+      json: useFlowToStatechart(props.flow, flowType.value),
       error: ''
     }
   } catch (e) {
@@ -36,11 +40,17 @@ const locale = computed(() => {
     }
   }
 })
+
+const flowType = ref<FlowType>(allFlowTypes[0])
 </script>
 
 <template>
   <div class="panel">
     <h3>Statechart JSON</h3>
+    <label for="flowTypeSelector">Flow Type:</label>
+    <select name="flowTypeSelector" id="flowTypeSelector" v-model="flowType">
+      <option v-for="t in allFlowTypes" :key="t" :value="t">{{ t }}</option>
+    </select>
     <div class="wrapper">
       <textarea class="output-code" rows="20" readonly>{{ statechart.json }}</textarea>
       <div class="error">{{ statechart.error }}</div>

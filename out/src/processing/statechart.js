@@ -28,11 +28,12 @@ var parser = (0, chevrotain_1.useParser)();
 var visitor = (0, chevrotain_1.useVisitor)();
 function useFlowToStatechart(flow, type) {
     parser.parse(flow);
-    visitor.visit(parser.cst);
     rootName = {
         episode: 'Current Episode',
         challenge: 'Current Challenge'
     }[type];
+    visitor.rootNodeId = rootName;
+    visitor.visit(parser.cst);
     var json = stateNodeToJsonRecursive(rootName);
     return json;
 }

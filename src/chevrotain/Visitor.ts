@@ -13,19 +13,19 @@ import type * as dsl from "../dsl/types"
 import type { CstNodeLocation } from "chevrotain";
 import type { NLUContext } from "../dsl/types";
 import { escapeDots, unescapeDots } from "../util";
+import type { FlowType } from "../types";
 
 const parser = useParser()
 
-const BaseVisitorWithDefaults = parser.getBaseCstVisitorConstructorWithDefaults()
-
-const ROOT_NODE_ID = 'Current Episode'
+const BaseVisitorWithDefaults = parser.getBaseCstVisitorConstructorWithDefaults<FlowType>()
 
 export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
+  rootNodeId = 'Current Episode'
   stateNodeByPath = {} as Record<string, dsl.StateNode>
   stateNodeByLabel = {} as Record<string, dsl.StateNode>
   transitionsBySourcePath = {} as Record<string, dsl.Transition[]>
   childrenByPath = {} as Record<string, dsl.StateNode[]>
-  path = [ROOT_NODE_ID] // array to internally keep track of the currently traversed state node path
+  path = [this.rootNodeId] // array to internally keep track of the currently traversed state node path
 
   constructor() {
     super()
@@ -103,7 +103,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     this.stateNodeByPath = {}
     this.stateNodeByLabel = {}
     this.transitionsBySourcePath = {}
-    this.path = [ROOT_NODE_ID]
+    this.path = [this.rootNodeId]
     this.childrenByPath = {}
     this.visit(ctx.sequence)
     this.fixTransitionTargets()

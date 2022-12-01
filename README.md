@@ -343,14 +343,14 @@ Optional arguments are denoted by [brackets]; all other listed arguments are man
 
 - [alert](#alert)
 - [cinema](#cinema)
-- [doConversation](#doconversation)
+- [doSubflow](#dosubflow)
 - [done](#done)
 - [focusApp](#focusapp)
 - [inChallenge](#inchallenge)
 - [loadChallenge](#loadchallenge)
-- [loadConversation](#loadconversation)
+- [loadSubflow](#loadsubflow)
 - [unloadChallenge](#unloadchallenge)
-- [unloadConversation](#unloadconversation)
+- [unloadSubflow](#unloadsubflow)
 
 #### `.alert`
 ```swift
@@ -373,18 +373,18 @@ Loads the video specified with `VideoUrl` and displays it in "cinema mode", i.e.
 
 Although the video can be jumped using a slider bar (to re-watch missed parts, for example), there is no close button provided and the overlay remains open until the video was watched to the end.
 
-#### `.doConversation`
+#### `.doSubflow`
 ```swift
-.doConversation ConversationId
+.doSubflow SubflowId
 ```
 
-- `ConversationId` – the ID of the conversation to load, which has to match the name of another `.flow` file residing in the same folder like the current flow.
+- `SubflowId` – the ID of the subflow to load, which has to match the name of another `.flow` file residing in the same folder like the current flow.
 
-Loads the conversation `ConversationId` and runs it in a separate state machine. 
-The current flow will wait until the conversation reaches its final state (last state node or a `.done` directive).
-`ConversationId` will be matched against all available conversation names in a case-insensitive manner.
+Loads the subflow `SubflowId` and runs it in a separate state machine. 
+The current flow will wait until the subflow reaches its final state (last state node or a `.done` directive).
+`SubflowId` will be matched against all available subflow names in a case-insensitive manner.
 
-> To run a conversation without stopping the current flow, use [`.loadConversation`](#loadconversation) instead.
+> To run a subflow without stopping the current flow, use [`.loadSubflow`](#loadsubflow) instead.
 
 #### `.done`
 ```swift
@@ -394,7 +394,7 @@ The current flow will wait until the conversation reaches its final state (last 
 
 This directive is internally translated into a "final" state; reaching it will immediately terminate execution of the flow.
 
-`.done` is most useful in conversation flows spawned using [`.loadConversation`](#loadconversation) or [`.doConversation`](#doconversation).
+`.done` is most useful in subflows loaded using [`.loadSubflow`](#loadsubflow) or [`.doSubflow`](#dosubflow).
 
 Using it in a main episode flow will mark the episode itself as finished and cause the Mastory app to return to the overview page (TBD).
 
@@ -439,18 +439,18 @@ manner.
 Note that `.loadChallenge` does not automatically focus the Wire app. To do so, you will need to additionally include
 a [`.focusApp`](#focusapp) directive after loading the challenge.
 
-#### `.loadConversation`
+#### `.loadSubflow`
 ```swift
-.loadConversation ConversationId
+.loadSubflow SubflowId
 ```
 
-- `ConversationId` – the ID of the conversation to load, which has to match the name of another `.flow` file residing in the same folder like the current flow.
+- `SubflowId` – the ID of the subflow to load, which has to match the name of another `.flow` file residing in the same folder like the current flow.
 
-Loads the conversation `ConversationId` and runs it in a separate state machine. `ConversationId` will be matched against all available conversation names in a case-insensitive
+Loads the subflow `SubflowId` and runs it in a separate state machine. `SubflowId` will be matched against all available subflow names in a case-insensitive
 manner.
 
-> `.loadConversation` will run the conversation *asynchronously*, i.e. the current flow will keep running in parallel to the conversation.
-> To load and *wait* for a conversation to finish, use [`.doConversation`](#doconversation) instead.
+> `.loadSubflow` will run the subflow *asynchronously*, i.e. the current flow will keep running in parallel to the subflow.
+> To load and *wait* for a subflow to finish, use [`.doSubflow`](#dosubflow) instead.
 
 #### `.unloadChallenge`
 ```swift
@@ -460,14 +460,14 @@ manner.
 
 Unloads any currently loaded challenge, leaving the Wire app in the state where it reads "No challenge available".
 
-#### `.unloadConversation`
+#### `.unloadSubflow`
 ```swift
-.unloadConversation
+.unloadSubflow
 ```
 
 
-Unloads any currently loaded conversation. 
-Use this directive to abort a conversation that was loaded with [`.loadConversation`](#loadconversation) before it reaches its final state.
+Unloads any currently loaded subflow. 
+Use this directive to abort a subflow that was loaded with [`.loadSubflow`](#loadsubflow) before it reaches its final state.
 ```swift
 
 ```

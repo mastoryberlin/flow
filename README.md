@@ -342,10 +342,24 @@ Optional arguments are denoted by [brackets]; all other listed arguments are man
 
 - [alert](#alert)
 - [cinema](#cinema)
+- [doConversation](#doconversation)
+- [done](#done)
 - [focusApp](#focusapp)
 - [inChallenge](#inchallenge)
 - [loadChallenge](#loadchallenge)
+- [loadConversation](#loadconversation)
 - [unloadChallenge](#unloadchallenge)
+- [unloadConversation](#unloadconversation)
+
+#### `.alert`
+```swift
+.alert {text: MessageText, title: PopupWindowTitle}
+```
+
+- `MessageText` – a string to be displayed by the alert overlay.
+- `PopupWindowTitle` – the overlay popup window's title.
+
+Displays a popup overlay dialog with a title and a (text) message, similar to JS's native `alert()` function.
 
 #### `.cinema`
 ```swift
@@ -358,15 +372,30 @@ Loads the video specified with `VideoUrl` and displays it in "cinema mode", i.e.
 
 Although the video can be jumped using a slider bar (to re-watch missed parts, for example), there is no close button provided and the overlay remains open until the video was watched to the end.
 
-#### `.alert`
+#### `.doConversation`
 ```swift
-.alert {text: MessageText, title: PopupWindowTitle}
+.doConversation ConversationId
 ```
 
-- `MessageText` – a string to be displayed by the alert overlay.
-- `PopupWindowTitle` – the overlay popup window's title.
+- `ConversationId` – the ID of the conversation to load, which has to match the name of another `.flow` file residing in the same folder like the current flow.
 
-Displays a popup overlay dialog with a title and a (text) message, similar to JS's native `alert()` function.
+Loads the conversation `ConversationId` and runs it in a separate state machine. 
+The current flow will wait until the conversation reaches its final state (last state node or a `.done` directive).
+`ConversationId` will be matched against all available conversation names in a case-insensitive manner.
+
+> To run a conversation without stopping the current flow, use [`.loadConversation`](#loadconversation) instead.
+
+#### `.done`
+```swift
+.done
+```
+
+
+This directive is internally translated into a "final" state; reaching it will immediately terminate execution of the flow.
+
+`.done` is most useful in conversation flows spawned using [`.loadConversation`](#loadconversation) or [`.doConversation`](#doconversation).
+
+Using it in a main episode flow will mark the episode itself as finished and cause the Mastory app to return to the overview page (TBD).
 
 #### `.focusApp`
 ```swift
@@ -397,17 +426,30 @@ match the expected data format to reach the intended result.
 
 #### `.loadChallenge`
 ```swift
-.loadChallenge ChallengeName
+.loadChallenge ChallengeId
 ```
 
-- `ChallengeName` – the name or ID of a challenge, i.e. the name of the `app` project's subfolder it is contained in under `challenges`.
+- `ChallengeId` – the ID of the challenge to load, i.e. the name of the `app` project's subfolder it is contained in under `challenges`.
 
-Loads the challenge `ChallengeName` in the Wire, including its Vue component, challenge store, and challenge
-state machine. `ChallengeName` will be matched against all available challenge names in a case-insensitive
+Loads the challenge `ChallengeId` in the Wire, including its Vue component, challenge store, and challenge
+state machine. `ChallengeId` will be matched against all available challenge names in a case-insensitive
 manner.
 
-Note that `.loadChallenge` does not automatically focus the Wire app. To do so, you will need to include
-a [`.focusApp`](#focusapp) directive as well.
+Note that `.loadChallenge` does not automatically focus the Wire app. To do so, you will need to additionally include
+a [`.focusApp`](#focusapp) directive after loading the challenge.
+
+#### `.loadConversation`
+```swift
+.loadConversation ConversationId
+```
+
+- `ConversationId` – the ID of the conversation to load, which has to match the name of another `.flow` file residing in the same folder like the current flow.
+
+Loads the conversation `ConversationId` and runs it in a separate state machine. `ConversationId` will be matched against all available conversation names in a case-insensitive
+manner.
+
+> `.loadConversation` will run the conversation *asynchronously*, i.e. the current flow will keep running in parallel to the conversation.
+> To load and *wait* for a conversation to finish, use [`.doConversation`](#doconversation) instead.
 
 #### `.unloadChallenge`
 ```swift
@@ -416,6 +458,15 @@ a [`.focusApp`](#focusapp) directive as well.
 
 
 Unloads any currently loaded challenge, leaving the Wire app in the state where it reads "No challenge available".
+
+#### `.unloadConversation`
+```swift
+.unloadConversation
+```
+
+
+Unloads any currently loaded conversation. 
+Use this directive to abort a conversation that was loaded with [`.loadConversation`](#loadconversation) before it reaches its final state.
 ```swift
 
 ```

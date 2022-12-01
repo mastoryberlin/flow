@@ -309,8 +309,9 @@ one for its specific use-case. Here are some examples for directives with argume
 
 ```
 
-Since apart from their side-effects directives are just ordinary state names, it is possible and in fact necessary to
-connect them to other states with transitions. 
+It is important to note that as Flow is not an imperative language, directives are **not** sequential commands!
+Apart from their side-effects, directives are just ordinary states, so it is possible and in fact necessary to
+connect them to other states with transitions.
 Just like with other states, shortcut syntax can be used to make the flow more readable:
 ```swift
 Beware of the dog! {
@@ -323,7 +324,7 @@ Beware of the dog! {
 
 ```
 
-> Be careful when using ellipses in combination with directives! You need to separate the transition part from the directive with
+> Careful when using ellipses in combination with directives! You need to separate the transition part from the directive with
 > whitespace, or else the directive will not be recognized as such.
 ```swift
 .bark

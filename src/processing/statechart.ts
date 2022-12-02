@@ -164,7 +164,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
 
     const assignments = node.assignVariables
     if (assignments) {
-      json.entry = {
+      json.exit = {
         type: '_assignToContext_',
         assignments
       }

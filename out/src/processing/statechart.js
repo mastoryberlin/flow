@@ -168,7 +168,7 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
         }
         var assignments = node.assignVariables;
         if (assignments) {
-            json.entry = {
+            json.exit = {
                 type: '_assignToContext_',
                 assignments: assignments
             };

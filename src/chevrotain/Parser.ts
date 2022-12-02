@@ -7,7 +7,7 @@ const [
   LCurly, RCurly, LSquare, RSquare, Pipe, Newline,
   Ellipsis, Arrow, NumberLiteral, TimeSpan,
   LengthFunction,
-  After, OnEvent, IfCondition, When, Label, Directive, StateNodeName
+  After, OnEvent, IfCondition, When, Label, Directive, Assignment, StateNodeName
 ] = tokens
 
 class Parser extends CstParser {
@@ -44,6 +44,13 @@ class Parser extends CstParser {
       $.OPTION(() => $.CONSUME(Label))
       $.OR([
         { ALT: () => $.CONSUME(Directive) },
+        {
+          ALT: () => {
+            $.AT_LEAST_ONE(() => 
+              $.CONSUME(Assignment)
+            )
+          }
+        },
         {
           ALT: () => {
             $.SUBRULE($.stateNodeName)

@@ -34,6 +34,7 @@ export interface StateNodeCstNode extends CstNode {
 export type StateNodeCstChildren = {
   Label?: IToken[];
   Directive?: IToken[];
+  Assignment?: IToken[];
   stateNodeName?: StateNodeNameCstNode[];
   LCurly?: IToken[];
   blanks?: (BlanksCstNode)[];

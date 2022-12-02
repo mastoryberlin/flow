@@ -166,23 +166,44 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                 always = alwaysTransitions.map(function (t) { return (__assign({ target: getTransitionTarget_1(t), internal: true }, getTransitionGuard_1(t))); });
             }
         }
+        var assignments = node.assignVariables;
+        if (assignments) {
+            json.entry = {
+                type: '_assignToContext_',
+                assignments: assignments
+            };
+        }
         var directive = node.directive;
         if (directive) {
             directive.arg = (_a = directive.arg) === null || _a === void 0 ? void 0 : _a.replace(/\\r/g, '');
             var sepHelper = '&.&';
-            json.entry = [];
             var invoke = {
                 onDone: '__DIRECTIVE_DONE__'
             };
             switch (directive.name) {
+                case 'alert':
+                    if (!directive.arg) {
+                        throw new Error('.alert directive must have an object argument: {title: ..., text: ...}');
+                    }
+                    invoke.src = { type: 'alert', alertData: directive.arg };
+                    break;
+                case 'cinema':
+                    invoke.src = { type: 'cinema', source: directive.arg };
+                    break;
+                case 'done':
+                    json.type = 'final';
+                    break;
+                case 'subflow':
+                    invoke.src = { type: 'subflow', id: directive.arg };
+                    break;
                 case 'focusApp':
-                    json.entry.push({ type: 'FOCUS_APP', appId: directive.arg.toLowerCase() });
+                    json.entry = { type: 'FOCUS_APP', appId: directive.arg.toLowerCase() };
                     break;
                 case 'loadChallenge':
-                    json.entry.push({ type: 'SET_CHALLENGE', challengeId: directive.arg });
+                    json.entry = { type: 'SET_CHALLENGE', challengeId: directive.arg };
                     break;
                 case 'unloadChallenge':
-                    json.entry.push({ type: 'UNLOAD_CHALLENGE_COMPONENT' });
+                    json.entry = { type: 'UNLOAD_CHALLENGE_COMPONENT' };
                     break;
                 case 'inChallenge':
                     {
@@ -204,23 +225,8 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                         if (character) {
                             eventData = eventData.replace('{', "{_pretendCausedByNpc:\"".concat(character, "\","));
                         }
-                        json.entry.push({ type: 'IN_CHALLENGE', eventName: eventName, eventData: eventData });
+                        json.entry = { type: 'IN_CHALLENGE', eventName: eventName, eventData: eventData };
                     }
-                    break;
-                case 'cinema':
-                    invoke.src = {
-                        type: 'cinema',
-                        source: directive.arg
-                    };
-                    break;
-                case 'alert':
-                    if (!directive.arg) {
-                        throw new Error('.alert directive must have an object argument: {title: ..., text: ...}');
-                    }
-                    invoke.src = {
-                        type: 'alert',
-                        alertData: directive.arg
-                    };
                     break;
                 default:
                     throw new Error("Unknown directive .".concat(directive.name, " at ").concat(fqPath));

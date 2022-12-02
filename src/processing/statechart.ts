@@ -162,18 +162,32 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
       }
     }
 
+    const assignments = node.assignVariables
+    if (assignments) {
+      json.entry = {
+        type: '_assignToContext_',
+        assignments
+      }
+    }
+
     const directive = node.directive
     if (directive) {
       directive.arg = directive.arg?.replace(/\\r/g, '')
       const sepHelper = '&.&'
-      json.entry = [] as any
       const invoke = {
         onDone: '__DIRECTIVE_DONE__'
       } as any
       switch (directive.name) {
-        case 'focusApp': json.entry.push({ type: 'FOCUS_APP', appId: directive.arg.toLowerCase() }); break
-        case 'loadChallenge': json.entry.push({ type: 'SET_CHALLENGE', challengeId: directive.arg }); break
-        case 'unloadChallenge': json.entry.push({ type: 'UNLOAD_CHALLENGE_COMPONENT' }); break
+        case 'alert':
+          if (!directive.arg) { throw new Error('.alert directive must have an object argument: {title: ..., text: ...}') }
+          invoke.src = { type: 'alert', alertData: directive.arg }
+          break
+        case 'cinema': invoke.src = { type: 'cinema', source: directive.arg }; break
+        case 'done': json.type = 'final'; break
+        case 'subflow': invoke.src = { type: 'subflow', id: directive.arg }; break
+        case 'focusApp': json.entry = { type: 'FOCUS_APP', appId: directive.arg.toLowerCase() }; break
+        case 'loadChallenge': json.entry = { type: 'SET_CHALLENGE', challengeId: directive.arg }; break
+        case 'unloadChallenge': json.entry = { type: 'UNLOAD_CHALLENGE_COMPONENT' }; break
         case 'inChallenge':
           {
             if (!directive.arg) { throw new Error('.inChallenge directive must have at least one argument: eventName') }
@@ -192,20 +206,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
             eventName = eventName
             eventData = eventData
             if (character) { eventData = eventData.replace('{', `{_pretendCausedByNpc:"${character}",`) }
-            json.entry.push({ type: 'IN_CHALLENGE', eventName, eventData })
-          }
-          break
-        case 'cinema':
-          invoke.src = {
-            type: 'cinema',
-            source: directive.arg,
-          }
-          break
-        case 'alert':
-          if (!directive.arg) { throw new Error('.alert directive must have an object argument: {title: ..., text: ...}') }
-          invoke.src = {
-            type: 'alert',
-            alertData: directive.arg,
+            json.entry = { type: 'IN_CHALLENGE', eventName, eventData }
           }
           break
         default:

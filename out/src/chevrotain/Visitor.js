@@ -53,6 +53,20 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
         if (stateNode.Directive) {
             return stateNode.Directive[0];
         }
+        else if (stateNode.Assignment) {
+            var assignments = stateNode.Assignment;
+            var first = assignments[0];
+            var last = assignments[assignments.length - 1];
+            return {
+                image: assignments.map(function (a) { return a.image; }).join(''),
+                startOffset: first.startOffset,
+                startLine: first.startLine,
+                startColumn: first.startColumn,
+                endOffset: last.endOffset,
+                endLine: last.endLine,
+                endColumn: last.endColumn
+            };
+        }
         else /* if (stateNode.stateNodeName) */ {
             var ch = stateNode.stateNodeName[0].children;
             var stateNodeNameDefinition = ch.StateNodeName || ch.NumberLiteral;
@@ -162,9 +176,12 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
         // ... the label if applicable ...
         var label = ctx.Label ? ctx.Label[0].image.substring(1) : undefined;
         // ... directive details if applicable ...
-        var directive, nluContext, message;
+        var directive, nluContext, message, assignVariables;
         if (ctx.Directive) {
             directive = ctx.Directive[0].payload;
+        }
+        else if (ctx.Assignment) {
+            assignVariables = ctx.Assignment.map(function (a) { return a.payload; });
         }
         else {
             // ... message details if applicable ...
@@ -176,7 +193,7 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
             };
             var mediaTypes = ['image', 'audio', 'video'];
             var urlPattern = '\\w+://\\S+';
-            var messagePattern = new RegExp("(?:(".concat(Object.values(allSenderAliases).flat().join('|'), ")\\s+)?") +
+            var messagePattern = new RegExp("^(?:(".concat(Object.values(allSenderAliases).flat().join('|'), ")\\s+)?") +
                 "(?:(".concat(mediaTypes.join('|'), "|").concat(urlPattern, ")\\s+)?") +
                 "\"([^\"]*)\"$", 'i');
             var messageMatch = name.match(messagePattern);
@@ -254,6 +271,7 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
             directive: directive,
             nluContext: nluContext,
             message: message,
+            assignVariables: assignVariables,
             // regExp,
             parallel: !!ctx.LSquare,
             path: __spreadArray([], this.path, true),

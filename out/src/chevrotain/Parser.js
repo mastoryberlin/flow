@@ -19,7 +19,7 @@ exports.useParser = void 0;
 var chevrotain_1 = require("chevrotain");
 var Lexer_1 = require("./Lexer");
 var tokens = (0, Lexer_1.useTokens)();
-var WhiteSpace = tokens[0], LineComment = tokens[1], LCurly = tokens[2], RCurly = tokens[3], LSquare = tokens[4], RSquare = tokens[5], Pipe = tokens[6], Newline = tokens[7], Ellipsis = tokens[8], Arrow = tokens[9], NumberLiteral = tokens[10], TimeSpan = tokens[11], LengthFunction = tokens[12], After = tokens[13], OnEvent = tokens[14], IfCondition = tokens[15], When = tokens[16], Label = tokens[17], Directive = tokens[18], StateNodeName = tokens[19];
+var WhiteSpace = tokens[0], LineComment = tokens[1], LCurly = tokens[2], RCurly = tokens[3], LSquare = tokens[4], RSquare = tokens[5], Pipe = tokens[6], Newline = tokens[7], Ellipsis = tokens[8], Arrow = tokens[9], NumberLiteral = tokens[10], TimeSpan = tokens[11], LengthFunction = tokens[12], After = tokens[13], OnEvent = tokens[14], IfCondition = tokens[15], When = tokens[16], Label = tokens[17], Directive = tokens[18], Assignment = tokens[19], StateNodeName = tokens[20];
 var Parser = /** @class */ (function (_super) {
     __extends(Parser, _super);
     function Parser() {
@@ -50,6 +50,13 @@ var Parser = /** @class */ (function (_super) {
             $.OPTION(function () { return $.CONSUME(Label); });
             $.OR([
                 { ALT: function () { return $.CONSUME(Directive); } },
+                {
+                    ALT: function () {
+                        $.AT_LEAST_ONE(function () {
+                            return $.CONSUME(Assignment);
+                        });
+                    }
+                },
                 {
                     ALT: function () {
                         $.SUBRULE($.stateNodeName);

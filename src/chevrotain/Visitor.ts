@@ -9,8 +9,8 @@ import * as vscode from "../dsl/vscode";
 
 import type { StateNodeCstChildren, TopLevelSequenceCstChildren, AlwaysTransitionCstChildren, SequenceCstChildren, TransitionTargetCstNode, TransitionTargetCstChildren, TransitionCstChildren, AlwaysTransitionCstNode, StateNodePathCstNode } from "./types";
 import { useParser } from "./Parser";
-import type * as dsl from "../dsl/types"
-import type { CstNodeLocation } from "chevrotain";
+import * as dsl from "../dsl/types"
+import type { CstNodeLocation, IToken } from "chevrotain";
 import type { NLUContext } from "../dsl/types";
 import { escapeDots, unescapeDots } from "../util";
 import type { FlowType } from "../types";
@@ -35,6 +35,19 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
   private getStateNodeNameDefinition(stateNode: StateNodeCstChildren) {
     if (stateNode.Directive) {
       return stateNode.Directive[0]
+    } else if (stateNode.Assignment) {
+      const assignments = stateNode.Assignment
+      const first = assignments[0]
+      const last = assignments[assignments.length - 1]
+      return {
+        image: assignments.map(a => a.image).join(''),
+        startOffset: first.startOffset,
+        startLine: first.startLine,
+        startColumn: first.startColumn,
+        endOffset: last.endOffset,
+        endLine: last.endLine,
+        endColumn: last.endColumn
+      } as IToken
     } else /* if (stateNode.stateNodeName) */ {
       const ch = stateNode.stateNodeName![0].children
       const stateNodeNameDefinition = ch.StateNodeName || ch.NumberLiteral
@@ -137,9 +150,11 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     const label = ctx.Label ? ctx.Label[0].image.substring(1) : undefined
 
     // ... directive details if applicable ...
-    let directive, nluContext, message
+    let directive, nluContext, message, assignVariables
     if (ctx.Directive) {
       directive = ctx.Directive[0].payload
+    } else if (ctx.Assignment) {
+      assignVariables = ctx.Assignment.map(a => a.payload)
     } else {
       // ... message details if applicable ...
       const allSenderAliases = {
@@ -151,7 +166,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
       const mediaTypes = ['image', 'audio', 'video']
       const urlPattern = '\\w+://\\S+'
       const messagePattern = new RegExp(
-        `(?:(${Object.values(allSenderAliases).flat().join('|')})\\s+)?` +
+        `^(?:(${Object.values(allSenderAliases).flat().join('|')})\\s+)?` +
         `(?:(${mediaTypes.join('|')}|${urlPattern})\\s+)?` +
         `"([^"]*)"$`,
         'i'
@@ -225,6 +240,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
       directive,
       nluContext,
       message,
+      assignVariables,
       // regExp,
       parallel: !!ctx.LSquare,
       path: [...this.path],

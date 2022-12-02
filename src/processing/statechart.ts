@@ -16,7 +16,7 @@ export function useFlowToStatechart(flow: string, type: FlowType) {
   visitor.rootNodeId = rootName
   visitor.visit(parser.cst)
   const json = stateNodeToJsonRecursive(rootName)
-  return json
+  return {json, visitor}
 }
 
 function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentInfo?: any): any {

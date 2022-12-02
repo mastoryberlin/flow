@@ -35,7 +35,7 @@ function useFlowToStatechart(flow, type) {
     visitor.rootNodeId = rootName;
     visitor.visit(parser.cst);
     var json = stateNodeToJsonRecursive(rootName);
-    return json;
+    return { json: json, visitor: visitor };
 }
 exports.useFlowToStatechart = useFlowToStatechart;
 function stateNodeToJsonRecursive(fqPath, node, parentInfo) {

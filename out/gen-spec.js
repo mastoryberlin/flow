@@ -58,6 +58,7 @@ function generateSpecMarkdown() {
         }
         return md;
     }).join("\n\n");
+    md = md.replace(/```swift\n+```\n/g, '').replace(/\n{2,}```\n/g, '\n```\n');
     (0, fs_1.writeFile)(mdPath, md, function () {
         console.log('DONE!');
     });

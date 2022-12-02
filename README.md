@@ -49,7 +49,6 @@ Names of state nodes may contain any word, non-word or whitespace characters exc
 Special syntax like `//` or `->` is also not permitted.
 ```swift
 My 1st State (couldn't think of a better name) // normal parentheses are allowed, too
-
 ```
 
 A [→compound state](https://xstate.js.org/docs/guides/hierarchical.html) is denoted by a pair of braces {}.
@@ -59,7 +58,6 @@ State 2 {
     State 2a // The first child state will be automatically deemed the "initial" one
     State 2b // This one won't be auto-selected
 }
-
 ```
 
 Using brackets [] instead of curly braces defines a [→"parallel" compound state](https://xstate.js.org/docs/guides/statenodes.html#state-node-types)
@@ -91,7 +89,6 @@ Combine `->` with the `on` keyword to define an event transition triggered by `S
 Some State {
     on SOME_EVENT -> Another State 
 }
-
 ```
 
 You can also define "after transitions" based on a timeout with the `after` keyword.
@@ -105,7 +102,6 @@ Some Other State {
 }
 Another State // This will be selected after 20 seconds
 Yet another state // This will be selected after 3 minutes and 25 seconds
-
 ```
 
 Transitions without `on` or `after` become ["always transitions"](https://xstate.js.org/docs/guides/transitions.html#eventless-always-transitions):
@@ -114,7 +110,6 @@ As soon as the state is entered, it is "redirected" to @omg
 Transitory {
     -> @omg
 }
-
 ```
 
 Nested transition targets can be qualified by separating the scopes with a pipe `|` sign
@@ -123,7 +118,6 @@ Unrelated State {
     after 2min -> Parallel State | I will, too | C // this will only transition if someGuard evaluates to true
 }
 C // If the above transition target had just been specified as `-> C`, this would have been selected instead
-
 ```
 
 Prepend a state node definition with `@someLabel` to assign `someLabel` to the state node for easier reference in transitions
@@ -132,7 +126,6 @@ Prepend a state node definition with `@someLabel` to assign `someLabel` to the s
 Good we don't have to type all that again {
     on MY_EVENT -> @short
 }
-
 ```
 
 Labels provide an *absolute* alternative to referencing a state through its (relative) path.
@@ -145,19 +138,12 @@ i.e. a reference like `-> State name | @label` will lead to an error.
 #### Implementation Status
 |Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
 |:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
-|✅|✅|✅|✅|✅|❌|❌
+|◔|◔|◔|◔|◔|◔|❌
 
-```swift
 
-```
-
-Inside Flow scripts, you have access to three kinds of variables:
+Inside Flow scripts, you have access to two kinds of variables:
 1. [Global variables](#global-variables) like `userName`
-2. Utility variables in the current [Flow Scope](#flow-scope)
-3. Shared Challenge Data
-```swift
-
-```
+2. Variables in the current [Episode Scope](#episode-scope)
 
 All available variables can be used for message interpolation by preceding their name with a `$` sign:
 ```swift
@@ -166,55 +152,72 @@ Intro {
 }
 ```
 
-When used in string interpolation, 
+You can also modify variable values using inline TypeScript expressions by wrapping them in `${...}`:
 ```swift
-
+VZ "We are ${classSize + 2} people (including Nick and myself)"
 ```
 
 #### Global Variables
-In every Flow you have access to a fixed set of global variables which are listed below. These variables are managed automatically, e.g. the `userName` will always be set based on the profile of the logged-on user.
-```swift
-
-```
+In every Flow you have access to a fixed set of global variables which are listed below. 
+These are not called "constants" since their value may change dynamically, but they are managed automatically and you cannot assign them, 
+e.g. `userName` will always be set based on the profile of the logged-on user.
 
 ##### `userName` (string)
 The first name of the current user. E.g. if a user's profile has stored a name of *Alex Baldwin*, `VZ "Hi, $userName!"` will have VZ send out "Hi, Alex!"
-```swift
-
-```
 
 ##### `className` (string)
 TBD
-```swift
-
-```
 
 ##### `classSize` (number)
 The number of students in the class currently signed in.
-```swift
 
+#### Episode Scope
+Each episode may define "its own" variables that are set at one point of execution, and checked in another. 
+These variables "belong" to the episode, so that other episodes' flows and challenges do not in general know of their existence.
+
+The episode scope is, however, shared between the episode's main flow, all [subflows](#subflows) and challenge flows, 
+so you can rely on the same set of variables across all parts of an episode.
+
+For this to work, all variables in the episode scope have to be declared and default-initialized in the special "episode config" file:
+1. Create a TypeScript file, called after the episode's name + `.ts`, in the corresponding subfolder of `episodes` (or open it if it already exists).
+2. In that file, `export default` an object with a `variables` option and list all episode-scope variables with their default values as key-value pairs under that option.
+
+For instance, if the episode *e17* needs a special `groupSize` variable that defaults to 0, this is how `~/episodes/e17/e17.ts` might look:
+```ts
+export default {
+variables: {
+groupSize: 0,
+// ... other variables ...
+},
+// ... other options ...
+}
 ```
 
-#### Flow Scope
-Each Flow may define its "own" variables that are set at one point of execution, and checked in another. These variables belong to the scope of the current Flow, so you cannot access them from other Flows.
+##### Assigning Variables
+If a state node name is of the form
 ```swift
-
+varname := expression
 ```
 
-If a state node name begins with an exclamation mark `!`, it will be interpreted as a variable assignment. The assignment is expected to be of the form `varname = expression`, where `varname` and `expression` can be any valid JS variable name and expression, respectively. `varname` will be either defined or re-assigned within the current Flow scope, and can then be used in message interpolation or [conditional transitions](#conditional-transitions).
-```swift
+it will be interpreted as a variable assignment in the current episode scope.
+- `varname` must be declared in the episode config file as described above,
+- `expression` can be any valid TypeScript expression that will be evaluated in the current episode scope.
 
-```
+> Note: Despite their "actionable" character, variable assignments are **not** sequential commands!
+> Apart from their side-effects, variable assignments are just ordinary states, so it is possible and in fact necessary to
+connect them to other states with transitions.
+
+After assigning a value to it, `varname` can be used in message interpolation or [conditional transitions](#conditional-transitions).
 
 Example:
 ```swift
 State A {
-        ! groupSize = classSize / 5
-        ...
+    groupSize := classSize / 5
+    .. Do something else
+    .. Switch {
         if groupSize < 3 -> State B
-}
-State B {
-        ...
+        -> State C
+    }
 }
 ```
 
@@ -225,7 +228,6 @@ or any JS expression referring to the current Flow variables
 ```swift
 after 2min if someCondition -> Target // this will only transition if `someCondition` evaluates to true
 on MY_EVENT if a == 3 || userName != 'phil' -> Target // assuming `a` is defined somewhere
-
 ```
 
 Replacing `if` by `when` + a state node reference will check if that state is (also) selected; only then the transition will happen
@@ -249,7 +251,6 @@ after 1s
 State B
 on PLAY if x < 0.5
 State C
-
 ```
 
 The above is equivalent to the more verbose definition
@@ -261,7 +262,6 @@ State B {
     on PLAY if x < 0.5 -> State C
 }
 State C
-
 ```
 
 The most frequent case of timeout transitions in a flow is the "fast succession" *A, then B* - where "then"
@@ -293,7 +293,6 @@ which are single-word commands (similar to function names in other programming l
 beware of the dog! {
     .biteUser
 }
-
 ```
 
 Some directives have *arguments* that modify or specify their behavior. Everything following a
@@ -306,12 +305,12 @@ one for its specific use-case. Here are some examples for directives with argume
 .loadChallenge Drone {droneProp: 3.5}
 .let VZ appear in Wire
 .let VZ jump
-
 ```
 
-It is important to note that as Flow is not an imperative language, directives are **not** sequential commands!
-Apart from their side-effects, directives are just ordinary states, so it is possible and in fact necessary to
+> Note: Despite their "actionable" character, directives are **not** sequential commands!
+> Apart from their side-effects, directives are just ordinary states, so it is possible and in fact necessary to
 connect them to other states with transitions.
+
 Just like with other states, shortcut syntax can be used to make the flow more readable:
 ```swift
 Beware of the dog! {
@@ -321,7 +320,6 @@ Beware of the dog! {
     on SELF_DEFENSE
     .bite burglar
 }
-
 ```
 
 > Careful when using ellipses in combination with directives! You need to separate the transition part from the directive with
@@ -334,21 +332,18 @@ Beware of the dog! {
 
 > In the example above, the 4 sequential dots will be interpreted as a shortcut for "after 4s", and the rest of the line
 > becomes an ordinary state node named "even louder", with no side-effects attached.
-```swift
-
-```
 
 Here is a list of all directives currently supported by the Mastory app.
 Optional arguments are denoted by [brackets]; all other listed arguments are mandatory.
 
 - [alert](#alert)
 - [cinema](#cinema)
-- [doSubflow](#dosubflow)
 - [done](#done)
 - [focusApp](#focusapp)
 - [inChallenge](#inchallenge)
 - [loadChallenge](#loadchallenge)
 - [loadSubflow](#loadsubflow)
+- [subflow](#subflow)
 - [unloadChallenge](#unloadchallenge)
 - [unloadSubflow](#unloadsubflow)
 
@@ -373,19 +368,6 @@ Loads the video specified with `VideoUrl` and displays it in "cinema mode", i.e.
 
 Although the video can be jumped using a slider bar (to re-watch missed parts, for example), there is no close button provided and the overlay remains open until the video was watched to the end.
 
-#### `.doSubflow`
-```swift
-.doSubflow SubflowId
-```
-
-- `SubflowId` – the ID of the subflow to load, which has to match the name of another `.flow` file residing in the same folder like the current flow.
-
-Loads the subflow `SubflowId` and runs it in a separate state machine. 
-The current flow will wait until the subflow reaches its final state (last state node or a `.done` directive).
-`SubflowId` will be matched against all available subflow names in a case-insensitive manner.
-
-> To run a subflow without stopping the current flow, use [`.loadSubflow`](#loadsubflow) instead.
-
 #### `.done`
 ```swift
 .done
@@ -394,7 +376,7 @@ The current flow will wait until the subflow reaches its final state (last state
 
 This directive is internally translated into a "final" state; reaching it will immediately terminate execution of the flow.
 
-`.done` is most useful in subflows loaded using [`.loadSubflow`](#loadsubflow) or [`.doSubflow`](#dosubflow).
+`.done` is most useful in subflows loaded using [`.loadSubflow`](#loadsubflow) or [`.subflow`](#subflow).
 
 Using it in a main episode flow will mark the episode itself as finished and cause the Mastory app to return to the overview page (TBD).
 
@@ -450,7 +432,20 @@ Loads the subflow `SubflowId` and runs it in a separate state machine. `SubflowI
 manner.
 
 > `.loadSubflow` will run the subflow *asynchronously*, i.e. the current flow will keep running in parallel to the subflow.
-> To load and *wait* for a subflow to finish, use [`.doSubflow`](#dosubflow) instead.
+> To load and *wait* for a subflow to finish, use [`.subflow`](#subflow) instead.
+
+#### `.subflow`
+```swift
+.subflow SubflowId
+```
+
+- `SubflowId` – the ID of the subflow to load, which has to match the name of another `.flow` file residing in the same folder like the current flow.
+
+Loads the subflow `SubflowId` and runs it in a separate state machine. 
+The current flow will wait until the subflow reaches its final state (last state node or a `.done` directive).
+`SubflowId` will be matched against all available subflow names in a case-insensitive manner.
+
+> To run a subflow without stopping the current flow, use [`.loadSubflow`](#loadsubflow) instead.
 
 #### `.unloadChallenge`
 ```swift
@@ -468,11 +463,8 @@ Unloads any currently loaded challenge, leaving the Wire app in the state where 
 
 Unloads any currently loaded subflow. 
 Use this directive to abort a subflow that was loaded with [`.loadSubflow`](#loadsubflow) before it reaches its final state.
-```swift
 
-```
-
-## Timing and Directives
+## Timing Directives
 TBD
 
 
@@ -500,7 +492,6 @@ Talkative {
                                                                                                  // Besides $userName, you can use $className and $teacherName
     on RESTART -> @how
 }
-
 ```
 
 Interactive conversations ("NLU contexts") can be defined by adding a state node called ? as the initial child of a compound state:
@@ -538,7 +529,6 @@ VZ "Hi, did you also get Alicia's messages?" {
 @omg VZ "OMG!"
 
 on SOME_EVENT // transition shortcuts also work on the root level: on the SOME_EVENT event, transition to the next state node
-
 ```
 
 In conversations, regular expressions can also be used as "intents" - those will be tested before any NLU processing takes place
@@ -562,13 +552,15 @@ Nick "Any idea what point this could be?"
         2 { Nick "I don't really get you ..." -> ? }
         3 { 
             Nick "Hey ... could it be (2.5, 1)? Give me a sec, I'll check that" {
-                ! x = 2.5, y = 1 // States whose names start with "!" can be used to set variable values manually
+                Set Variables [
+                    x := 2.5
+                    y := 1
+                ]
                 -> @correct
             }
         }
     }
 }
-
 ```
 
 Values of captured/set variables can also be used in (message) strings with the $ + identifier syntax:
@@ -576,7 +568,6 @@ Values of captured/set variables can also be used in (message) strings with the 
 @correct Nick "Okay, I'll check the point ($x, $y)!"
 after 1s
 @wrong Nick "Hmm, that didn't really work out. Any other ideas?" -> 
-
 ```
 
 To avoid repetitive responses, we can define a compound state with a sequence of "time of re-entry" children:
@@ -587,5 +578,61 @@ Greeting {
     2 { "Great to meet you." } // ... for the second time ...
     * { "Welcome." } // ... and any subsequent times (optional)
     // If no * default substate is provided, the sequence will start over after the last child (1 -> 2 -> 1 -> 2 ...)
+}
+```
+
+
+###  Subflows
+
+#### Implementation Status
+|Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
+|:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
+|✅|❌|❌|❌|❌|❌|❌
+
+With larger episode flows, managing the entire flow in one file quickly becomes tedious.
+It is therefore recommended to author episodes in a modular manner, organized around a single main episode flow
+as entry point and many "subflows" which make up its parts, and which are invoked one by one from the main flow
+using [`.subflow`](#subflow) or [`.loadSubflow`](#loadsubflow) directives:
+```
+(app project root directory)
+└─ episodes
+└─ MyEpisode
+├─ Intro.flow
+├─ Main.flow
+├─ MyEpisode.flow
+├─ MyEpisode.ts   <-- episode config file
+├─ Outro.flow
+└─ meta.json      <-- metadata
+```
+In the above example structure, `MyEpisode.flow` defines the main flow for the *MyEpisode* episode, and it could look something like this:
+```swift
+Intro {
+    .cinema some_starter_video
+    .. .subflow Intro // run the subflow defined in Intro.flow - this state will remain active until the subflow completes
+    .. -> Main
+}
+Main {
+    .subflow Main // run the subflow defined in Main.flow - this state will remain active until the subflow completes
+    .. -> Outro
+}
+Outro {
+    .subflow Outro // run the subflow defined in Outro.flow - this state will remain active until the subflow completes
+    .. .done
+}
+```
+
+Just like with main episode flows, it is important to make sure that every subflow comes to an end under all circumstances.
+Use [`.done`](#done) in subflow definitions to end execution before the last line of code.
+
+The file `meta.json` contains metadata on the episode, and as part of that, a `mainFlow` property which you may use to 
+customize the main flow (entry point) for the episode. This can be convenient if you need to switch between different structures
+(for user tests etc.), but still want to refer to the same set of subflows. 
+
+For instance, to define that *MyEpisode* should run a file `MyEpisode-variant.flow`
+instead of the default `MyEpisode.flow`, your `meta.json` might look like this:
+```json
+{
+"title": "My Episode",
+"mainFlow": "MyEpisode-variant"
 }
 ```

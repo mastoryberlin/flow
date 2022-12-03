@@ -1,21 +1,16 @@
 import { useParser, useVisitor } from "../chevrotain";
 import type * as dsl from "../dsl/types"
 import { allNpcs } from "../constants";
-import type { FlowType } from "../types.d"
 
 let rootName: string
 const parser = useParser()
 const visitor = useVisitor()
 
-export function useFlowToStatechart(flow: string, type: FlowType) {
+export function useFlowToStatechart(flow: string, rootNodeId = '<ROOT>') {
   parser.parse(flow)
-  rootName = {
-    episode: 'Current Episode',
-    challenge: 'Current Challenge',
-  }[type]
-  visitor.rootNodeId = rootName
+  visitor.rootNodeId = rootNodeId
   visitor.visit(parser.cst)
-  const json = stateNodeToJsonRecursive(rootName)
+  const json = stateNodeToJsonRecursive(rootNodeId)
   return {json, visitor}
 }
 

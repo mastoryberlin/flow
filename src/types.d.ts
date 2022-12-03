@@ -1,4 +1,4 @@
-import { allPanelIds, allFlowTypes } from "./constants";
+import { allPanelIds } from "./constants";
 
 // import type ParsePanelVue from "./components/ParserPanel.vue";
 // import type VisitorPanelVue from "./components/VisitorPanel.vue";
@@ -11,5 +11,3 @@ export interface PanelInfo {
   displayTitle: string
   component: any //PanelComponent
 }
-
-export type FlowType = typeof allFlowTypes[number]

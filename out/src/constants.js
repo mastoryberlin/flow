@@ -1,6 +1,6 @@
 "use strict";
 exports.__esModule = true;
-exports.allFlowTypes = exports.allNpcs = exports.allPanelIds = void 0;
+exports.allNpcs = exports.allPanelIds = void 0;
 exports.allPanelIds = [
     'parser',
     'visitor',
@@ -11,8 +11,4 @@ exports.allNpcs = [
     "Alicia",
     "VZ",
     "Professor",
-];
-exports.allFlowTypes = [
-    'episode',
-    'challenge',
 ];

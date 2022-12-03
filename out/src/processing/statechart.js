@@ -26,15 +26,12 @@ var constants_1 = require("../constants");
 var rootName;
 var parser = (0, chevrotain_1.useParser)();
 var visitor = (0, chevrotain_1.useVisitor)();
-function useFlowToStatechart(flow, type) {
+function useFlowToStatechart(flow, rootNodeId) {
+    if (rootNodeId === void 0) { rootNodeId = '<ROOT>'; }
     parser.parse(flow);
-    rootName = {
-        episode: 'Current Episode',
-        challenge: 'Current Challenge'
-    }[type];
-    visitor.rootNodeId = rootName;
+    visitor.rootNodeId = rootNodeId;
     visitor.visit(parser.cst);
-    var json = stateNodeToJsonRecursive(rootName);
+    var json = stateNodeToJsonRecursive(rootNodeId);
     return { json: json, visitor: visitor };
 }
 exports.useFlowToStatechart = useFlowToStatechart;

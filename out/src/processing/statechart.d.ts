@@ -1,5 +1,4 @@
-import type { FlowType } from "../types.d";
-export declare function useFlowToStatechart(flow: string, type: FlowType): {
+export declare function useFlowToStatechart(flow: string, rootNodeId?: string): {
     json: any;
     visitor: import("../chevrotain").DslVisitorWithDefaults;
 };

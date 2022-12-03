@@ -7,9 +7,6 @@ import type { TopLevelSequenceCstNode } from '../chevrotain/types';
 import { useFlowToLocale } from '../processing/locale';
 import { useFlowToStatechart } from '../processing/statechart';
 
-import { allFlowTypes } from "../constants";
-import type { FlowType } from '../types.d';
-
 const props = defineProps<{
   cst: TopLevelSequenceCstNode
   visitor: DslVisitorWithDefaults
@@ -17,9 +14,10 @@ const props = defineProps<{
 }>()
 
 const statechart = computed(() => {
+  const rootId = '<ROOT>'
   try {
     return {
-      json: useFlowToStatechart(props.flow, flowType.value),
+      data: useFlowToStatechart(props.flow, rootId),
       error: ''
     }
   } catch (e) {
@@ -31,7 +29,7 @@ const statechart = computed(() => {
 const locale = computed(() => {
   try {
     return {
-      json: useFlowToLocale(props.flow),
+      data: useFlowToLocale(props.flow),
       error: ''
     }
   } catch (e) {
@@ -41,23 +39,19 @@ const locale = computed(() => {
   }
 })
 
-const flowType = ref<FlowType>(allFlowTypes[0])
+const rootNodeId = ref('')
 </script>
 
 <template>
   <div class="panel">
     <h3>Statechart JSON</h3>
-    <label for="flowTypeSelector">Flow Type:</label>
-    <select name="flowTypeSelector" id="flowTypeSelector" v-model="flowType">
-      <option v-for="t in allFlowTypes" :key="t" :value="t">{{ t }}</option>
-    </select>
     <div class="wrapper">
-      <textarea class="output-code" rows="20" readonly>{{ statechart.json }}</textarea>
+      <textarea class="output-code" rows="20" readonly>{{ statechart.data?.json }}</textarea>
       <div class="error">{{ statechart.error }}</div>
     </div>
     <h3>Default Locale JSON</h3>
     <div class="wrapper">
-      <textarea class="output-code" rows="20" readonly>{{ locale.json }}</textarea>
+      <textarea class="output-code" rows="20" readonly>{{ locale.data }}</textarea>
       <div class="error">{{ locale.error }}</div>
     </div>
   </div>

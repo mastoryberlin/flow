@@ -13,11 +13,10 @@ import * as dsl from "../dsl/types"
 import type { CstNodeLocation, IToken } from "chevrotain";
 import type { NLUContext } from "../dsl/types";
 import { escapeDots, unescapeDots } from "../util";
-import type { FlowType } from "../types";
 
 const parser = useParser()
 
-const BaseVisitorWithDefaults = parser.getBaseCstVisitorConstructorWithDefaults<FlowType>()
+const BaseVisitorWithDefaults = parser.getBaseCstVisitorConstructorWithDefaults()
 
 export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
   rootNodeId = 'Current Episode'

@@ -14,10 +14,9 @@ const props = defineProps<{
 }>()
 
 const statechart = computed(() => {
-  const rootId = '<ROOT>'
   try {
     return {
-      data: useFlowToStatechart(props.flow, rootId),
+      data: useFlowToStatechart(props.flow, rootNodeId.value),
       error: ''
     }
   } catch (e) {
@@ -29,7 +28,7 @@ const statechart = computed(() => {
 const locale = computed(() => {
   try {
     return {
-      data: useFlowToLocale(props.flow),
+      data: useFlowToLocale(props.flow, rootNodeId.value),
       error: ''
     }
   } catch (e) {
@@ -39,19 +38,21 @@ const locale = computed(() => {
   }
 })
 
-const rootNodeId = ref('')
+const rootNodeId = ref('<ROOT>')
 </script>
 
 <template>
   <div class="panel">
     <h3>Statechart JSON</h3>
+    <label for="rootId">Root Node ID:</label>
+    <input type="text" name="rootId" id="rootId" v-model="rootNodeId">
     <div class="wrapper">
       <textarea class="output-code" rows="20" readonly>{{ statechart.data?.json }}</textarea>
       <div class="error">{{ statechart.error }}</div>
     </div>
     <h3>Default Locale JSON</h3>
     <div class="wrapper">
-      <textarea class="output-code" rows="20" readonly>{{ locale.data }}</textarea>
+      <textarea class="output-code" rows="20" readonly>{{ locale.data?.json }}</textarea>
       <div class="error">{{ locale.error }}</div>
     </div>
   </div>

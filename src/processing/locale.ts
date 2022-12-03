@@ -2,12 +2,14 @@ import { useParser, useVisitor } from '../chevrotain'
 import type * as dsl from '../dsl/types'
 import { unescapeDots } from '../util'
 
-const rootName = 'Current Episode'
+let rootName: string
 const parser = useParser()
 const visitor = useVisitor()
 
-export function useFlowToLocale(flow:string) {
+export function useFlowToLocale(flow: string, rootNodeId = '<ROOT>') {
   parser.parse(flow);
+  visitor.rootNodeId = rootNodeId
+  rootName = rootNodeId
   visitor.visit(parser.cst);
   const pathsArray = {} as Record<string, string>
   const intentsArray = {} as Record<string, string>
@@ -16,7 +18,7 @@ export function useFlowToLocale(flow:string) {
   json.flow.buttonIntents = intentsArray
   stateNodeToJsonRecursive(rootName, null, pathsArray, intentsArray)
   // console.log('entryPaths', pathsArray)
-  return json;
+  return {json, visitor};
 }
 
 

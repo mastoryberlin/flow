@@ -1,6 +1,9 @@
-export declare function useFlowToLocale(flow: string): {
-    flow: {
-        messages: {};
-        buttonIntents: {};
+export declare function useFlowToLocale(flow: string, rootNodeId?: string): {
+    json: {
+        flow: {
+            messages: {};
+            buttonIntents: {};
+        };
     };
+    visitor: import("../chevrotain").DslVisitorWithDefaults;
 };

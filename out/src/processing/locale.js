@@ -3,11 +3,14 @@ exports.__esModule = true;
 exports.useFlowToLocale = void 0;
 var chevrotain_1 = require("../chevrotain");
 var util_1 = require("../util");
-var rootName = 'Current Episode';
+var rootName;
 var parser = (0, chevrotain_1.useParser)();
 var visitor = (0, chevrotain_1.useVisitor)();
-function useFlowToLocale(flow) {
+function useFlowToLocale(flow, rootNodeId) {
+    if (rootNodeId === void 0) { rootNodeId = '<ROOT>'; }
     parser.parse(flow);
+    visitor.rootNodeId = rootNodeId;
+    rootName = rootNodeId;
     visitor.visit(parser.cst);
     var pathsArray = {};
     var intentsArray = {};
@@ -16,7 +19,7 @@ function useFlowToLocale(flow) {
     json.flow.buttonIntents = intentsArray;
     stateNodeToJsonRecursive(rootName, null, pathsArray, intentsArray);
     // console.log('entryPaths', pathsArray)
-    return json;
+    return { json: json, visitor: visitor };
 }
 exports.useFlowToLocale = useFlowToLocale;
 function recursionButtonIntents(node, intentsArray) {

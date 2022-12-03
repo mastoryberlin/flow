@@ -30,6 +30,7 @@ function useFlowToStatechart(flow, rootNodeId) {
     if (rootNodeId === void 0) { rootNodeId = '<ROOT>'; }
     parser.parse(flow);
     visitor.rootNodeId = rootNodeId;
+    rootName = rootNodeId;
     visitor.visit(parser.cst);
     var json = stateNodeToJsonRecursive(rootNodeId);
     return { json: json, visitor: visitor };

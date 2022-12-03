@@ -9,6 +9,7 @@ const visitor = useVisitor()
 export function useFlowToStatechart(flow: string, rootNodeId = '<ROOT>') {
   parser.parse(flow)
   visitor.rootNodeId = rootNodeId
+  rootName = rootNodeId
   visitor.visit(parser.cst)
   const json = stateNodeToJsonRecursive(rootNodeId)
   return {json, visitor}

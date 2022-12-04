@@ -128,12 +128,37 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
             }
         }
     };
-    DslVisitorWithDefaults.prototype.allStateNodes = function () { return Object.values(this.stateNodeByPath); };
+    DslVisitorWithDefaults.prototype.markLastStateNodeAsFinal = function () {
+        var _this = this;
+        var stateNodes = this.allStateNodes();
+        var stateNodeInLastVisitedLine = stateNodes.find(function (s) {
+            var transitions = _this.transitionsBySourcePath[s.path.join('.')];
+            if ((transitions === null || transitions === void 0 ? void 0 : transitions.length) || s.childNodes.length || s.parallel) {
+                return false;
+            }
+            var line = s.range.start.line;
+            for (var _i = 0, stateNodes_1 = stateNodes; _i < stateNodes_1.length; _i++) {
+                var t = stateNodes_1[_i];
+                if (t.range.start.line > line) {
+                    return false;
+                }
+            }
+            return true;
+        });
+        if (stateNodeInLastVisitedLine) {
+            stateNodeInLastVisitedLine.final = true;
+        }
+    };
+    DslVisitorWithDefaults.prototype.allStateNodes = function () {
+        return Object.values(this.stateNodeByPath);
+    };
     DslVisitorWithDefaults.prototype.allTransitions = function () {
+        // Due to the way it is created, this.transitionsBySourcePath may contain a value for the empty string key ''.
+        // When indexing this.transitionsBySourcePath directly that doesn't hurt, but here we have to filter it out.
         var withSource = Object.fromEntries(Object.entries(this.transitionsBySourcePath)
             .filter(function (_a) {
-            var k = _a[0];
-            return k !== '';
+            var sourcePath = _a[0];
+            return sourcePath !== '';
         }));
         return Object.values(withSource).flat();
     };
@@ -145,6 +170,7 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
         this.childrenByPath = {};
         this.visit(ctx.sequence);
         this.fixTransitionTargets();
+        this.markLastStateNodeAsFinal();
     };
     DslVisitorWithDefaults.prototype.sequence = function (ctx) {
         var _this = this;

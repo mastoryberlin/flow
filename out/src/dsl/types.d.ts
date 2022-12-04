@@ -46,6 +46,7 @@ export interface StateNode extends SemanticUnit {
     nluContext?: NLUContext;
     childNodes: StateNode[];
     transitions: Transition[];
+    final?: boolean;
 }
 export declare type FqStateNodePath = Array<string>;
 export declare type Label = string;

@@ -259,6 +259,9 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                 message: kind === 'text' ? node.path.join('.') : ((_b = node.message.source) === null || _b === void 0 ? void 0 : _b.toString()) || ''
             };
         }
+        if (node.final) {
+            json.type = 'final';
+        }
         return json;
     }
     else {

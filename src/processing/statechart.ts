@@ -234,6 +234,10 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
       }
     }
 
+    if (node.final) {
+      json.type = 'final'
+    }
+
     return json
   } else {
     // Root Node

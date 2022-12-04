@@ -102,11 +102,33 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     }
   }
 
-  allStateNodes() { return Object.values(this.stateNodeByPath) as dsl.StateNode[] }
+  private markLastStateNodeAsFinal() {
+    const stateNodes = this.allStateNodes()
+    const stateNodeInLastVisitedLine = stateNodes.find(s => {
+      const transitions = this.transitionsBySourcePath[s.path.join('.')]
+      if (transitions?.length || s.childNodes.length || s.parallel) { return false }
+      const line = s.range.start.line
+      for (const t of stateNodes) {
+        if (t.range.start.line > line) { return false }
+      }
+      return true
+    })
+
+    if (stateNodeInLastVisitedLine) {
+      stateNodeInLastVisitedLine.final = true
+    }
+  }
+
+  allStateNodes() {
+    return Object.values(this.stateNodeByPath) as dsl.StateNode[]
+  }
+
   allTransitions() {
+    // Due to the way it is created, this.transitionsBySourcePath may contain a value for the empty string key ''.
+    // When indexing this.transitionsBySourcePath directly that doesn't hurt, but here we have to filter it out.
     const withSource = Object.fromEntries(
       Object.entries(this.transitionsBySourcePath)
-        .filter(([k]) => k !== '')
+        .filter(([sourcePath]) => sourcePath !== '')
     )
     return Object.values(withSource).flat() as dsl.Transition[]
   }
@@ -119,6 +141,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     this.childrenByPath = {}
     this.visit(ctx.sequence)
     this.fixTransitionTargets()
+    this.markLastStateNodeAsFinal()
   }
 
   sequence(ctx: SequenceCstChildren) {

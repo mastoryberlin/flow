@@ -619,7 +619,7 @@ Greeting {
 #### Implementation Status
 |Specs|Syntax Highlighting|Parser|Visitor|Statechart Transform|App|Extension Convenience|
 |:---:|:-----------------:|:----:|:-----:|:------------------:|:-:|:-------------------:|
-|✅|❌|❌|❌|❌|❌|❌
+|✅|❌|✅|✅|✅|✅|❌
 
 With larger episode flows, managing the entire flow in one file quickly becomes tedious.
 It is therefore recommended to author episodes in a modular manner, organized around a single main episode flow

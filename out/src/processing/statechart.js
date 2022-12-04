@@ -179,6 +179,9 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                 onDone: '__DIRECTIVE_DONE__'
             };
             switch (directive.name) {
+                case 'actorPoints':
+                    invoke.src = { type: 'actorPoints', actorPointsData: directive.arg };
+                    break;
                 case 'alert':
                     if (!directive.arg) {
                         throw new Error('.alert directive must have an object argument: {title: ..., text: ...}');

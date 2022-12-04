@@ -336,6 +336,7 @@ Beware of the dog! {
 Here is a list of all directives currently supported by the Mastory app.
 Optional arguments are denoted by [brackets]; all other listed arguments are mandatory.
 
+- [actorPoints](#actorpoints)
 - [alert](#alert)
 - [cinema](#cinema)
 - [done](#done)
@@ -346,6 +347,32 @@ Optional arguments are denoted by [brackets]; all other listed arguments are man
 - [subflow](#subflow)
 - [unloadChallenge](#unloadchallenge)
 - [unloadSubflow](#unloadsubflow)
+
+#### `.actorPoints`
+```swift
+.actorPoints {at: UIElementDataId}
+```
+
+- `UIElementDataId` – a string identifying a UI element that the avatar pointer should point at.
+
+Displays an "avatar mouse pointer" animation, faking to the user that one of the NPCs is interacting with the app UI.
+
+`UIElementDataId` should match the `data-avatar-target` attribute of some HTML element visible at the time this
+directive is executing. For example, if there is a button UI element defined like
+```html
+<button data-avatar-target="closeButton"> Close! </button>
+```
+then you could fake an effect as if an NPC was clicking on that button via:
+```swift
+.actorPoints {at: 'closeButton'}
+```
+
+An animation will only be displayed if the event that led to the state of this directive has an `_pretendCausedByNpc` parameter.
+In this case, the "actor" (avatar) performing the fake operation will be chosen based on this parameter, matching up with any
+episode flow [.inChallenge](#inchallenge) directives that may have caused the current directive.
+
+If `_pretendCausedByNpc` is unset, it is assumed that the current directive was caused by some actual user interaction,
+and it will have no effect.
 
 #### `.alert`
 ```swift
@@ -391,9 +418,10 @@ Ensures that `AppName` is visible for the user, switching the "currently selecte
 
 #### `.inChallenge`
 ```swift
-.inChallenge EventName OptionsObject
+.inChallenge [ActorName] EventName OptionsObject
 ```
 
+- `ActorName` (*optional*) – the name of an NPC which can be used to fake a UI interaction, see [.actorPoints](#actorpoints).
 - `EventName` – the name of an event that can be interpreted by the currently loaded challenge state machine.
 - `OptionsObject` – a JavaScript object of the form `{option1: value1, option2: value2, ...}` containing any
 additional event-related data to be forwarded to the challenge state machine.
@@ -406,6 +434,10 @@ data in a certain way, check its specs in the `app` project's hierarchy at `chal
 Note that `EventName` must *exactly* match the event name defined by the challenge state machine, as no automatic case-translations will be performed.
 Likewise, the `OptionsObject` will be passed to the challenge state machine's `send()` function as-is, so make sure to also
 match the expected data format to reach the intended result.
+
+If `ActorName` is given, the NPC name will be forwarded to the event sent to the challenge via an additional parameter `_pretendCausedByNpc`.
+Then, if the event leads to an [.actorPoints](#actorpoints) directive in the challenge flow, a UI interaction by this NPC
+will be displayed.
 
 #### `.loadChallenge`
 ```swift

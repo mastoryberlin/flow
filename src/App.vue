@@ -8,11 +8,12 @@ import ResultsPane from './components/ResultsPane.vue';
 import { useVisitor } from './chevrotain/Visitor';
 
 const code = ref(`A {
-  1
-  2
-  3
-}
-`)
+  B {
+    C {
+      .done
+    }
+  }
+}`)
 
 const parser = useParser()
 const visitor = useVisitor()

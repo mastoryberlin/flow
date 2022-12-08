@@ -180,7 +180,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
           invoke.src = { type: 'alert', alertData: directive.arg }
           break
         case 'cinema': invoke.src = { type: 'cinema', source: directive.arg }; break
-        case 'done': json.type = 'final'; break
+        case 'done': always = `#${rootName}.__FLOW_DONE__`; break
         case 'subflow': invoke.src = { type: 'subflow', id: directive.arg }; break
         case 'focusApp': json.entry = { type: 'FOCUS_APP', appId: directive.arg.toLowerCase() }; break
         case 'loadChallenge': json.entry = { type: 'SET_CHALLENGE', challengeId: directive.arg }; break
@@ -235,12 +235,13 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
     }
 
     if (node.final) {
-      json.type = 'final'
+      json.always = `#${rootName}.__FLOW_DONE__`
     }
 
     return json
   } else {
     // Root Node
+    childStates.__FLOW_DONE__ = { type: 'final' }
     return {
       id: rootName,
       initial: children[0].name,

@@ -2,16 +2,15 @@
 exports.__esModule = true;
 exports.useFlowToLocale = void 0;
 var chevrotain_1 = require("../chevrotain");
+var issue_tracker_1 = require("./issue-tracker");
 var util_1 = require("../util");
 var rootName;
 var parser = (0, chevrotain_1.useParser)();
 var visitor = (0, chevrotain_1.useVisitor)();
 function useFlowToLocale(flow, rootNodeId) {
     if (rootNodeId === void 0) { rootNodeId = '<ROOT>'; }
-    parser.parse(flow);
-    visitor.rootNodeId = rootNodeId;
     rootName = rootNodeId;
-    visitor.visit(parser.cst);
+    (0, issue_tracker_1.useIssueTracker)(parser, visitor, flow, rootNodeId);
     var pathsArray = {};
     var intentsArray = {};
     var json = { flow: { messages: {}, buttonIntents: {} } };

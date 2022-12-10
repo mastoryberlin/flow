@@ -8,11 +8,11 @@ import ResultsPane from './components/ResultsPane.vue';
 import { useVisitor } from './chevrotain/Visitor';
 
 const code = ref(`A {
-  B {
-    C {
-      .done
-    }
-  }
+  B
+  .. VZ "Let's take a look at it!" 
+  .. quicky := true
+  .. enableClosePreview := true
+  .. .inChallenge VZ closePreview 
 }`)
 
 const parser = useParser()

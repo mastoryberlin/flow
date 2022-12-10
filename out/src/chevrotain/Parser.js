@@ -15,7 +15,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 exports.__esModule = true;
-exports.useParser = void 0;
+exports.useParser = exports.Parser = void 0;
 var chevrotain_1 = require("chevrotain");
 var Lexer_1 = require("./Lexer");
 var tokens = (0, Lexer_1.useTokens)();
@@ -178,6 +178,7 @@ var Parser = /** @class */ (function (_super) {
     };
     return Parser;
 }(chevrotain_1.CstParser));
+exports.Parser = Parser;
 var reusableParser = new Parser();
 var useParser = function () { return reusableParser; };
 exports.useParser = useParser;

@@ -9,7 +9,7 @@ import * as vscode from "../dsl/vscode";
 
 import type { StateNodeCstChildren, TopLevelSequenceCstChildren, AlwaysTransitionCstChildren, SequenceCstChildren, TransitionTargetCstNode, TransitionTargetCstChildren, TransitionCstChildren, AlwaysTransitionCstNode, StateNodePathCstNode } from "./types";
 import { useParser } from "./Parser";
-import * as dsl from "../dsl/types"
+import type * as dsl from "../dsl/types"
 import type { CstNodeLocation, IToken } from "chevrotain";
 import type { NLUContext } from "../dsl/types";
 import { escapeDots, unescapeDots } from "../util";
@@ -180,15 +180,15 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     } else {
       // ... message details if applicable ...
       const allSenderAliases = {
-        'Nick': ['nick'],
-        'Alicia': ['alicia'],
-        'VZ': ['vz', 'victoria'],
-        'Professor': ['dr camarena', 'prof', 'professor']
+        'Nick': ['nick', 'nic', 'nik'],
+        'Alicia': ['alicia', 'alcia', 'ali'],
+        'VZ': ['vz', 'vz|', 'victoria'],
+        'Professor': ['dr camarena', 'prof', 'dr| camarena', 'prof|', 'professor']
       }
       const mediaTypes = ['image', 'audio', 'video']
       const urlPattern = '\\w+://\\S+'
       const messagePattern = new RegExp(
-        `^(?:(${Object.values(allSenderAliases).flat().join('|')})\\s+)?` +
+        `^(?:((?:(?!"|${mediaTypes.join('|')})(?:\\S(?!://))+\\s+)+))?` +
         `(?:(${mediaTypes.join('|')}|${urlPattern})\\s+)?` +
         `"([^"]*)"$`,
         'i'
@@ -196,7 +196,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
       const messageMatch = name.match(messagePattern)
       if (messageMatch) { 
         const [_, alias, mediaTypeOrUrl, textOrPlaceholder] = messageMatch
-        const sender = alias ? Object.entries(allSenderAliases).find(([_, aliases]) => aliases.includes(alias.toLowerCase()))?.[0] as dsl.NPC : undefined
+        const sender = alias ? Object.entries(allSenderAliases).find(([_, aliases]) => aliases.includes(alias.trim().toLowerCase()))?.[0] as dsl.NPC : undefined
 
         if (mediaTypeOrUrl) {
           let type: dsl.MessageType, source: vscode.Uri | undefined

@@ -22,16 +22,15 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
 exports.__esModule = true;
 exports.useFlowToStatechart = void 0;
 var chevrotain_1 = require("../chevrotain");
+var issue_tracker_1 = require("./issue-tracker");
 var constants_1 = require("../constants");
 var rootName;
 var parser = (0, chevrotain_1.useParser)();
 var visitor = (0, chevrotain_1.useVisitor)();
 function useFlowToStatechart(flow, rootNodeId) {
     if (rootNodeId === void 0) { rootNodeId = '<ROOT>'; }
-    parser.parse(flow);
-    visitor.rootNodeId = rootNodeId;
     rootName = rootNodeId;
-    visitor.visit(parser.cst);
+    (0, issue_tracker_1.useIssueTracker)(parser, visitor, flow, rootNodeId);
     var json = stateNodeToJsonRecursive(rootNodeId);
     return { json: json, visitor: visitor };
 }

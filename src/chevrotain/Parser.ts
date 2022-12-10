@@ -10,7 +10,7 @@ const [
   After, OnEvent, IfCondition, When, Label, Directive, Assignment, StateNodeName
 ] = tokens
 
-class Parser extends CstParser {
+export class Parser extends CstParser {
   cst: any = {
     name: 'topLevelSequence',
     children: {

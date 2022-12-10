@@ -1,4 +1,5 @@
 import { useParser, useVisitor } from "../chevrotain";
+import { useIssueTracker } from "./issue-tracker";
 import type * as dsl from "../dsl/types"
 import { allNpcs } from "../constants";
 
@@ -7,10 +8,8 @@ const parser = useParser()
 const visitor = useVisitor()
 
 export function useFlowToStatechart(flow: string, rootNodeId = '<ROOT>') {
-  parser.parse(flow)
-  visitor.rootNodeId = rootNodeId
   rootName = rootNodeId
-  visitor.visit(parser.cst)
+  useIssueTracker(parser, visitor, flow, rootNodeId)
   const json = stateNodeToJsonRecursive(rootNodeId)
   return {json, visitor}
 }

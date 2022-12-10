@@ -212,14 +212,14 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
         else {
             // ... message details if applicable ...
             var allSenderAliases = {
-                'Nick': ['nick'],
-                'Alicia': ['alicia'],
-                'VZ': ['vz', 'victoria'],
-                'Professor': ['dr camarena', 'prof', 'professor']
+                'Nick': ['nick', 'nic', 'nik'],
+                'Alicia': ['alicia', 'alcia', 'ali'],
+                'VZ': ['vz', 'vz|', 'victoria'],
+                'Professor': ['dr camarena', 'prof', 'dr| camarena', 'prof|', 'professor']
             };
             var mediaTypes = ['image', 'audio', 'video'];
             var urlPattern = '\\w+://\\S+';
-            var messagePattern = new RegExp("^(?:(".concat(Object.values(allSenderAliases).flat().join('|'), ")\\s+)?") +
+            var messagePattern = new RegExp("^(?:((?:(?!\"|".concat(mediaTypes.join('|'), ")(?:\\S(?!://))+\\s+)+))?") +
                 "(?:(".concat(mediaTypes.join('|'), "|").concat(urlPattern, ")\\s+)?") +
                 "\"([^\"]*)\"$", 'i');
             var messageMatch = name.match(messagePattern);
@@ -227,7 +227,7 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                 var _ = messageMatch[0], alias_1 = messageMatch[1], mediaTypeOrUrl = messageMatch[2], textOrPlaceholder = messageMatch[3];
                 var sender = alias_1 ? (_a = Object.entries(allSenderAliases).find(function (_a) {
                     var _ = _a[0], aliases = _a[1];
-                    return aliases.includes(alias_1.toLowerCase());
+                    return aliases.includes(alias_1.trim().toLowerCase());
                 })) === null || _a === void 0 ? void 0 : _a[0] : undefined;
                 if (mediaTypeOrUrl) {
                     var type = void 0, source 

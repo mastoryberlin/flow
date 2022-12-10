@@ -13,11 +13,12 @@ function useIssueTracker(parser, visitor, flow, rootNodeId) {
     var checkDeadEnds = function () {
         kind = 'dead end';
         var deadEnds = allStateNodes.filter(function (s) {
-            var _a;
+            var _a, _b;
             return !s.final &&
                 !s.childNodes.length &&
                 s.name !== '?' &&
-                !((_a = visitor.transitionsBySourcePath[s.path.join('.')]) === null || _a === void 0 ? void 0 : _a.length);
+                ((_a = s.directive) === null || _a === void 0 ? void 0 : _a.name) !== 'done' &&
+                !((_b = visitor.transitionsBySourcePath[s.path.join('.')]) === null || _b === void 0 ? void 0 : _b.length);
         });
         issues.push.apply(issues, deadEnds.map(function (s) { return ({
             kind: kind,

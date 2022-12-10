@@ -27,7 +27,7 @@ var StateNodeName = (0, chevrotain_1.createToken)({
     },
     line_breaks: false
 });
-var directiveRegex = /\.(\w+)(?: +([^\n]*))?/y;
+var directiveRegex = /\.(\w+)(?: +((?:[^\n\/]|\/(?!\/))*))?/y;
 var Directive = (0, chevrotain_1.createToken)({
     name: 'Directive',
     pattern: function (text, startOffset) {

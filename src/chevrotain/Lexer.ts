@@ -15,7 +15,7 @@ const StateNodeName = createToken({
   line_breaks: false
 })
 
-const directiveRegex = /\.(\w+)(?: +([^\n]*))?/y
+const directiveRegex = /\.(\w+)(?: +((?:[^\n\/]|\/(?!\/))*))?/y
 const Directive = createToken({
   name: 'Directive',
   pattern: (text: string, startOffset: number) => {

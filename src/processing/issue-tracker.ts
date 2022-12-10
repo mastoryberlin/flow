@@ -19,6 +19,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
       !s.final &&
       !s.childNodes.length &&
       s.name !== '?' &&
+      s.directive?.name !== 'done' &&
       !visitor.transitionsBySourcePath[s.path.join('.')]?.length
     )
     issues.push(...deadEnds.map(s => ({

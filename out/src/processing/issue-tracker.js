@@ -7,6 +7,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId) {
     visitor.visit(parser.cst);
     var issues = [];
     var allStateNodes = visitor.allStateNodes();
+    var stateNodeByPath = visitor.stateNodeByPath;
     var allTransitions = visitor.allTransitions();
     var kind;
     var checkDeadEnds = function () {
@@ -15,6 +16,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId) {
             var _a;
             return !s.final &&
                 !s.childNodes.length &&
+                s.name !== '?' &&
                 !((_a = visitor.transitionsBySourcePath[s.path.join('.')]) === null || _a === void 0 ? void 0 : _a.length);
         });
         issues.push.apply(issues, deadEnds.map(function (s) { return ({
@@ -37,14 +39,19 @@ function useIssueTracker(parser, visitor, flow, rootNodeId) {
     var mediaTypes = ['image', 'audio', 'video'];
     var checkMessageSenders = function () {
         kind = 'message sender unknown';
-        var unknownSenders = allStateNodes.filter(function (s) { return s.message && !s.message.sender; });
+        var unknownSenders = allStateNodes.filter(function (s) {
+            return s.message &&
+                (s.path.length <= 2 ||
+                    stateNodeByPath[s.path.slice(0, s.path.length - 1).join('.')].childNodes[0].name !== '?') &&
+                !s.message.sender;
+        });
         issues.push.apply(issues, unknownSenders.map(function (s) {
-            var _a;
+            var _a, _b;
             return ({
                 kind: kind,
                 location: s.path,
                 payload: {
-                    sender: (_a = s.path[s.path.length - 1].match(new RegExp("^(?:((?:(?!\"|".concat(mediaTypes.join('|'), ")(?:\\S(?!://))+\\s+)+))?")))) === null || _a === void 0 ? void 0 : _a[1].trim()
+                    sender: (_b = (_a = s.path[s.path.length - 1].match(new RegExp("^(?:((?:(?!\"|".concat(mediaTypes.join('|'), ")(?:\\S(?!://))+\\s+)+))?")))) === null || _a === void 0 ? void 0 : _a[1]) === null || _b === void 0 ? void 0 : _b.trim()
                 }
             });
         }));

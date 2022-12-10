@@ -9,6 +9,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   
   const issues: Issue[] = []
   const allStateNodes = visitor.allStateNodes()
+  const stateNodeByPath = visitor.stateNodeByPath
   const allTransitions = visitor.allTransitions()
   let kind: IssueKind
 
@@ -17,6 +18,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     const deadEnds = allStateNodes.filter(s =>
       !s.final &&
       !s.childNodes.length &&
+      s.name !== '?' &&
       !visitor.transitionsBySourcePath[s.path.join('.')]?.length
     )
     issues.push(...deadEnds.map(s => ({
@@ -38,12 +40,19 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   const mediaTypes = ['image', 'audio', 'video']
   const checkMessageSenders = () => {
     kind = 'message sender unknown'
-    const unknownSenders = allStateNodes.filter(s => s.message && !s.message.sender)
+    const unknownSenders = allStateNodes.filter(s =>
+      s.message &&
+      (
+        s.path.length <= 2 ||
+        stateNodeByPath[s.path.slice(0, s.path.length - 1).join('.')].childNodes[0].name !== '?'
+      ) &&
+      !s.message.sender
+    )
     issues.push(...unknownSenders.map(s => ({
       kind,
       location: s.path,
       payload: {
-        sender: s.path[s.path.length - 1].match(new RegExp(`^(?:((?:(?!"|${mediaTypes.join('|')})(?:\\S(?!://))+\\s+)+))?`))?.[1].trim()
+        sender: s.path[s.path.length - 1].match(new RegExp(`^(?:((?:(?!"|${mediaTypes.join('|')})(?:\\S(?!://))+\\s+)+))?`))?.[1]?.trim()
       }
     })))
   }

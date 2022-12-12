@@ -187,11 +187,14 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
         case 'inChallenge':
           {
             if (!directive.arg) { throw new Error('.inChallenge directive must have at least one argument: eventName') }
-            let args = directive.arg.replace(" ", sepHelper).split(sepHelper)
+            const splitter = new RegExp('\\s+|(?<!^)\\b(?!$)')
+            let args = directive.arg.replace(splitter, sepHelper).split(sepHelper)
+            console.log('ARGS 1: ', args)
 
             const character = allNpcs.find(c => c.toLowerCase() === args[0].toLowerCase())
             if (character) {
-              args = args[1].replace(" ", sepHelper).split(sepHelper)
+              args = args[1].replace(splitter, sepHelper).split(sepHelper)
+              console.log('ARGS 2: ', args)
             }
             let eventName = args[0]
 

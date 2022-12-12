@@ -210,10 +210,13 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                         if (!directive.arg) {
                             throw new Error('.inChallenge directive must have at least one argument: eventName');
                         }
-                        var args_1 = directive.arg.replace(" ", sepHelper).split(sepHelper);
+                        var splitter = new RegExp('\\s+|(?<!^)\\b(?!$)');
+                        var args_1 = directive.arg.replace(splitter, sepHelper).split(sepHelper);
+                        console.log('ARGS 1: ', args_1);
                         var character = constants_1.allNpcs.find(function (c) { return c.toLowerCase() === args_1[0].toLowerCase(); });
                         if (character) {
-                            args_1 = args_1[1].replace(" ", sepHelper).split(sepHelper);
+                            args_1 = args_1[1].replace(splitter, sepHelper).split(sepHelper);
+                            console.log('ARGS 2: ', args_1);
                         }
                         var eventName = args_1[0];
                         var eventData = "{}";

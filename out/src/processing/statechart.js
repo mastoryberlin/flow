@@ -174,6 +174,7 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
         if (directive) {
             directive.arg = (_a = directive.arg) === null || _a === void 0 ? void 0 : _a.replace(/\\r/g, '');
             var sepHelper = '&.&';
+            var argSplitter = new RegExp('\\s+|(?<!^)\\b(?!$)');
             var invoke = {
                 onDone: '__DIRECTIVE_DONE__'
             };
@@ -197,7 +198,18 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                     invoke.src = { type: 'subflow', id: directive.arg };
                     break;
                 case 'focusApp':
-                    json.entry = { type: 'FOCUS_APP', appId: directive.arg.toLowerCase() };
+                    {
+                        if (!directive.arg) {
+                            throw new Error('.focusApp directive must have at least one argument: appId');
+                        }
+                        var args_1 = directive.arg.replace(argSplitter, sepHelper).split(sepHelper);
+                        var character = constants_1.allNpcs.find(function (c) { return c.toLowerCase() === args_1[0].toLowerCase(); });
+                        if (character) {
+                            args_1 = args_1[1].replace(argSplitter, sepHelper).split(sepHelper);
+                        }
+                        var appId = args_1[0].trim().toLowerCase();
+                        invoke.src = { type: '_focusApp_', appId: appId, character: character };
+                    }
                     break;
                 case 'loadChallenge':
                     json.entry = { type: 'SET_CHALLENGE', challengeId: directive.arg };
@@ -210,21 +222,16 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                         if (!directive.arg) {
                             throw new Error('.inChallenge directive must have at least one argument: eventName');
                         }
-                        var splitter = new RegExp('\\s+|(?<!^)\\b(?!$)');
-                        var args_1 = directive.arg.replace(splitter, sepHelper).split(sepHelper);
-                        console.log('ARGS 1: ', args_1);
-                        var character = constants_1.allNpcs.find(function (c) { return c.toLowerCase() === args_1[0].toLowerCase(); });
+                        var args_2 = directive.arg.replace(argSplitter, sepHelper).split(sepHelper);
+                        var character = constants_1.allNpcs.find(function (c) { return c.toLowerCase() === args_2[0].toLowerCase(); });
                         if (character) {
-                            args_1 = args_1[1].replace(splitter, sepHelper).split(sepHelper);
-                            console.log('ARGS 2: ', args_1);
+                            args_2 = args_2[1].replace(argSplitter, sepHelper).split(sepHelper);
                         }
-                        var eventName = args_1[0];
+                        var eventName = args_2[0];
                         var eventData = "{}";
-                        if (args_1.length > 1) {
-                            eventData = args_1[1];
+                        if (args_2.length > 1) {
+                            eventData = args_2[1];
                         }
-                        eventName = eventName;
-                        eventData = eventData;
                         if (character) {
                             eventData = eventData.replace('{', "{_pretendCausedByNpc:\"".concat(character, "\","));
                         }

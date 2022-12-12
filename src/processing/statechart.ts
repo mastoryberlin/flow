@@ -169,6 +169,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
     if (directive) {
       directive.arg = directive.arg?.replace(/\\r/g, '')
       const sepHelper = '&.&'
+      const argSplitter = new RegExp('\\s+|(?<!^)\\b(?!$)')
       const invoke = {
         onDone: '__DIRECTIVE_DONE__'
       } as any
@@ -181,20 +182,29 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
         case 'cinema': invoke.src = { type: 'cinema', source: directive.arg }; break
         case 'done': always = `#${rootName}.__FLOW_DONE__`; break
         case 'subflow': invoke.src = { type: 'subflow', id: directive.arg }; break
-        case 'focusApp': json.entry = { type: 'FOCUS_APP', appId: directive.arg.toLowerCase() }; break
+        case 'focusApp':
+          {
+            if (!directive.arg) { throw new Error('.focusApp directive must have at least one argument: appId') }
+            let args = directive.arg.replace(argSplitter, sepHelper).split(sepHelper)
+
+            const character = allNpcs.find(c => c.toLowerCase() === args[0].toLowerCase())
+            if (character) {
+              args = args[1].replace(argSplitter, sepHelper).split(sepHelper)
+            }
+            let appId = args[0].trim().toLowerCase()
+            invoke.src = { type: '_focusApp_', appId, character }
+          }
+          break
         case 'loadChallenge': json.entry = { type: 'SET_CHALLENGE', challengeId: directive.arg }; break
         case 'unloadChallenge': json.entry = { type: 'UNLOAD_CHALLENGE_COMPONENT' }; break
         case 'inChallenge':
           {
             if (!directive.arg) { throw new Error('.inChallenge directive must have at least one argument: eventName') }
-            const splitter = new RegExp('\\s+|(?<!^)\\b(?!$)')
-            let args = directive.arg.replace(splitter, sepHelper).split(sepHelper)
-            console.log('ARGS 1: ', args)
+            let args = directive.arg.replace(argSplitter, sepHelper).split(sepHelper)
 
             const character = allNpcs.find(c => c.toLowerCase() === args[0].toLowerCase())
             if (character) {
-              args = args[1].replace(splitter, sepHelper).split(sepHelper)
-              console.log('ARGS 2: ', args)
+              args = args[1].replace(argSplitter, sepHelper).split(sepHelper)
             }
             let eventName = args[0]
 
@@ -202,8 +212,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
             if (args.length > 1) {
               eventData = args[1]
             }
-            eventName = eventName
-            eventData = eventData
+
             if (character) { eventData = eventData.replace('{', `{_pretendCausedByNpc:"${character}",`) }
             json.entry = { type: 'IN_CHALLENGE', eventName, eventData }
           }

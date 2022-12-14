@@ -229,8 +229,8 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                         }
                         var eventName = args_2[0];
                         var eventData = "{}";
-                        if (args_2.length > 1) {
-                            eventData = args_2[1];
+                        if (args_2.length > 1 && args_2[1].trim()) {
+                            eventData = args_2[1].trim();
                         }
                         if (character) {
                             eventData = eventData.replace('{', "{_pretendCausedByNpc:\"".concat(character, "\","));

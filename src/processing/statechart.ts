@@ -209,8 +209,8 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
             let eventName = args[0]
 
             let eventData = "{}"
-            if (args.length > 1) {
-              eventData = args[1]
+            if (args.length > 1 && args[1].trim()) {
+              eventData = args[1].trim()
             }
 
             if (character) { eventData = eventData.replace('{', `{_pretendCausedByNpc:"${character}",`) }

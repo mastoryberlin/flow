@@ -1,4 +1,13 @@
 "use strict";
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 exports.__esModule = true;
 exports.useIssueTracker = void 0;
 function useIssueTracker(parser, visitor, flow, rootNodeId) {
@@ -7,30 +16,34 @@ function useIssueTracker(parser, visitor, flow, rootNodeId) {
     visitor.visit(parser.cst);
     var issues = [];
     var allStateNodes = visitor.allStateNodes();
+    var rootStateNodes = visitor.allStateNodes().filter(function (s) { return s.path.length <= 2; });
     var stateNodeByPath = visitor.stateNodeByPath;
     var allTransitions = visitor.allTransitions();
     var kind;
     var checkDeadEnds = function () {
         kind = 'dead end';
-        var deadEnds = allStateNodes.filter(function (s) {
-            var isExcluded = function (n) { var _a; return n.final || n.childNodes.length || n.name === '?' || ((_a = n.directive) === null || _a === void 0 ? void 0 : _a.name) === 'done'; };
-            var hasTransitions = function (n) { var _a; return !!((_a = visitor.transitionsBySourcePath[n.path.join('.')]) === null || _a === void 0 ? void 0 : _a.length); };
-            if (isExcluded(s)) {
-                return false;
-            }
-            if (!hasTransitions(s)) {
-                if (s.path.length < 2) {
-                    return true;
-                }
-                var parent_1 = stateNodeByPath[s.path.slice(0, s.path.length - 1).join('.')];
-                if (parent_1.parallel && parent_1.childNodes.some(function (sibling) { return isExcluded(sibling) || hasTransitions(sibling); })) {
-                    return false;
+        var isExcluded = function (n) { var _a; return n.final || n.childNodes.length || n.name === '?' || ((_a = n.directive) === null || _a === void 0 ? void 0 : _a.name) === 'done'; };
+        var hasTransitions = function (n) { var _a; return !!((_a = visitor.transitionsBySourcePath[n.path.join('.')]) === null || _a === void 0 ? void 0 : _a.length); };
+        var findDeadEndsRecursive = function (s) {
+            if (s.parallel) {
+                var deadEndsInChildren = s.childNodes.map(function (c) { return findDeadEndsRecursive(c); });
+                if (deadEndsInChildren.every(function (result) { return result.length; })) {
+                    return __spreadArray([s], deadEndsInChildren.flat(), true);
                 }
                 else {
-                    return true;
+                    return [];
                 }
             }
-        });
+            else {
+                if (isExcluded(s) || hasTransitions(s)) {
+                    return s.childNodes.map(function (c) { return findDeadEndsRecursive(c); }).flat();
+                }
+                else {
+                    return [s];
+                }
+            }
+        };
+        var deadEnds = rootStateNodes.map(function (s) { return findDeadEndsRecursive(s); }).flat();
         issues.push.apply(issues, deadEnds.map(function (s) { return ({
             kind: kind,
             location: s.path

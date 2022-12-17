@@ -9,26 +9,32 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   
   const issues: Issue[] = []
   const allStateNodes = visitor.allStateNodes()
+  const rootStateNodes = visitor.allStateNodes().filter(s => s.path.length <= 2)
   const stateNodeByPath = visitor.stateNodeByPath
   const allTransitions = visitor.allTransitions()
   let kind: IssueKind
-
+  
   const checkDeadEnds = () => {
     kind = 'dead end'
-    const deadEnds = allStateNodes.filter(s => {
-      const isExcluded = (n: StateNode) => n.final || n.childNodes.length || n.name === '?' || n.directive?.name === 'done'
-      const hasTransitions = (n: StateNode) => !!visitor.transitionsBySourcePath[n.path.join('.')]?.length
-      if (isExcluded(s)) { return false }
-      if (!hasTransitions(s)) {
-        if (s.path.length < 2) { return true }
-        const parent = stateNodeByPath[s.path.slice(0, s.path.length - 1).join('.')]
-        if (parent.parallel && parent.childNodes.some(sibling => isExcluded(sibling) || hasTransitions(sibling))) {
-          return false
+    const isExcluded = (n: StateNode) => n.final || n.childNodes.length || n.name === '?' || n.directive?.name === 'done'
+    const hasTransitions = (n: StateNode) => !!visitor.transitionsBySourcePath[n.path.join('.')]?.length
+    const findDeadEndsRecursive = (s: StateNode): StateNode[] => {
+      if (s.parallel) {
+        const deadEndsInChildren = s.childNodes.map(c => findDeadEndsRecursive(c))
+        if (deadEndsInChildren.every(result => result.length)) {
+          return [s, ...deadEndsInChildren.flat()]
         } else {
-          return true
+          return []
+        }
+      } else {
+        if (isExcluded(s) || hasTransitions(s)) {
+          return s.childNodes.map(c => findDeadEndsRecursive(c)).flat()
+        } else {
+          return [s]
         }
       }
-    })
+    }
+    const deadEnds = rootStateNodes.map(s => findDeadEndsRecursive(s)).flat()
     issues.push(...deadEnds.map(s => ({
       kind,
       location: s.path,

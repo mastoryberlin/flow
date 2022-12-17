@@ -13,12 +13,23 @@ function useIssueTracker(parser, visitor, flow, rootNodeId) {
     var checkDeadEnds = function () {
         kind = 'dead end';
         var deadEnds = allStateNodes.filter(function (s) {
-            var _a, _b;
-            return !s.final &&
-                !s.childNodes.length &&
-                s.name !== '?' &&
-                ((_a = s.directive) === null || _a === void 0 ? void 0 : _a.name) !== 'done' &&
-                !((_b = visitor.transitionsBySourcePath[s.path.join('.')]) === null || _b === void 0 ? void 0 : _b.length);
+            var isExcluded = function (n) { var _a; return n.final || n.childNodes.length || n.name === '?' || ((_a = n.directive) === null || _a === void 0 ? void 0 : _a.name) === 'done'; };
+            var hasTransitions = function (n) { var _a; return !!((_a = visitor.transitionsBySourcePath[n.path.join('.')]) === null || _a === void 0 ? void 0 : _a.length); };
+            if (isExcluded(s)) {
+                return false;
+            }
+            if (!hasTransitions(s)) {
+                if (s.path.length < 2) {
+                    return true;
+                }
+                var parent_1 = stateNodeByPath[s.path.slice(0, s.path.length - 1).join('.')];
+                if (parent_1.parallel && parent_1.childNodes.some(function (sibling) { return isExcluded(sibling) || hasTransitions(sibling); })) {
+                    return false;
+                }
+                else {
+                    return true;
+                }
+            }
         });
         issues.push.apply(issues, deadEnds.map(function (s) { return ({
             kind: kind,

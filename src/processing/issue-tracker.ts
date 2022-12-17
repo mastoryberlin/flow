@@ -1,5 +1,5 @@
 import type { Parser, DslVisitorWithDefaults } from "../chevrotain";
-import type { MediaMessage } from "../dsl/types";
+import type { MediaMessage, StateNode } from "../dsl/types";
 import type { Issue, IssueKind } from "../types";
 
 export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults, flow: string, rootNodeId: string) {
@@ -15,13 +15,20 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
 
   const checkDeadEnds = () => {
     kind = 'dead end'
-    const deadEnds = allStateNodes.filter(s =>
-      !s.final &&
-      !s.childNodes.length &&
-      s.name !== '?' &&
-      s.directive?.name !== 'done' &&
-      !visitor.transitionsBySourcePath[s.path.join('.')]?.length
-    )
+    const deadEnds = allStateNodes.filter(s => {
+      const isExcluded = (n: StateNode) => n.final || n.childNodes.length || n.name === '?' || n.directive?.name === 'done'
+      const hasTransitions = (n: StateNode) => !!visitor.transitionsBySourcePath[n.path.join('.')]?.length
+      if (isExcluded(s)) { return false }
+      if (!hasTransitions(s)) {
+        if (s.path.length < 2) { return true }
+        const parent = stateNodeByPath[s.path.slice(0, s.path.length - 1).join('.')]
+        if (parent.parallel && parent.childNodes.some(sibling => isExcluded(sibling) || hasTransitions(sibling))) {
+          return false
+        } else {
+          return true
+        }
+      }
+    })
     issues.push(...deadEnds.map(s => ({
       kind,
       location: s.path,

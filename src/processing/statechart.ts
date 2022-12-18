@@ -97,7 +97,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
             internal: true,
             cond: { type: 'isIntentName', intentName },
           })),
-          { target: '*' } // fallback intent
+          // { target: '*' } // fallback intent
         ]
       }
     }

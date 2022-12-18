@@ -115,13 +115,11 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
             json.exit = 'LEAVE_NLU_CONTEXT';
             // ================================================================
             json.on = {
-                INTENT: __spreadArray(__spreadArray([], intents.map(function (intentName) { return ({
+                INTENT: __spreadArray([], intents.map(function (intentName) { return ({
                     target: "\"".concat(intentName, "\""),
                     internal: true,
                     cond: { type: 'isIntentName', intentName: intentName }
-                }); }), true), [
-                    { target: '*' } // fallback intent
-                ], false)
+                }); }), true)
             };
         }
         var transitions = visitor.transitionsBySourcePath[fqPath]; // node.transitions is currently empty

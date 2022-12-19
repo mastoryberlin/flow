@@ -1,2 +1,3 @@
 import type { Parser, DslVisitorWithDefaults } from "../chevrotain";
-export declare function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults, flow: string, rootNodeId: string): void;
+import type { Issue } from "../types";
+export declare function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults, flow: string, rootNodeId: string, noThrow?: boolean): Issue[];

@@ -19,7 +19,8 @@ export type IssueKind = typeof allIssueKinds[number]
 export type IssueSeverity = 'warning' | 'error'
 
 export interface Issue {
-  kind: IssueKind
+  kind: IssueKind,
+  issueKind: IssueSeverity,
   location: FqStateNodePath | Position
   payload?: any
 }

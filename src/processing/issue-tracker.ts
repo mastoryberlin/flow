@@ -99,8 +99,8 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   checkMessageMediaUrl()
 
   if (noThrow) {
-    console.log(`Flow DSL list of Errors:${issues}`)
-    return issues
+    console.log(`Flow DSL list of Errors:${JSON.stringify(issues)}`)
+    return JSON.stringify(issues)
   } else {
     issues.forEach(i => {
       const name = i.kind.toUpperCase()

@@ -30,7 +30,7 @@ var visitor = (0, chevrotain_1.useVisitor)();
 function useFlowToStatechart(flow, rootNodeId) {
     if (rootNodeId === void 0) { rootNodeId = '<ROOT>'; }
     rootName = rootNodeId;
-    (0, issue_tracker_1.useIssueTracker)(parser, visitor, flow, rootNodeId);
+    (0, issue_tracker_1.useIssueTracker)(parser, visitor, flow, rootNodeId, true);
     var json = stateNodeToJsonRecursive(rootNodeId);
     return { json: json, visitor: visitor };
 }

@@ -10,7 +10,7 @@ var visitor = (0, chevrotain_1.useVisitor)();
 function useFlowToLocale(flow, rootNodeId) {
     if (rootNodeId === void 0) { rootNodeId = '<ROOT>'; }
     rootName = rootNodeId;
-    (0, issue_tracker_1.useIssueTracker)(parser, visitor, flow, rootNodeId);
+    (0, issue_tracker_1.useIssueTracker)(parser, visitor, flow, rootNodeId, true);
     var pathsArray = {};
     var intentsArray = {};
     var json = { flow: { messages: {}, buttonIntents: {} } };

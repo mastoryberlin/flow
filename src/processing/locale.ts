@@ -9,7 +9,7 @@ const visitor = useVisitor()
 
 export function useFlowToLocale(flow: string, rootNodeId = '<ROOT>') {
   rootName = rootNodeId
-  useIssueTracker(parser, visitor, flow, rootNodeId)
+  useIssueTracker(parser, visitor, flow, rootNodeId, true)
   const pathsArray = {} as Record<string, string>
   const intentsArray = {} as Record<string, string>
   const json = { flow: { messages: {}, buttonIntents: {} } }
@@ -17,7 +17,7 @@ export function useFlowToLocale(flow: string, rootNodeId = '<ROOT>') {
   json.flow.buttonIntents = intentsArray
   stateNodeToJsonRecursive(rootName, null, pathsArray, intentsArray)
   // console.log('entryPaths', pathsArray)
-  return {json, visitor};
+  return { json, visitor };
 }
 
 
@@ -53,7 +53,7 @@ function stateNodeToJsonRecursive(fqPath: string, node: dsl.StateNode | null, pa
     children = node.childNodes;
     if (node.message && node.message.type === 'text') {
       const text = (node.message as dsl.TextMessage).text
-      if(text){
+      if (text) {
         pathsArray[fqPath] = text
       }
       // console.log('node.childNodes',node.childNodes)

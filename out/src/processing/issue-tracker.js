@@ -107,8 +107,8 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     checkMessageSenders();
     checkMessageMediaUrl();
     if (noThrow) {
-        console.log("Flow DSL list of Errors:".concat(issues));
-        return issues;
+        console.log("Flow DSL list of Errors:".concat(JSON.stringify(issues)));
+        return JSON.stringify(issues);
     }
     else {
         issues.forEach(function (i) {

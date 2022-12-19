@@ -21,6 +21,6 @@ export type IssueSeverity = 'warning' | 'error'
 export interface Issue {
   kind: IssueKind,
   issueKind: IssueSeverity,
-  position:  Position,
+  position: FqStateNodePath | Position,
   payload?: any
 }

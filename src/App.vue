@@ -7,13 +7,10 @@ import type { TopLevelSequenceCstNode } from './chevrotain/types';
 import ResultsPane from './components/ResultsPane.vue';
 import { useVisitor } from './chevrotain/Visitor';
 
-const code = ref(`A {
+const code = ref(`
+A
   B
-  .. VZ "Let's take a look at it!" 
-  .. quicky := true
-  .. enableClosePreview := true
-  .. .inChallenge VZ closePreview 
-}`)
+`)
 
 const parser = useParser()
 const visitor = useVisitor()
@@ -25,7 +22,7 @@ const parse = (flowCode: string) => {
 
 const cst = ref<TopLevelSequenceCstNode | null>(null)
 
-onMounted(() => {parse(code.value)})
+onMounted(() => { parse(code.value) })
 </script>
 
 <template>
@@ -34,4 +31,5 @@ onMounted(() => {parse(code.value)})
 </template>
 
 <style scoped>
+
 </style>

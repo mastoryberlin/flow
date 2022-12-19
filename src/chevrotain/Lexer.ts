@@ -34,7 +34,7 @@ const Directive = createToken({
   line_breaks: false
 })
 
-const assignmentRegex = /(\w+)\s*:=\s*([^;\n]+);?/y
+const assignmentRegex = /(.*?)\s*:=\s*([^;\n]+);?/y
 const Assignment = createToken({
   name: 'Assignment',
   pattern: (text: string, startOffset: number) => {

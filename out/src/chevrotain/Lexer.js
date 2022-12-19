@@ -45,7 +45,7 @@ var Directive = (0, chevrotain_1.createToken)({
     },
     line_breaks: false
 });
-var assignmentRegex = /(\w+)\s*:=\s*([^;\n]+);?/y;
+var assignmentRegex = /(.*?)\s*:=\s*([^;\n]+);?/y;
 var Assignment = (0, chevrotain_1.createToken)({
     name: 'Assignment',
     pattern: function (text, startOffset) {

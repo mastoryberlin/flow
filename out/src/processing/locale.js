@@ -13,7 +13,7 @@ function useFlowToLocale(flow, rootNodeId) {
     (0, issue_tracker_1.useIssueTracker)(parser, visitor, flow, rootNodeId, true);
     var pathsArray = {};
     var intentsArray = {};
-    var json = { flow: { messages: {}, buttonIntents: {} } };
+    var json = { flow: { messages: {}, buttonIntents: {}, skeleton: {} } };
     json.flow.messages = pathsArray;
     json.flow.buttonIntents = intentsArray;
     stateNodeToJsonRecursive(rootName, null, pathsArray, intentsArray);

@@ -48,7 +48,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
         var deadEnds = rootStateNodes.map(function (s) { return findDeadEndsRecursive(s); }).flat();
         issues.push.apply(issues, deadEnds.map(function (s) { return ({
             kind: kind,
-            location: s.path,
+            location: s.range,
             issueKind: issueKind
         }); }));
     };
@@ -61,7 +61,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             return ({
                 kind: kind,
                 issueKind: issueKind,
-                location: t.sourcePath,
+                location: t.range,
                 payload: { target: ((_a = t.target) === null || _a === void 0 ? void 0 : _a.label) || ((_b = t.target) === null || _b === void 0 ? void 0 : _b.path) }
             });
         }));
@@ -80,7 +80,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             var _a, _b;
             return ({
                 kind: kind,
-                location: s.path,
+                location: s.range,
                 issueKind: issueKind,
                 payload: {
                     sender: (_b = (_a = s.path[s.path.length - 1].match(new RegExp("^(?:((?:(?!\"|".concat(mediaTypes.join('|'), ")(?:\\S(?!://))+\\s+)+))?")))) === null || _a === void 0 ? void 0 : _a[1]) === null || _b === void 0 ? void 0 : _b.trim()
@@ -98,7 +98,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
         });
         issues.push.apply(issues, undefinedMediaUrl.map(function (s) { return ({
             kind: kind,
-            location: s.path,
+            location: s.range,
             issueKind: issueKind
         }); }));
     };

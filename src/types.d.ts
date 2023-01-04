@@ -1,6 +1,6 @@
 import { allPanelIds, allIssueKinds } from "./constants";
 import { FqStateNodePath } from "./dsl/types";
-import { Position } from "./dsl/vscode";
+import { Range } from "./dsl/vscode";
 
 // import type ParsePanelVue from "./components/ParserPanel.vue";
 // import type VisitorPanelVue from "./components/VisitorPanel.vue";
@@ -21,6 +21,6 @@ export type IssueSeverity = 'warning' | 'error'
 export interface Issue {
   kind: IssueKind,
   severity: IssueSeverity,
-  location: Position,
+  range: Range,
   payload?: any
 }

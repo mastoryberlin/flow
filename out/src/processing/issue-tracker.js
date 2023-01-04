@@ -48,7 +48,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
         var deadEnds = rootStateNodes.map(function (s) { return findDeadEndsRecursive(s); }).flat();
         issues.push.apply(issues, deadEnds.map(function (s) { return ({
             kind: kind,
-            location: s.range.start,
+            range: s.range,
             severity: severity
         }); }));
     };
@@ -61,7 +61,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             return ({
                 kind: kind,
                 severity: severity,
-                location: t.range.start,
+                range: t.range,
                 payload: { target: ((_a = t.target) === null || _a === void 0 ? void 0 : _a.label) || ((_b = t.target) === null || _b === void 0 ? void 0 : _b.path) }
             });
         }));
@@ -80,7 +80,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             var _a, _b;
             return ({
                 kind: kind,
-                location: s.range.start,
+                range: s.range,
                 severity: severity,
                 payload: {
                     sender: (_b = (_a = s.path[s.path.length - 1].match(new RegExp("^(?:((?:(?!\"|".concat(mediaTypes.join('|'), ")(?:\\S(?!://))+\\s+)+))?")))) === null || _a === void 0 ? void 0 : _a[1]) === null || _b === void 0 ? void 0 : _b.trim()
@@ -98,7 +98,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
         });
         issues.push.apply(issues, undefinedMediaUrl.map(function (s) { return ({
             kind: kind,
-            location: s.range.start,
+            range: s.range,
             severity: severity
         }); }));
     };
@@ -109,7 +109,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     if (!noThrow) {
         issues.forEach(function (i) {
             var name = i.kind.toUpperCase();
-            throw new Error("Flow DSL Error ".concat(name, " at line ").concat(i.location.line, ", col ").concat(i.location.character, ": ").concat(JSON.stringify(i.payload)));
+            throw new Error("Flow DSL Error ".concat(name, " at line ").concat(i.range.start.line, ", col ").concat(i.range.start.character, ": ").concat(JSON.stringify(i.payload)));
         });
     }
     return issues;

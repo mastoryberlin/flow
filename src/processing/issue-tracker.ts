@@ -39,7 +39,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     const deadEnds = rootStateNodes.map(s => findDeadEndsRecursive(s)).flat()
     issues.push(...deadEnds.map(s => ({
       kind,
-      location: s.range.start,
+      range: s.range,
       severity,
     })))
   }
@@ -51,7 +51,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     issues.push(...unknownTargets.map(t => ({
       kind,
       severity,
-      location: t.range.start,
+      range: t.range,
       payload: { target: t.target?.label || t.target?.path }
     })))
   }
@@ -70,7 +70,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     )
     issues.push(...unknownSenders.map(s => ({
       kind,
-      location: s.range.start,
+      range: s.range,
       severity,
       payload: {
         sender: s.path[s.path.length - 1].match(new RegExp(`^(?:((?:(?!"|${mediaTypes.join('|')})(?:\\S(?!://))+\\s+)+))?`))?.[1]?.trim()
@@ -88,7 +88,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     )
     issues.push(...undefinedMediaUrl.map(s => ({
       kind,
-      location: s.range.start,
+      range: s.range,
       severity,
     })))
   }
@@ -101,7 +101,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   if (!noThrow) {
     issues.forEach(i => {
       const name = i.kind.toUpperCase()
-      throw new Error(`Flow DSL Error ${name} at line ${i.location.line}, col ${i.location.character}: ${JSON.stringify(i.payload)}`)
+      throw new Error(`Flow DSL Error ${name} at line ${i.range.start.line}, col ${i.range.start.character}: ${JSON.stringify(i.payload)}`)
     })
   }
   return issues

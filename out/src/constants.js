@@ -22,11 +22,16 @@ exports.allNpcs = [
     "Professor",
 ];
 exports.allErrors = [
+    'parser error',
+    'state name is used multiple times in the same scope',
     'message sender unknown',
+    'transition does not come from a state node',
     'transition target unknown',
+    'reenterable states (with child states 1, 2, ...) must define a * fallback child state',
 ];
 exports.allWarnings = [
     'dead end',
     'media url undefined',
+    'unresolved TODO',
 ];
 exports.allIssueKinds = __spreadArray(__spreadArray([], exports.allErrors, true), exports.allWarnings, true);

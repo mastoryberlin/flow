@@ -12,13 +12,18 @@ export const allNpcs = [
 ] as const
 
 export const allErrors = [
+  'parser error',
+  'state name is used multiple times in the same scope',
   'message sender unknown',
+  'transition does not come from a state node',
   'transition target unknown',
+  'reenterable states (with child states 1, 2, ...) must define a * fallback child state',
 ] as const
 
 export const allWarnings = [
   'dead end',
   'media url undefined',
+  'unresolved TODO',
 ] as const
 
 export const allIssueKinds = [

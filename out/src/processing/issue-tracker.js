@@ -10,6 +10,7 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
 };
 exports.__esModule = true;
 exports.useIssueTracker = void 0;
+var vscode_1 = require("../dsl/vscode");
 function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     parser.parse(flow);
     visitor.rootNodeId = rootNodeId;
@@ -21,6 +22,17 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     var allTransitions = visitor.allTransitions();
     var kind;
     var severity;
+    for (var _i = 0, _a = parser.errors; _i < _a.length; _i++) {
+        var error = _a[_i];
+        var r = error.token;
+        var message = error.message;
+        issues.push({
+            kind: 'parser error',
+            range: new vscode_1.Range(r.startLine || 0, r.startColumn || 0, r.endLine || 0, r.endColumn || 0),
+            severity: 'error',
+            payload: { message: message }
+        });
+    }
     var checkDeadEnds = function () {
         kind = 'dead end';
         severity = 'warning';
@@ -52,6 +64,33 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             severity: severity
         }); }));
     };
+    var checkDuplicateStateNodeNames = function () {
+        kind = 'state name is used multiple times in the same scope';
+        severity = 'error';
+        var duplicateNames = allStateNodes.filter(function (s, i) { return allStateNodes.indexOf(s) !== i; });
+        issues.push.apply(issues, duplicateNames.map(function (s) { return ({
+            kind: kind,
+            range: s.range,
+            severity: severity,
+            payload: {
+                path: s.path
+            }
+        }); }));
+    };
+    var checkTransitionSources = function () {
+        kind = 'transition does not come from a state node';
+        severity = 'error';
+        var noSourceState = allTransitions.filter(function (t) { return !t.sourcePath; });
+        issues.push.apply(issues, noSourceState.map(function (t) {
+            var _a, _b;
+            return ({
+                kind: kind,
+                severity: severity,
+                range: t.range,
+                payload: { target: ((_a = t.target) === null || _a === void 0 ? void 0 : _a.label) || ((_b = t.target) === null || _b === void 0 ? void 0 : _b.path) }
+            });
+        }));
+    };
     var checkTransitionTargets = function () {
         kind = 'transition target unknown';
         severity = 'error';
@@ -62,9 +101,22 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
                 kind: kind,
                 severity: severity,
                 range: t.range,
-                payload: { target: ((_a = t.target) === null || _a === void 0 ? void 0 : _a.label) || ((_b = t.target) === null || _b === void 0 ? void 0 : _b.path) }
+                payload: { source: t.sourcePath, target: ((_a = t.target) === null || _a === void 0 ? void 0 : _a.label) || ((_b = t.target) === null || _b === void 0 ? void 0 : _b.path) }
             });
         }));
+    };
+    var checkReenterableFallbacks = function () {
+        kind = 'reenterable states (with child states 1, 2, ...) must define a * fallback child state';
+        severity = 'error';
+        var reenterableWithoutFallback = allStateNodes.filter(function (s) { return s.childNodes.length && s.childNodes.every(function (c) { return /[1-9]\d*/.test(c.name); }); });
+        issues.push.apply(issues, reenterableWithoutFallback.map(function (s) { return ({
+            kind: kind,
+            range: s.range,
+            severity: severity,
+            payload: {
+                path: s.path
+            }
+        }); }));
     };
     var mediaTypes = ['image', 'audio', 'video'];
     var checkMessageSenders = function () {
@@ -102,16 +154,32 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             severity: severity
         }); }));
     };
+    var checkTodos = function () {
+        kind = 'unresolved TODO';
+        severity = 'warning';
+        var todos = parser.input.filter(function (t) { var _a; return ((_a = t.tokenType.GROUP) === null || _a === void 0 ? void 0 : _a.includes('comments')) && /TODO|TBD/.test(t.image); });
+        issues.push.apply(issues, todos.map(function (t) { return ({
+            kind: kind,
+            range: new vscode_1.Range(t.startLine || 0, t.startColumn || 0, t.endLine || 0, t.endColumn || 0),
+            severity: severity,
+            payload: { todo: t.image.replace(/\/\/\s*|TODO:?\s*|TBD:?\s*/g, '') }
+        }); }));
+    };
     checkDeadEnds();
+    checkDuplicateStateNodeNames();
+    checkTransitionSources();
     checkTransitionTargets();
+    checkReenterableFallbacks();
     checkMessageSenders();
     checkMessageMediaUrl();
+    checkTodos();
+    issues.sort(function (i, j) { return 100 * (i.range.start.line - j.range.start.line) + i.range.start.character - j.range.start.character; });
     if (!noThrow) {
         issues.forEach(function (i) {
             var name = i.kind.toUpperCase();
             throw new Error("Flow DSL Error ".concat(name, " at line ").concat(i.range.start.line, ", col ").concat(i.range.start.character, ": ").concat(JSON.stringify(i.payload)));
         });
     }
-    return JSON.stringify(issues);
+    return issues;
 }
 exports.useIssueTracker = useIssueTracker;

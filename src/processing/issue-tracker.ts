@@ -1,6 +1,7 @@
 import type { Parser, DslVisitorWithDefaults } from "../chevrotain";
 import type { MediaMessage, StateNode } from "../dsl/types";
 import type { Issue, IssueKind, IssueSeverity } from "../types";
+import { Range } from "../dsl/vscode";
 
 export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults, flow: string, rootNodeId: string, noThrow?: boolean) {
   parser.parse(flow)
@@ -8,12 +9,25 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   visitor.visit(parser.cst)
 
   const issues: Issue[] = []
+
   const allStateNodes = visitor.allStateNodes()
   const rootStateNodes = visitor.allStateNodes().filter(s => s.path.length <= 2)
   const stateNodeByPath = visitor.stateNodeByPath
   const allTransitions = visitor.allTransitions()
+
   let kind: IssueKind
   let severity: IssueSeverity
+
+  for (const error of parser.errors) {
+    const r = error.token
+    const {message} = error
+    issues.push({
+      kind: 'parser error',
+      range: new Range(r.startLine || 0, r.startColumn || 0, r.endLine || 0, r.endColumn || 0),
+      severity: 'error',
+      payload: {message}
+    })
+  }
 
   const checkDeadEnds = () => {
     kind = 'dead end'
@@ -44,6 +58,32 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     })))
   }
 
+  const checkDuplicateStateNodeNames = () => {
+    kind = 'state name is used multiple times in the same scope'
+    severity = 'error'
+    const duplicateNames = allStateNodes.filter((s, i) => allStateNodes.indexOf(s) !== i)
+    issues.push(...duplicateNames.map(s => ({
+      kind,
+      range: s.range,
+      severity,
+      payload: {
+        path: s.path
+      }
+    })))
+  }
+
+  const checkTransitionSources = () => {
+    kind = 'transition does not come from a state node'
+    severity = 'error'
+    const noSourceState = allTransitions.filter(t => !t.sourcePath)
+    issues.push(...noSourceState.map(t => ({
+      kind,
+      severity,
+      range: t.range,
+      payload: { target: t.target?.label || t.target?.path }
+    })))
+  }
+
   const checkTransitionTargets = () => {
     kind = 'transition target unknown'
     severity = 'error'
@@ -52,7 +92,21 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
       kind,
       severity,
       range: t.range,
-      payload: { target: t.target?.label || t.target?.path }
+      payload: { source: t.sourcePath, target: t.target?.label || t.target?.path }
+    })))
+  }
+
+  const checkReenterableFallbacks = () => {
+    kind = 'reenterable states (with child states 1, 2, ...) must define a * fallback child state'
+    severity = 'error'
+    const reenterableWithoutFallback = allStateNodes.filter(s => s.childNodes.length && s.childNodes.every(c => /[1-9]\d*/.test(c.name)))
+    issues.push(...reenterableWithoutFallback.map(s => ({
+      kind,
+      range: s.range,
+      severity,
+      payload: {
+        path: s.path
+      }
     })))
   }
 
@@ -93,10 +147,28 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     })))
   }
 
+  const checkTodos = () => {
+    kind = 'unresolved TODO'
+    severity = 'warning'
+    const todos = parser.input.filter(t => t.tokenType.GROUP?.includes('comments') && /TODO|TBD/.test(t.image))
+    issues.push(...todos.map(t => ({
+      kind,
+      range: new Range(t.startLine || 0, t.startColumn || 0, t.endLine || 0, t.endColumn || 0),
+      severity,
+      payload: { todo: t.image.replace(/\/\/\s*|TODO:?\s*|TBD:?\s*/g, '')},
+    })))
+  }
+
   checkDeadEnds()
+  checkDuplicateStateNodeNames()
+  checkTransitionSources()
   checkTransitionTargets()
+  checkReenterableFallbacks()
   checkMessageSenders()
   checkMessageMediaUrl()
+  checkTodos()
+
+  issues.sort((i, j) => 100*(i.range.start.line - j.range.start.line) + i.range.start.character - j.range.start.character)
 
   if (!noThrow) {
     issues.forEach(i => {
@@ -104,5 +176,5 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
       throw new Error(`Flow DSL Error ${name} at line ${i.range.start.line}, col ${i.range.start.character}: ${JSON.stringify(i.payload)}`)
     })
   }
-  return JSON.stringify(issues)
+  return issues
 }

@@ -1,4 +1,4 @@
-import { CstParser } from 'chevrotain'
+import { CstParser, IToken } from 'chevrotain'
 import { useTokens, useLexer } from './Lexer';
 
 const tokens = useTokens()
@@ -17,6 +17,7 @@ export class Parser extends CstParser {
       sequence: []
     }
   }
+  comments: IToken[] = []
   
   constructor() {
     super(tokens, {
@@ -178,6 +179,7 @@ export class Parser extends CstParser {
     const lexer = useLexer()
     const lexerResult = lexer.tokenize(code)
     this.input = lexerResult.tokens
+    this.comments = lexerResult.groups['comments']
     this.cst = (this as any).topLevelSequence()
   }
 }

@@ -1,21 +1,23 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import CstView from './components/CstTreeView.vue';
 import FlowCodeInput from './components/FlowCodeInput.vue'
+import { useLexer } from "./chevrotain/Lexer";
 import { useParser } from "./chevrotain/Parser";
 import type { TopLevelSequenceCstNode } from './chevrotain/types';
 import ResultsPane from './components/ResultsPane.vue';
 import { useVisitor } from './chevrotain/Visitor';
+import type { IToken } from 'chevrotain';
 
-const code = ref(`
-A
-  B
-`)
+const code = ref(`A // my TODO: stuff
+B`)
 
+const lexer = useLexer()
 const parser = useParser()
 const visitor = useVisitor()
 const parse = (flowCode: string) => {
   parser.parse(flowCode)
+  console.log('COMMENTS: ', parser.comments)
   cst.value = parser.cst
   visitor.visit(parser.cst)
 }

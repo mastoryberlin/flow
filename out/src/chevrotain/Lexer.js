@@ -80,7 +80,7 @@ var tokenDefinitions = {
     When: /\bwhen\b/,
     Label: /@\w+\b/,
     NumberLiteral: { pattern: /(?:0|[1-9]\d*)(?:\.\d+)?/, longer_alt: TimeSpan },
-    LineComment: { pattern: /\/\/.*/, group: 'comments' },
+    LineComment: { pattern: /\/\/[^\n]*/, group: 'comments' },
     WhiteSpace: { pattern: /[ \t]+/, group: chevrotain_1.Lexer.SKIPPED }
 };
 var dslTokens = Object.fromEntries(Object.entries(tokenDefinitions).map(function (_a) {

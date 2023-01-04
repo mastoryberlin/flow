@@ -33,6 +33,7 @@ var Parser = /** @class */ (function (_super) {
                 sequence: []
             }
         };
+        _this.comments = [];
         var $ = _this;
         $.RULE("topLevelSequence", function () {
             $.SUBRULE($.sequence); //TODO: Sort out all transitions except shortcut ones
@@ -174,6 +175,7 @@ var Parser = /** @class */ (function (_super) {
         var lexer = (0, Lexer_1.useLexer)();
         var lexerResult = lexer.tokenize(code);
         this.input = lexerResult.tokens;
+        this.comments = lexerResult.groups['comments'];
         this.cst = this.topLevelSequence();
     };
     return Parser;

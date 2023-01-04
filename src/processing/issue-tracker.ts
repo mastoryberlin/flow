@@ -87,7 +87,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   const checkTransitionTargets = () => {
     kind = 'transition target unknown'
     severity = 'error'
-    const unknownTargets = allTransitions.filter(t => t.target?.unknown)
+    const unknownTargets = allTransitions.filter(t => !t.target || t.target.unknown)
     issues.push(...unknownTargets.map(t => ({
       kind,
       severity,
@@ -150,7 +150,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   const checkTodos = () => {
     kind = 'unresolved TODO'
     severity = 'warning'
-    const todos = parser.input.filter(t => t.tokenType.GROUP?.includes('comments') && /TODO|TBD/.test(t.image))
+    const todos = parser.input.filter(t => t.tokenType.GROUP === 'comments' && /TODO|TBD/.test(t.image))
     issues.push(...todos.map(t => ({
       kind,
       range: new Range(t.startLine || 0, t.startColumn || 0, t.endLine || 0, t.endColumn || 0),

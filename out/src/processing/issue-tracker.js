@@ -94,7 +94,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     var checkTransitionTargets = function () {
         kind = 'transition target unknown';
         severity = 'error';
-        var unknownTargets = allTransitions.filter(function (t) { var _a; return (_a = t.target) === null || _a === void 0 ? void 0 : _a.unknown; });
+        var unknownTargets = allTransitions.filter(function (t) { return !t.target || t.target.unknown; });
         issues.push.apply(issues, unknownTargets.map(function (t) {
             var _a, _b;
             return ({
@@ -157,7 +157,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     var checkTodos = function () {
         kind = 'unresolved TODO';
         severity = 'warning';
-        var todos = parser.input.filter(function (t) { var _a; return ((_a = t.tokenType.GROUP) === null || _a === void 0 ? void 0 : _a.includes('comments')) && /TODO|TBD/.test(t.image); });
+        var todos = parser.input.filter(function (t) { return t.tokenType.GROUP === 'comments' && /TODO|TBD/.test(t.image); });
         issues.push.apply(issues, todos.map(function (t) { return ({
             kind: kind,
             range: new vscode_1.Range(t.startLine || 0, t.startColumn || 0, t.endLine || 0, t.endColumn || 0),

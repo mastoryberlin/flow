@@ -112,6 +112,6 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             throw new Error("Flow DSL Error ".concat(name, " at line ").concat(i.range.start.line, ", col ").concat(i.range.start.character, ": ").concat(JSON.stringify(i.payload)));
         });
     }
-    return issues;
+    return JSON.stringify(issues);
 }
 exports.useIssueTracker = useIssueTracker;

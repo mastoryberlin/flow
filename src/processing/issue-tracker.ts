@@ -104,5 +104,5 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
       throw new Error(`Flow DSL Error ${name} at line ${i.range.start.line}, col ${i.range.start.character}: ${JSON.stringify(i.payload)}`)
     })
   }
-  return issues
+  return JSON.stringify(issues)
 }

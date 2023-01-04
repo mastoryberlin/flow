@@ -150,7 +150,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   const checkTodos = () => {
     kind = 'unresolved TODO'
     severity = 'warning'
-    const todos = parser.input.filter(t => t.tokenType.GROUP === 'comments' && /TODO|TBD/.test(t.image))
+    const todos = parser.comments.filter(t => /TODO|TBD/.test(t.image))
     issues.push(...todos.map(t => ({
       kind,
       range: new Range(t.startLine || 0, t.startColumn || 0, t.endLine || 0, t.endColumn || 0),

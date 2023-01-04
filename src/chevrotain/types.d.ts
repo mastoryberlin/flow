@@ -142,7 +142,6 @@ export interface BlanksCstNode extends CstNode {
 }
 
 export type BlanksCstChildren = {
-  LineComment?: IToken[];
   Newline?: IToken[];
 };
 

@@ -157,7 +157,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     var checkTodos = function () {
         kind = 'unresolved TODO';
         severity = 'warning';
-        var todos = parser.input.filter(function (t) { return t.tokenType.GROUP === 'comments' && /TODO|TBD/.test(t.image); });
+        var todos = parser.comments.filter(function (t) { return /TODO|TBD/.test(t.image); });
         issues.push.apply(issues, todos.map(function (t) { return ({
             kind: kind,
             range: new vscode_1.Range(t.startLine || 0, t.startColumn || 0, t.endLine || 0, t.endColumn || 0),

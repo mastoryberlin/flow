@@ -39,7 +39,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     const deadEnds = rootStateNodes.map(s => findDeadEndsRecursive(s)).flat()
     issues.push(...deadEnds.map(s => ({
       kind,
-      location: s.range,
+      location: s.range.start,
       issueKind,
     })))
   }
@@ -51,7 +51,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     issues.push(...unknownTargets.map(t => ({
       kind,
       issueKind,
-      location: t.range,
+      location: t.range.start,
       payload: { target: t.target?.label || t.target?.path }
     })))
   }
@@ -70,7 +70,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     )
     issues.push(...unknownSenders.map(s => ({
       kind,
-      location: s.range,
+      location: s.range.start,
       issueKind,
       payload: {
         sender: s.path[s.path.length - 1].match(new RegExp(`^(?:((?:(?!"|${mediaTypes.join('|')})(?:\\S(?!://))+\\s+)+))?`))?.[1]?.trim()
@@ -88,7 +88,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     )
     issues.push(...undefinedMediaUrl.map(s => ({
       kind,
-      location: s.range,
+      location: s.range.start,
       issueKind,
     })))
   }

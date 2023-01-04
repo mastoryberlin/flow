@@ -106,15 +106,12 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     checkTransitionTargets();
     checkMessageSenders();
     checkMessageMediaUrl();
-    if (noThrow) {
-        console.log("Flow DSL list of Errors:".concat(JSON.stringify(issues)));
-        return JSON.stringify(issues);
-    }
-    else {
+    if (!noThrow) {
         issues.forEach(function (i) {
             var name = i.kind.toUpperCase();
-            throw new Error("Flow DSL Error ".concat(name, " at ").concat(i.location, " (").concat(JSON.stringify(i.payload), ")"));
+            throw new Error("Flow DSL Error ".concat(name, " at line ").concat(i.location.line, ", col ").concat(i.location.character, ": ").concat(JSON.stringify(i.payload)));
         });
     }
+    return issues;
 }
 exports.useIssueTracker = useIssueTracker;

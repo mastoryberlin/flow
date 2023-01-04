@@ -98,14 +98,11 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   checkMessageSenders()
   checkMessageMediaUrl()
 
-  if (noThrow) {
-    console.log(`Flow DSL list of Errors:${JSON.stringify(issues)}`)
-    return JSON.stringify(issues)
-  } else {
+  if (!noThrow) {
     issues.forEach(i => {
       const name = i.kind.toUpperCase()
-      throw new Error(`Flow DSL Error ${name} at ${i.location} (${JSON.stringify(i.payload)})`)
-    }
-    )
+      throw new Error(`Flow DSL Error ${name} at line ${i.location.line}, col ${i.location.character}: ${JSON.stringify(i.payload)}`)
+    })
   }
+  return issues
 }

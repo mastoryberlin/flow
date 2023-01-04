@@ -13,11 +13,11 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   const stateNodeByPath = visitor.stateNodeByPath
   const allTransitions = visitor.allTransitions()
   let kind: IssueKind
-  let issueKind: IssueSeverity
+  let severity: IssueSeverity
 
   const checkDeadEnds = () => {
     kind = 'dead end'
-    issueKind = 'warning'
+    severity = 'warning'
     const isExcluded = (n: StateNode) => n.final || n.childNodes.length || n.name === '?' || n.directive?.name === 'done'
     const hasTransitions = (n: StateNode) => !!visitor.transitionsBySourcePath[n.path.join('.')]?.length
     const findDeadEndsRecursive = (s: StateNode): StateNode[] => {
@@ -40,17 +40,17 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     issues.push(...deadEnds.map(s => ({
       kind,
       location: s.range.start,
-      issueKind,
+      severity,
     })))
   }
 
   const checkTransitionTargets = () => {
     kind = 'transition target unknown'
-    issueKind = 'error'
+    severity = 'error'
     const unknownTargets = allTransitions.filter(t => t.target?.unknown)
     issues.push(...unknownTargets.map(t => ({
       kind,
-      issueKind,
+      severity,
       location: t.range.start,
       payload: { target: t.target?.label || t.target?.path }
     })))
@@ -59,7 +59,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   const mediaTypes = ['image', 'audio', 'video']
   const checkMessageSenders = () => {
     kind = 'message sender unknown'
-    issueKind = 'error'
+    severity = 'error'
     const unknownSenders = allStateNodes.filter(s =>
       s.message &&
       (
@@ -71,7 +71,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     issues.push(...unknownSenders.map(s => ({
       kind,
       location: s.range.start,
-      issueKind,
+      severity,
       payload: {
         sender: s.path[s.path.length - 1].match(new RegExp(`^(?:((?:(?!"|${mediaTypes.join('|')})(?:\\S(?!://))+\\s+)+))?`))?.[1]?.trim()
       }
@@ -80,7 +80,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
 
   const checkMessageMediaUrl = () => {
     kind = 'media url undefined'
-    issueKind = 'warning'
+    severity = 'warning'
     const undefinedMediaUrl = allStateNodes.filter(s =>
       s.message &&
       s.message.type !== 'text' &&
@@ -89,7 +89,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     issues.push(...undefinedMediaUrl.map(s => ({
       kind,
       location: s.range.start,
-      issueKind,
+      severity,
     })))
   }
 

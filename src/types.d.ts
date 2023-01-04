@@ -20,7 +20,7 @@ export type IssueSeverity = 'warning' | 'error'
 
 export interface Issue {
   kind: IssueKind,
-  issueKind: IssueSeverity,
+  severity: IssueSeverity,
   location: Position,
   payload?: any
 }

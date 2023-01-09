@@ -24,6 +24,7 @@ export const allWarnings = [
   'dead end',
   'media url undefined',
   'unresolved TODO',
+  'transition will jump nowhere because the target state includes the transition definition',
 ] as const
 
 export const allIssueKinds = [

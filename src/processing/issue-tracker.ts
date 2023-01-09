@@ -20,12 +20,12 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
 
   for (const error of parser.errors) {
     const r = error.token
-    const {message} = error
+    const { message } = error
     issues.push({
       kind: 'parser error',
       range: new Range(r.startLine || 0, r.startColumn || 0, r.endLine || 0, r.endColumn || 0),
       severity: 'error',
-      payload: {message}
+      payload: { message }
     })
   }
 
@@ -56,6 +56,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
       range: s.range,
       severity,
     })))
+    console.log('deadEnds:', deadEnds)
   }
 
   const checkDuplicateStateNodeNames = () => {
@@ -69,6 +70,23 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
       payload: {
         path: s.path
       }
+    })))
+  }
+
+  const checkExplicitSelfTransitions = () => {
+    kind = 'transition will jump nowhere because the target state includes the transition definition'
+    severity = 'warning'
+    const filteredTargets = allTransitions.filter(t => {
+      const stateNode = stateNodeByPath[t.target!.path!.join('.')]
+      if (t.target && t.sourcePath && t.sourcePath.join('.').startsWith(stateNode.path.join('.'))) {
+        return t
+      }
+    })
+    issues.push(...filteredTargets.map(t => ({
+      kind,
+      severity,
+      range: t.range,
+      payload: { target: t.target?.label || t.target?.path }
     })))
   }
 
@@ -155,11 +173,12 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
       kind,
       range: new Range(t.startLine || 0, t.startColumn || 0, t.endLine || 0, t.endColumn || 0),
       severity,
-      payload: { todo: t.image.replace(/\/\/\s*|TODO:?\s*|TBD:?\s*/g, '')},
+      payload: { todo: t.image.replace(/\/\/\s*|TODO:?\s*|TBD:?\s*/g, '') },
     })))
   }
 
   checkDeadEnds()
+  checkExplicitSelfTransitions()
   checkDuplicateStateNodeNames()
   checkTransitionSources()
   checkTransitionTargets()
@@ -168,7 +187,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   checkMessageMediaUrl()
   checkTodos()
 
-  issues.sort((i, j) => 100*(i.range.start.line - j.range.start.line) + i.range.start.character - j.range.start.character)
+  issues.sort((i, j) => 100 * (i.range.start.line - j.range.start.line) + i.range.start.character - j.range.start.character)
 
   if (!noThrow) {
     issues.forEach(i => {

@@ -9,8 +9,11 @@ import ResultsPane from './components/ResultsPane.vue';
 import { useVisitor } from './chevrotain/Visitor';
 import type { IToken } from 'chevrotain';
 
-const code = ref(`A // my TODO: stuff
-B`)
+const code = ref(`A {
+  B {
+    -> A
+  }
+}`)
 
 const lexer = useLexer()
 const parser = useParser()

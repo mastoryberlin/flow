@@ -13,6 +13,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   const allStateNodes = visitor.allStateNodes()
   const rootStateNodes = visitor.allStateNodes().filter(s => s.path.length <= 2)
   const stateNodeByPath = visitor.stateNodeByPath
+  const stateNodeByLabel = visitor.stateNodeByLabel
   const allTransitions = visitor.allTransitions()
 
   let kind: IssueKind
@@ -77,10 +78,18 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     kind = 'transition will jump nowhere because the target state includes the transition definition'
     severity = 'warning'
     const filteredTargets = allTransitions.filter(t => {
-      const stateNode = stateNodeByPath[t.target!.path!.join('.')].path.join('.')
-      if (t.target && t.sourcePath && t.sourcePath.join('.').startsWith(stateNode)) {
-        return t
+      if (t.target && t.sourcePath && !t.target.unknown) {
+        let targetStateNode: StateNode | undefined = undefined
+        if (t.target.label) {
+          targetStateNode = stateNodeByLabel[t.target.label]
+        } else if (t.target.path) {
+          targetStateNode = stateNodeByPath[t.target.path.join('.')]
+        }
+        if (targetStateNode && t.sourcePath.join('.').startsWith(targetStateNode.path.join('.'))) {
+          return true
+        }
       }
+      return false
     })
     issues.push(...filteredTargets.map(t => ({
       kind,

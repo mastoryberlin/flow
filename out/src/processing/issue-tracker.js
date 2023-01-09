@@ -82,8 +82,8 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
         kind = 'transition will jump nowhere because the target state includes the transition definition';
         severity = 'warning';
         var filteredTargets = allTransitions.filter(function (t) {
-            var stateNode = stateNodeByPath[t.target.path.join('.')];
-            if (t.target && t.sourcePath && t.sourcePath.join('.').startsWith(stateNode.path.join('.'))) {
+            var stateNode = stateNodeByPath[t.target.path.join('.')].path.join('.');
+            if (t.target && t.sourcePath && t.sourcePath.join('.').startsWith(stateNode)) {
                 return t;
             }
         });

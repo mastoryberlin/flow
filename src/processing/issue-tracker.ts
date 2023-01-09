@@ -77,8 +77,8 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     kind = 'transition will jump nowhere because the target state includes the transition definition'
     severity = 'warning'
     const filteredTargets = allTransitions.filter(t => {
-      const stateNode = stateNodeByPath[t.target!.path!.join('.')]
-      if (t.target && t.sourcePath && t.sourcePath.join('.').startsWith(stateNode.path.join('.'))) {
+      const stateNode = stateNodeByPath[t.target!.path!.join('.')].path.join('.')
+      if (t.target && t.sourcePath && t.sourcePath.join('.').startsWith(stateNode)) {
         return t
       }
     })

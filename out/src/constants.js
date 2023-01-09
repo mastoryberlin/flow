@@ -33,5 +33,6 @@ exports.allWarnings = [
     'dead end',
     'media url undefined',
     'unresolved TODO',
+    'transition will jump nowhere because the target state includes the transition definition',
 ];
 exports.allIssueKinds = __spreadArray(__spreadArray([], exports.allErrors, true), exports.allWarnings, true);

@@ -63,6 +63,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             range: s.range,
             severity: severity
         }); }));
+        console.log('deadEnds:', deadEnds);
     };
     var checkDuplicateStateNodeNames = function () {
         kind = 'state name is used multiple times in the same scope';
@@ -76,6 +77,25 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
                 path: s.path
             }
         }); }));
+    };
+    var checkExplicitSelfTransitions = function () {
+        kind = 'transition will jump nowhere because the target state includes the transition definition';
+        severity = 'warning';
+        var filteredTargets = allTransitions.filter(function (t) {
+            var stateNode = stateNodeByPath[t.target.path.join('.')];
+            if (t.target && t.sourcePath && t.sourcePath.join('.').startsWith(stateNode.path.join('.'))) {
+                return t;
+            }
+        });
+        issues.push.apply(issues, filteredTargets.map(function (t) {
+            var _a, _b;
+            return ({
+                kind: kind,
+                severity: severity,
+                range: t.range,
+                payload: { target: ((_a = t.target) === null || _a === void 0 ? void 0 : _a.label) || ((_b = t.target) === null || _b === void 0 ? void 0 : _b.path) }
+            });
+        }));
     };
     var checkTransitionSources = function () {
         kind = 'transition does not come from a state node';
@@ -166,6 +186,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
         }); }));
     };
     checkDeadEnds();
+    checkExplicitSelfTransitions();
     checkDuplicateStateNodeNames();
     checkTransitionSources();
     checkTransitionTargets();

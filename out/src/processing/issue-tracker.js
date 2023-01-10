@@ -19,6 +19,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     var allStateNodes = visitor.allStateNodes();
     var rootStateNodes = visitor.allStateNodes().filter(function (s) { return s.path.length <= 2; });
     var stateNodeByPath = visitor.stateNodeByPath;
+    var stateNodeByLabel = visitor.stateNodeByLabel;
     var allTransitions = visitor.allTransitions();
     var kind;
     var severity;
@@ -82,10 +83,19 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
         kind = 'transition will jump nowhere because the target state includes the transition definition';
         severity = 'warning';
         var filteredTargets = allTransitions.filter(function (t) {
-            var stateNode = stateNodeByPath[t.target.path.join('.')].path.join('.');
-            if (t.target && t.sourcePath && t.sourcePath.join('.').startsWith(stateNode)) {
-                return t;
+            if (t.target && t.sourcePath && !t.target.unknown) {
+                var targetStateNode = undefined;
+                if (t.target.label) {
+                    targetStateNode = stateNodeByLabel[t.target.label];
+                }
+                else if (t.target.path) {
+                    targetStateNode = stateNodeByPath[t.target.path.join('.')];
+                }
+                if (targetStateNode && t.sourcePath.join('.').startsWith(targetStateNode.path.join('.'))) {
+                    return true;
+                }
             }
+            return false;
         });
         issues.push.apply(issues, filteredTargets.map(function (t) {
             var _a, _b;

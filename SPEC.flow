@@ -236,6 +236,7 @@ Beware of the dog! {
 // - [inChallenge](#inchallenge)
 // - [loadChallenge](#loadchallenge)
 // - [loadSubflow](#loadsubflow)
+// - [reach](#reach)
 // - [subflow](#subflow)
 // - [unloadChallenge](#unloadchallenge)
 // - [unloadSubflow](#unloadsubflow)
@@ -330,6 +331,17 @@ Beware of the dog! {
 //
 // > `.loadSubflow` will run the subflow *asynchronously*, i.e. the current flow will keep running in parallel to the subflow.
 // > To load and *wait* for a subflow to finish, use [`.subflow`](#subflow) instead.
+//
+// #### `.reach`
+.reach SkeletonPart [EntryId]
+// - `SkeletonPart` – the ID of one of the possible sections in an episode skeleton. Currently, the following values are accepted: `mission`, `input`, `whatItMeans`, `actionPlan`, `toDos`, `results`, `conclusion`.
+// - `EntryId` – an ID to further specify the item to be activated. Can be either a string, a "JSON path" (dot-separated string), or left out entirely, depending on the selected `SkeletonPart`.
+//
+// Enables one of the entries on the Log page, indicating that a particular goal has been reached.
+// The exact usage depends on what piece of the current episode's skeleton (as defined in the episode config file) should be enabled:
+// - For the episode's `mission`, `EntryId` is ignored and can be left out.
+// - For the episode's `actionPlan`, `EntryId` is interpreted as a "JSON path" (dot-separated string, e.g. `firstGoal.analyze.solveSecret`) to identify the nesting position of the entry that should be enabled.
+// - For any other value passed as `SkeletonPart`, `EntryId` is expected to be a simple string, which is interpreted as the key identifying the entry to be enabled within the respective section object.
 //
 // #### `.subflow`
 .subflow SubflowId

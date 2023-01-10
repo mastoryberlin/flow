@@ -18,6 +18,7 @@ export const allErrors = [
   'transition does not come from a state node',
   'transition target unknown',
   'reenterable states (with child states 1, 2, ...) must define a * fallback child state',
+  'state node names must be unique in every scope',
 ] as const
 
 export const allWarnings = [

@@ -24,6 +24,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
   stateNodeByLabel = {} as Record<string, dsl.StateNode>
   transitionsBySourcePath = {} as Record<string, dsl.Transition[]>
   childrenByPath = {} as Record<string, dsl.StateNode[]>
+  ambiguousStateNodes = [] as [string, vscode.Range][]
   path = [this.rootNodeId] // array to internally keep track of the currently traversed state node path
 
   constructor() {
@@ -136,6 +137,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
   topLevelSequence(ctx: TopLevelSequenceCstChildren) {
     this.stateNodeByPath = {}
     this.stateNodeByLabel = {}
+    this.ambiguousStateNodes = []
     this.transitionsBySourcePath = {}
     this.path = [this.rootNodeId]
     this.childrenByPath = {}
@@ -167,7 +169,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
       endColumn = closing[0].endColumn
     }
     const range = new vscode.Range(startLine || 0, startColumn || 0, endLine || 0, endColumn || 0)
-    
+
     // ... the label if applicable ...
     const label = ctx.Label ? ctx.Label[0].image.substring(1) : undefined
 
@@ -194,7 +196,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
         'i'
       )
       const messageMatch = name.match(messagePattern)
-      if (messageMatch) { 
+      if (messageMatch) {
         const [_, alias, mediaTypeOrUrl, textOrPlaceholder] = messageMatch
         const sender = alias ? Object.entries(allSenderAliases).find(([_, aliases]) => aliases.includes(alias.trim().toLowerCase()))?.[0] as dsl.NPC : undefined
 
@@ -230,7 +232,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
           const firstSubNodeNameDef = this.getStateNodeNameDefinition(subNodes[0].children)
           if (firstSubNodeNameDef.image === '?') {
             const subNodeNameStrings = subNodes.slice(1)
-            .map(s => this.getStateNodeNameDefinition(s.children).image)
+              .map(s => this.getStateNodeNameDefinition(s.children).image)
 
             const intentPattern = /^"([^"]+)"$/
             const intents = subNodeNameStrings
@@ -248,9 +250,9 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
               includes: []
             }
           }
-        }  
-      }  
-      
+        }
+      }
+
       if (ctx.sequence && ctx.sequence.length) {
         this.visit(ctx.sequence[0])
       }
@@ -272,18 +274,21 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
       offset: startOffset
     }
 
+    if (this.stateNodeByPath[fullPath]) {
+      this.ambiguousStateNodes.push([fullPath, range])
+    }
     this.stateNodeByPath[fullPath] = stateNode
     if (label) {
       this.stateNodeByLabel[label] = stateNode
-    }  
+    }
 
     const curPathAsString = curPath.join('.')
     if (this.childrenByPath[curPathAsString]) {
       this.childrenByPath[curPathAsString].push(stateNode)
     } else {
       this.childrenByPath[curPathAsString] = [stateNode]
-    }  
-    
+    }
+
     this.path = curPath
   }
 
@@ -326,7 +331,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
           const t = c.StateNodeName || c.TimeSpan || c.NumberLiteral
           return t ? t[0].image : ''
         })
-        
+
         const first = p[0].location as CstNodeLocation, last = p[p.length - 1].location as CstNodeLocation
         target = {
           path: relative,

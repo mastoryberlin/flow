@@ -20,6 +20,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     var rootStateNodes = visitor.allStateNodes().filter(function (s) { return s.path.length <= 2; });
     var stateNodeByPath = visitor.stateNodeByPath;
     var stateNodeByLabel = visitor.stateNodeByLabel;
+    var ambiguousStateNodes = visitor.ambiguousStateNodes;
     var allTransitions = visitor.allTransitions();
     var kind;
     var severity;
@@ -76,6 +77,21 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             severity: severity,
             payload: {
                 path: s.path
+            }
+        }); }));
+    };
+    var checkAmbiguousStateNodes = function () {
+        kind = 'state node names must be unique in every scope';
+        severity = 'error';
+        var duplicateNames = ambiguousStateNodes.map(function (s) {
+            return { fullPath: s[0], range: s[1] };
+        });
+        issues.push.apply(issues, duplicateNames.map(function (s) { return ({
+            kind: kind,
+            range: s.range,
+            severity: severity,
+            payload: {
+                path: s.fullPath
             }
         }); }));
     };
@@ -195,6 +211,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             payload: { todo: t.image.replace(/\/\/\s*|TODO:?\s*|TBD:?\s*/g, '') }
         }); }));
     };
+    checkAmbiguousStateNodes();
     checkDeadEnds();
     checkExplicitSelfTransitions();
     checkDuplicateStateNodeNames();
@@ -211,6 +228,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             throw new Error("Flow DSL Error ".concat(name, " at line ").concat(i.range.start.line, ", col ").concat(i.range.start.character, ": ").concat(JSON.stringify(i.payload)));
         });
     }
+    console.log('issues:', issues);
     return issues;
 }
 exports.useIssueTracker = useIssueTracker;

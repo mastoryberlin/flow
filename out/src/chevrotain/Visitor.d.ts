@@ -1,3 +1,4 @@
+import * as vscode from "../dsl/vscode";
 import type { StateNodeCstChildren, TopLevelSequenceCstChildren, SequenceCstChildren, TransitionCstChildren } from "./types";
 import type * as dsl from "../dsl/types";
 declare const BaseVisitorWithDefaults: new (...args: any[]) => import("chevrotain").ICstVisitor<any, any>;
@@ -7,6 +8,7 @@ export declare class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     stateNodeByLabel: Record<string, dsl.StateNode>;
     transitionsBySourcePath: Record<string, dsl.Transition[]>;
     childrenByPath: Record<string, dsl.StateNode[]>;
+    ambiguousStateNodes: [string, vscode.Range][];
     path: string[];
     constructor();
     private getStateNodeNameDefinition;

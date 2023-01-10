@@ -45,6 +45,7 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
         _this.stateNodeByLabel = {};
         _this.transitionsBySourcePath = {};
         _this.childrenByPath = {};
+        _this.ambiguousStateNodes = [];
         _this.path = [_this.rootNodeId]; // array to internally keep track of the currently traversed state node path
         _this.validateVisitor();
         return _this;
@@ -165,6 +166,7 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
     DslVisitorWithDefaults.prototype.topLevelSequence = function (ctx) {
         this.stateNodeByPath = {};
         this.stateNodeByLabel = {};
+        this.ambiguousStateNodes = [];
         this.transitionsBySourcePath = {};
         this.path = [this.rootNodeId];
         this.childrenByPath = {};
@@ -306,6 +308,9 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
             range: range,
             offset: startOffset
         };
+        if (this.stateNodeByPath[fullPath]) {
+            this.ambiguousStateNodes.push([fullPath, range]);
+        }
         this.stateNodeByPath[fullPath] = stateNode;
         if (label) {
             this.stateNodeByLabel[label] = stateNode;

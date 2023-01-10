@@ -10,9 +10,8 @@ import { useVisitor } from './chevrotain/Visitor';
 import type { IToken } from 'chevrotain';
 
 const code = ref(`A {
-  B {
-    -> A
-  }
+  B
+  .. B
 }`)
 
 const lexer = useLexer()

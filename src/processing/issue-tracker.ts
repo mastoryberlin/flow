@@ -14,6 +14,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   const rootStateNodes = visitor.allStateNodes().filter(s => s.path.length <= 2)
   const stateNodeByPath = visitor.stateNodeByPath
   const stateNodeByLabel = visitor.stateNodeByLabel
+  const ambiguousStateNodes = visitor.ambiguousStateNodes
   const allTransitions = visitor.allTransitions()
 
   let kind: IssueKind
@@ -70,6 +71,22 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
       severity,
       payload: {
         path: s.path
+      }
+    })))
+  }
+
+  const checkAmbiguousStateNodes = () => {
+    kind = 'state node names must be unique in every scope'
+    severity = 'error'
+    const duplicateNames = ambiguousStateNodes.map(s => {
+      return { fullPath: s[0], range: s[1] }
+    })
+    issues.push(...duplicateNames.map(s => ({
+      kind,
+      range: s.range,
+      severity,
+      payload: {
+        path: s.fullPath
       }
     })))
   }
@@ -186,6 +203,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     })))
   }
 
+  checkAmbiguousStateNodes()
   checkDeadEnds()
   checkExplicitSelfTransitions()
   checkDuplicateStateNodeNames()
@@ -204,5 +222,6 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
       throw new Error(`Flow DSL Error ${name} at line ${i.range.start.line}, col ${i.range.start.character}: ${JSON.stringify(i.payload)}`)
     })
   }
+  console.log('issues:', issues)
   return issues
 }

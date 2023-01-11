@@ -209,6 +209,15 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                         invoke.src = { type: '_focusApp_', appId: appId, character: character };
                     }
                     break;
+                case 'reach':
+                    {
+                        var args = directive.arg.trim().split(' ');
+                        var section = args[0];
+                        var path = args[1];
+                        json.entry = { type: '_showEntry', section: section, path: path };
+                        console.log('reach:', args);
+                    }
+                    break;
                 case 'loadChallenge':
                     json.entry = { type: 'SET_CHALLENGE', challengeId: directive.arg };
                     break;

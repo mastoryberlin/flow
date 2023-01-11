@@ -9,9 +9,9 @@ const visitor = useVisitor()
 
 export function useFlowToStatechart(flow: string, rootNodeId = '<ROOT>') {
   rootName = rootNodeId
-  useIssueTracker(parser, visitor, flow, rootNodeId,true)
+  useIssueTracker(parser, visitor, flow, rootNodeId, true)
   const json = stateNodeToJsonRecursive(rootNodeId)
-  return {json, visitor}
+  return { json, visitor }
 }
 
 function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentInfo?: any): any {
@@ -35,7 +35,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
   }
 
   const childStates = Object.fromEntries(children.map(childNode => {
-    const sub = stateNodeToJsonRecursive(`${fqPath}.${childNode.name}`, childNode, childNode.name === '?' ? {availableIntents} : undefined)
+    const sub = stateNodeToJsonRecursive(`${fqPath}.${childNode.name}`, childNode, childNode.name === '?' ? { availableIntents } : undefined)
     return [childNode.name, sub]
   }))
 
@@ -108,13 +108,13 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
       const eventTransitions = transitions.filter(t => t.type === 'event') as dsl.EventTransition[]
       const afterTransitions = transitions.filter(t => t.type === 'after') as dsl.AfterTransition[]
       const alwaysTransitions = transitions.filter(t => t.type === 'always') as dsl.AlwaysTransition[]
-      
+
       const getTransitionTarget = (t: dsl.BaseTransition) => t.target
         ? (t.target.unknown
           ? undefined
           : '#' + (t.target.label || t.target.path!.join('.')))
         : undefined
-      
+
       const getTransitionGuard = (t: dsl.BaseTransition) => t.guard
         ? ('condition' in t.guard)
           ? { cond: { type: '_expressionEval_', expression: t.guard.condition } }
@@ -133,7 +133,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
           return group;
         }, {} as any)
       }
-    
+
       if (afterTransitions.length) {
         after = afterTransitions.reduce((group, t) => {
           const { timeout } = t;
@@ -147,7 +147,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
           return group;
         }, {} as any)
       }
-    
+
       if (alwaysTransitions.length) {
         always = alwaysTransitions.map(t => ({
           target: getTransitionTarget(t),
@@ -195,6 +195,15 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
             invoke.src = { type: '_focusApp_', appId, character }
           }
           break
+        case 'reach': {
+          const args = directive.arg.trim().split(' ')
+          const section = args[0]
+          const path = args[1]
+          json.entry = { type: '_showEntry', section, path }
+          console.log('reach:', args)
+
+        }
+          break;
         case 'loadChallenge': json.entry = { type: 'SET_CHALLENGE', challengeId: directive.arg }; break
         case 'unloadChallenge': json.entry = { type: 'UNLOAD_CHALLENGE_COMPONENT' }; break
         case 'inChallenge':

@@ -215,7 +215,12 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                         var section = args[0];
                         var path = args[1];
                         json.entry = { type: '_showEntry', section: section, path: path };
-                        console.log('reach:', args);
+                    }
+                    break;
+                case 'goal':
+                    {
+                        var goalString = directive.arg.trim();
+                        json.entry = { type: '_setWireGoal', goalString: goalString };
                     }
                     break;
                 case 'loadChallenge':

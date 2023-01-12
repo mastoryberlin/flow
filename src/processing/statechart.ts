@@ -200,8 +200,11 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
           const section = args[0]
           const path = args[1]
           json.entry = { type: '_showEntry', section, path }
-          console.log('reach:', args)
-
+        }
+          break;
+        case 'goal': {
+          const goalString = directive.arg.trim()
+          json.entry = { type: '_setWireGoal', goalString }
         }
           break;
         case 'loadChallenge': json.entry = { type: 'SET_CHALLENGE', challengeId: directive.arg }; break

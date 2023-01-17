@@ -102,13 +102,32 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                     }
                     else {
                         var line_1 = t.range.start.line;
-                        // console.log('PROCESSING SHORTCUT TRANSITION', sourcePathAsString, line)
-                        var precedingStateNode = this_1.allStateNodes().find(function (s) { return s.range.end.line === line_1 - 1 || (s.range.end.line === line_1 && s.range.end.character < t.range.start.character); });
-                        var followingStateNode = this_1.allStateNodes().find(function (s) { return (s.range.start.line === line_1 && s.range.start.character > t.range.end.character) || s.range.start.line === line_1 + 1; });
+                        var ancestors = this_1.allStateNodes().filter(function (s) { return s.range.start.line < line_1 && s.range.end.line > line_1; });
+                        var stateNodeSiblings = void 0;
+                        var transitionSiblings = void 0;
+                        if (ancestors.length) {
+                            ancestors.sort(function (a, b) { return b.range.start.line - a.range.start.line; });
+                            var parent_1 = ancestors[0];
+                            stateNodeSiblings = parent_1.childNodes;
+                            transitionSiblings = this_1.transitionsBySourcePath[parent_1.path.join('.')] || [];
+                        }
+                        else {
+                            stateNodeSiblings = this_1.topLevelStateNodes();
+                            transitionSiblings = this_1.transitionsBySourcePath[''] || [];
+                        }
+                        console.log('PROCESSING SHORTCUT TRANSITION', line_1);
+                        var siblings = __spreadArray(__spreadArray([], stateNodeSiblings, true), transitionSiblings, true);
+                        console.log('Siblings: ', siblings);
+                        var precedingStateNodeSiblings = stateNodeSiblings.filter(function (s) { return s.range.end.line < line_1; });
+                        var subsequentStateNodeSiblings = stateNodeSiblings.filter(function (s) { return s.range.start.line > line_1; });
+                        var precedingSiblings_1 = siblings.filter(function (s) { return s.range.end.line < line_1; });
+                        var subsequentSiblings_1 = siblings.filter(function (s) { return s.range.start.line > line_1; });
+                        var precedingStateNode = precedingStateNodeSiblings.find(function (s) { return !precedingSiblings_1.some(function (t) { return t.range.end.line > s.range.end.line; }); });
+                        var followingStateNode = subsequentStateNodeSiblings.find(function (s) { return !subsequentSiblings_1.some(function (t) { return t.range.start.line < s.range.start.line; }); });
                         if (precedingStateNode && followingStateNode) {
-                            // console.log('SETTING THE SOURCE TO', precedingStateNode.path)
+                            console.log('SETTING THE SOURCE TO', precedingStateNode.path);
                             t.sourcePath = precedingStateNode.path;
-                            // console.log('SETTING THE TARGET TO', followingStateNode.path)
+                            console.log('SETTING THE TARGET TO', followingStateNode.path);
                             t.target.path = followingStateNode.path;
                             t.target.unknown = false;
                             var asString = t.sourcePath.join('.');
@@ -152,6 +171,9 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
     };
     DslVisitorWithDefaults.prototype.allStateNodes = function () {
         return Object.values(this.stateNodeByPath);
+    };
+    DslVisitorWithDefaults.prototype.topLevelStateNodes = function () {
+        return this.allStateNodes().filter(function (s) { return !s.path || s.path.length < 2; });
     };
     DslVisitorWithDefaults.prototype.allTransitions = function () {
         // Due to the way it is created, this.transitionsBySourcePath may contain a value for the empty string key ''.

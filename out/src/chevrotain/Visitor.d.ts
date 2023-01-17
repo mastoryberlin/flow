@@ -15,6 +15,7 @@ export declare class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     private fixTransitionTargets;
     private markLastStateNodeAsFinal;
     allStateNodes(): dsl.StateNode[];
+    topLevelStateNodes(): dsl.StateNode[];
     allTransitions(): dsl.Transition[];
     topLevelSequence(ctx: TopLevelSequenceCstChildren): void;
     sequence(ctx: SequenceCstChildren): void;

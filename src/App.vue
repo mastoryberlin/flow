@@ -9,10 +9,7 @@ import ResultsPane from './components/ResultsPane.vue';
 import { useVisitor } from './chevrotain/Visitor';
 import type { IToken } from 'chevrotain';
 
-const code = ref(`A {
-  B
-  .. B
-}`)
+const code = ref(`Nick "Hey, \${userName}"`)
 
 const lexer = useLexer()
 const parser = useParser()

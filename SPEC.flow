@@ -3,7 +3,7 @@
 // Line comments start with double-slashes like in JS/TS
 
 // # State Nodes
-// |done|done|done|done|done|done|tbd
+// |done|done|done|done|done|done|done
 // To define a [→state node](https://xstate.js.org/docs/guides/statenodes.html), just write its name on a line of its own.
 // Names of state nodes may contain any word, non-word or whitespace characters except `|`, `{`, `[`.
 // Special syntax like `//` or `->` is also not permitted.
@@ -27,7 +27,7 @@ Parallel State [
 ]
 
 // # Transitions
-// |done|done|done|done|done|done|tbd
+// |done|done|done|done|done|done|done
 // Inside a state's braces (or brackets), use the arrow syntax `->` to define a transition to another state.
 // Transition targets are looked up within the current compound state's scope first;
 // if no matching target is found, the search continues one level higher until a match is found.

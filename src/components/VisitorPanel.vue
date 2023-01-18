@@ -55,7 +55,7 @@ const currentTransitionNumber = ref<number | null>(null)
     <StateNodeDetailView v-if="currentStateNodePath" :path="currentStateNodePath" :visitor="visitor" />
     <div v-if="issueArray">
       <div v-for="issue in issueArray" class="issues">
-        Error:{{ issue.kind }} on line: {{ issue.range.start }}
+        Error: {{ issue.kind }} on line {{ issue.range.start.line }}
       </div>
     </div>
     <h3>Transitions</h3>

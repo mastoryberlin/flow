@@ -32,3 +32,7 @@ export const allIssueKinds = [
   ...allErrors,
   ...allWarnings,
 ]
+
+export const allDirectives = [
+  ''
+] as const

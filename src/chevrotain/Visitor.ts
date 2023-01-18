@@ -93,19 +93,19 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
               stateNodeSiblings = this.topLevelStateNodes()
               transitionSiblings = this.transitionsBySourcePath[''] || []
             }
-            console.log('PROCESSING SHORTCUT TRANSITION', line)
+            // console.log('PROCESSING SHORTCUT TRANSITION', line)
             const siblings = [...stateNodeSiblings, ...transitionSiblings]
-            console.log('Siblings: ', siblings)
+            // console.log('Siblings: ', siblings)
             const precedingStateNodeSiblings = stateNodeSiblings.filter(s => s.range.end.line < line)
-            const subsequentStateNodeSiblings = stateNodeSiblings.filter(s => s.range.start.line > line)
+            const subsequentStateNodeSiblings = stateNodeSiblings.filter(s => s.range.start.line >= line)
             const precedingSiblings = siblings.filter(s => s.range.end.line < line)
-            const subsequentSiblings = siblings.filter(s => s.range.start.line > line)
+            const subsequentSiblings = siblings.filter(s => s.range.start.line >= line)
             const precedingStateNode = precedingStateNodeSiblings.find(s => !precedingSiblings.some(t => t.range.end.line > s.range.end.line))
             const followingStateNode = subsequentStateNodeSiblings.find(s => !subsequentSiblings.some(t => t.range.start.line < s.range.start.line))
             if (precedingStateNode && followingStateNode) {
-              console.log('SETTING THE SOURCE TO', precedingStateNode.path)
+              // console.log('SETTING THE SOURCE TO', precedingStateNode.path)
               t.sourcePath = precedingStateNode.path
-              console.log('SETTING THE TARGET TO', followingStateNode.path)
+              // console.log('SETTING THE TARGET TO', followingStateNode.path)
               t.target.path = followingStateNode.path
               t.target.unknown = false
               const asString = t.sourcePath.join('.')

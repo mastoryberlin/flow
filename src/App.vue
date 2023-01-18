@@ -10,28 +10,18 @@ import { useVisitor } from './chevrotain/Visitor';
 import type { IToken } from 'chevrotain';
 
 const code = ref(`
-"yes, I want to work alone with this formula" {
-    userWillWorkAlone := true
-    .. .done
-}
-"yes, I want to discuss this formula with you" {
-    userWillWorkAlone := false
-    .. userWillDiscussFormula := true
-    .. choosed := 'surface'
-    .. .done
-}
-"no, I want to look for a different formula on my own." {
+userWillWorkAlone := true
+.. userWillDiscussFormula := true
+.. choosed := 'surface'
+.. "no, I want to look for a different formula on my own." {
     VZ "Okay. Just delete the current formula and write another one in there."
     .. _ {
         -> @waitingForGeneralFormulaInput
     }
 }
-"no, I want to look for another formula with you" {
-    VZ "Okay, let's do that."
-    .. userWillWorkAlone := false
-    .. userWillDiscussFormula := false
-    .. .done
-}
+.. userWillWorkAlone := false
+.. userWillDiscussFormula := false
+.. .done
 `)
 
 const lexer = useLexer()

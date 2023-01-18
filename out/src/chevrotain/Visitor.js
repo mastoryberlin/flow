@@ -173,7 +173,7 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
         return Object.values(this.stateNodeByPath);
     };
     DslVisitorWithDefaults.prototype.topLevelStateNodes = function () {
-        return this.allStateNodes().filter(function (s) { return !s.path || s.path.length < 2; });
+        return this.allStateNodes().filter(function (s) { return !s.path || s.path.length <= 2; });
     };
     DslVisitorWithDefaults.prototype.allTransitions = function () {
         // Due to the way it is created, this.transitionsBySourcePath may contain a value for the empty string key ''.

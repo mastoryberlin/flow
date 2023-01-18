@@ -143,7 +143,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
   }
 
   topLevelStateNodes() {
-    return this.allStateNodes().filter(s => !s.path || s.path.length < 2) as dsl.StateNode[]
+    return this.allStateNodes().filter(s => !s.path || s.path.length <= 2) as dsl.StateNode[]
   }
 
   allTransitions() {

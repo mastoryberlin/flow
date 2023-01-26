@@ -267,6 +267,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
     childStates.__FLOW_DONE__ = { type: 'final' }
     return {
       id: rootName,
+      predictableActionArguments: true,
       initial: children[0].name,
       states: childStates
     }

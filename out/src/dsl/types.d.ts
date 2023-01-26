@@ -76,7 +76,7 @@ export interface EventTransition extends BaseTransition {
     eventName: Event;
 }
 export interface AfterTransition extends BaseTransition {
-    timeout: Number;
+    timeout: number;
 }
 export interface AlwaysTransition extends BaseTransition {
 }

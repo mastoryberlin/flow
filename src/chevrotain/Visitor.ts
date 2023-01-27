@@ -48,7 +48,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
         endLine: last.endLine,
         endColumn: last.endColumn
       } as IToken
-    } else /* if (stateNode.stateNodeName) */ {
+    } else if (stateNode.stateNodeName) {
       const ch = stateNode.stateNodeName![0].children
       const stateNodeNameDefinition = ch.StateNodeName || ch.NumberLiteral
       return stateNodeNameDefinition![0]
@@ -177,6 +177,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
   stateNode(ctx: StateNodeCstChildren) {
     const nameDef = this.getStateNodeNameDefinition(ctx)
 
+    if (!nameDef) { return }
     // Get the name and full path ...
     const name = escapeDots(nameDef.image)
     const curPath = [...this.path]
@@ -252,19 +253,19 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
         const subNodes = ch.stateNode
         if (subNodes) {
           const firstSubNodeNameDef = this.getStateNodeNameDefinition(subNodes[0].children)
-          if (firstSubNodeNameDef.image === '?') {
+          if (firstSubNodeNameDef?.image === '?') {
             const subNodeNameStrings = subNodes.slice(1)
-              .map(s => this.getStateNodeNameDefinition(s.children).image)
+              .map(s => this.getStateNodeNameDefinition(s.children)?.image)
 
             const intentPattern = /^"([^"]+)"$/
             const intents = subNodeNameStrings
-              .filter(s => intentPattern.test(s))
-              .map(s => s.match(intentPattern)![1])
+              .filter(s => s && intentPattern.test(s))
+              .map(s => s!.match(intentPattern)![1])
 
             const regExpPattern = /^\/([^\/]+)\/$/
             const regExps = subNodeNameStrings
-              .filter(s => regExpPattern.test(s))
-              .map(s => new RegExp(s.match(regExpPattern)![1]))
+              .filter(s => s && regExpPattern.test(s))
+              .map(s => new RegExp(s!.match(regExpPattern)![1]))
 
             nluContext = {
               intents,
@@ -274,10 +275,10 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
           }
         }
       }
+    }
 
-      if (ctx.sequence && ctx.sequence.length) {
-        this.visit(ctx.sequence[0])
-      }
+    if (ctx.sequence && ctx.sequence.length) {
+      this.visit(ctx.sequence[0])
     }
 
     const stateNode: dsl.StateNode = {

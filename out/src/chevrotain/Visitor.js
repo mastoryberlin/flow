@@ -68,7 +68,7 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                 endColumn: last.endColumn
             };
         }
-        else /* if (stateNode.stateNodeName) */ {
+        else if (stateNode.stateNodeName) {
             var ch = stateNode.stateNodeName[0].children;
             var stateNodeNameDefinition = ch.StateNodeName || ch.NumberLiteral;
             return stateNodeNameDefinition[0];
@@ -210,6 +210,9 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
         var _this = this;
         var _a;
         var nameDef = this.getStateNodeNameDefinition(ctx);
+        if (!nameDef) {
+            return;
+        }
         // Get the name and full path ...
         var name = (0, util_1.escapeDots)(nameDef.image);
         var curPath = __spreadArray([], this.path, true);
@@ -292,16 +295,16 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                 var subNodes = ch.stateNode;
                 if (subNodes) {
                     var firstSubNodeNameDef = this.getStateNodeNameDefinition(subNodes[0].children);
-                    if (firstSubNodeNameDef.image === '?') {
+                    if ((firstSubNodeNameDef === null || firstSubNodeNameDef === void 0 ? void 0 : firstSubNodeNameDef.image) === '?') {
                         var subNodeNameStrings = subNodes.slice(1)
-                            .map(function (s) { return _this.getStateNodeNameDefinition(s.children).image; });
+                            .map(function (s) { var _a; return (_a = _this.getStateNodeNameDefinition(s.children)) === null || _a === void 0 ? void 0 : _a.image; });
                         var intentPattern_1 = /^"([^"]+)"$/;
                         var intents = subNodeNameStrings
-                            .filter(function (s) { return intentPattern_1.test(s); })
+                            .filter(function (s) { return s && intentPattern_1.test(s); })
                             .map(function (s) { return s.match(intentPattern_1)[1]; });
                         var regExpPattern_1 = /^\/([^\/]+)\/$/;
                         var regExps = subNodeNameStrings
-                            .filter(function (s) { return regExpPattern_1.test(s); })
+                            .filter(function (s) { return s && regExpPattern_1.test(s); })
                             .map(function (s) { return new RegExp(s.match(regExpPattern_1)[1]); });
                         nluContext_1 = {
                             intents: intents,
@@ -311,9 +314,9 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                     }
                 }
             }
-            if (ctx.sequence && ctx.sequence.length) {
-                this.visit(ctx.sequence[0]);
-            }
+        }
+        if (ctx.sequence && ctx.sequence.length) {
+            this.visit(ctx.sequence[0]);
         }
         var stateNode = {
             name: name,

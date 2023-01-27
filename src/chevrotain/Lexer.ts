@@ -1,6 +1,6 @@
 import { createToken, Lexer, type CustomPatternMatcherReturn } from 'chevrotain'
 
-const stateNodeNameRegex = /(?:\w+:\/\/|"[^"]*"|[^-\/\[\{\n@]|-(?!>)|\/(?!\/))*/y
+const stateNodeNameRegex = /(?:\w+:\/\/|"[^"]*"|[^-\/\[\{\n@]|-(?!>)|\/(?!\/))+/y
 const StateNodeName = createToken({
   name: 'StateNodeName',
   pattern: (text: string, startOffset: number) => {

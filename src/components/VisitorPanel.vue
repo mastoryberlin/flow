@@ -6,6 +6,7 @@ import type { FqStateNodePath, IfTransitionGuard, Label, StateNode, Transition, 
 import { useIssueTracker } from '../processing/issue-tracker';
 import StateNodeDetailView from './StateNodeDetailView.vue';
 import { useParser, useVisitor } from "../chevrotain";
+import type { Issue } from '../types';
 
 const props = defineProps<{
   cst: TopLevelSequenceCstNode
@@ -17,7 +18,7 @@ const parser = useParser()
 const visitor = useVisitor()
 
 const flowProp = computed(() => props.flow)
-let issueArray = computed(() => useIssueTracker(parser, visitor, props.flow, '<ROOT>', true))
+let issueArray = ref([] as Issue[])
 watch(flowProp, () => {
   issueArray.value = useIssueTracker(parser, visitor, props.flow, '<ROOT>', true)
 })

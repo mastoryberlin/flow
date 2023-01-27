@@ -20,12 +20,19 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   let kind: IssueKind
   let severity: IssueSeverity
 
+  const lines = flow.split('\n')
+  const lastLine = lines.length || 1
+  const lastLineEndColumn = lines.length ? (lines[lastLine - 1].length || 1) : 1
+
   for (const error of parser.errors) {
     const r = error.token
     const { message } = error
+    const range = r.tokenType.name === 'EOF'
+      ? new Range(lastLine, r.startColumn || 1, lastLine, lastLineEndColumn)
+      : new Range(r.startLine || lastLine, r.startColumn || 1, r.endLine || lastLine, r.endColumn || lastLineEndColumn)
     issues.push({
       kind: 'parser error',
-      range: new Range(r.startLine || 0, r.startColumn || 0, r.endLine || 0, r.endColumn || 0),
+      range,
       severity: 'error',
       payload: { message }
     })
@@ -214,7 +221,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   checkMessageMediaUrl()
   checkTodos()
 
-  issues.sort((i, j) => 100 * (i.range.start.line - j.range.start.line) + i.range.start.character - j.range.start.character)
+  issues.sort((i, j) => 1000 * (i.range.start.line - j.range.start.line) + i.range.start.character - j.range.start.character)
 
   if (!noThrow) {
     issues.forEach(i => {

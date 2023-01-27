@@ -13,7 +13,7 @@ var __assign = (this && this.__assign) || function () {
 exports.__esModule = true;
 exports.useLexer = exports.useTokens = void 0;
 var chevrotain_1 = require("chevrotain");
-var stateNodeNameRegex = /(?:\w+:\/\/|"[^"]*"|[^-\/\[\{\n@]|-(?!>)|\/(?!\/))*/y;
+var stateNodeNameRegex = /(?:\w+:\/\/|"[^"]*"|[^-\/\[\{\n@]|-(?!>)|\/(?!\/))+/y;
 var StateNodeName = (0, chevrotain_1.createToken)({
     name: 'StateNodeName',
     pattern: function (text, startOffset) {

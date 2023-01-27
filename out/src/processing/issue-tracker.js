@@ -24,13 +24,19 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     var allTransitions = visitor.allTransitions();
     var kind;
     var severity;
+    var lines = flow.split('\n');
+    var lastLine = lines.length || 1;
+    var lastLineEndColumn = lines.length ? (lines[lastLine - 1].length || 1) : 1;
     for (var _i = 0, _a = parser.errors; _i < _a.length; _i++) {
         var error = _a[_i];
         var r = error.token;
         var message = error.message;
+        var range = r.tokenType.name === 'EOF'
+            ? new vscode_1.Range(lastLine, r.startColumn || 1, lastLine, lastLineEndColumn)
+            : new vscode_1.Range(r.startLine || lastLine, r.startColumn || 1, r.endLine || lastLine, r.endColumn || lastLineEndColumn);
         issues.push({
             kind: 'parser error',
-            range: new vscode_1.Range(r.startLine || 0, r.startColumn || 0, r.endLine || 0, r.endColumn || 0),
+            range: range,
             severity: 'error',
             payload: { message: message }
         });
@@ -221,7 +227,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     checkMessageSenders();
     checkMessageMediaUrl();
     checkTodos();
-    issues.sort(function (i, j) { return 100 * (i.range.start.line - j.range.start.line) + i.range.start.character - j.range.start.character; });
+    issues.sort(function (i, j) { return 1000 * (i.range.start.line - j.range.start.line) + i.range.start.character - j.range.start.character; });
     if (!noThrow) {
         issues.forEach(function (i) {
             var name = i.kind.toUpperCase();

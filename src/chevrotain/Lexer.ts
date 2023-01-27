@@ -6,8 +6,8 @@ const StateNodeName = createToken({
   pattern: (text: string, startOffset: number) => {
     stateNodeNameRegex.lastIndex = startOffset
     const execResult = stateNodeNameRegex.exec(text)
-    if (execResult !== null) { 
-      let matched = execResult[0]
+    if (execResult !== null && execResult.length) {
+      const matched = execResult[0]
       return [matched.trim()]
     }
     return null
@@ -21,7 +21,7 @@ const Directive = createToken({
   pattern: (text: string, startOffset: number) => {
     directiveRegex.lastIndex = startOffset
     const execResult = directiveRegex.exec(text)
-    if (execResult !== null) {
+    if (execResult !== null && execResult.length) {
       const ret = execResult as unknown as CustomPatternMatcherReturn
       ret.payload = {
         name: execResult[1],

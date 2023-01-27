@@ -19,7 +19,7 @@ var StateNodeName = (0, chevrotain_1.createToken)({
     pattern: function (text, startOffset) {
         stateNodeNameRegex.lastIndex = startOffset;
         var execResult = stateNodeNameRegex.exec(text);
-        if (execResult !== null) {
+        if (execResult !== null && execResult.length) {
             var matched = execResult[0];
             return [matched.trim()];
         }
@@ -33,7 +33,7 @@ var Directive = (0, chevrotain_1.createToken)({
     pattern: function (text, startOffset) {
         directiveRegex.lastIndex = startOffset;
         var execResult = directiveRegex.exec(text);
-        if (execResult !== null) {
+        if (execResult !== null && execResult.length) {
             var ret = execResult;
             ret.payload = {
                 name: execResult[1],

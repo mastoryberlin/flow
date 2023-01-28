@@ -150,7 +150,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   const checkReenterableFallbacks = () => {
     kind = 'reenterable states (with child states 1, 2, ...) must define a * fallback child state'
     severity = 'error'
-    const reenterableWithoutFallback = allStateNodes.filter(s => s.childNodes.length && s.childNodes.every(c => /[1-9]\d*/.test(c.name)))
+    const reenterableWithoutFallback = allStateNodes.filter(s => s.childNodes.length && s.childNodes.every(c => /^[1-9]\d*$/.test(c.name)))
     issues.push(...reenterableWithoutFallback.map(s => ({
       kind,
       range: s.range,

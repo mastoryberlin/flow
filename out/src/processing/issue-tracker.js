@@ -160,7 +160,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     var checkReenterableFallbacks = function () {
         kind = 'reenterable states (with child states 1, 2, ...) must define a * fallback child state';
         severity = 'error';
-        var reenterableWithoutFallback = allStateNodes.filter(function (s) { return s.childNodes.length && s.childNodes.every(function (c) { return /[1-9]\d*/.test(c.name); }); });
+        var reenterableWithoutFallback = allStateNodes.filter(function (s) { return s.childNodes.length && s.childNodes.every(function (c) { return /^[1-9]\d*$/.test(c.name); }); });
         issues.push.apply(issues, reenterableWithoutFallback.map(function (s) { return ({
             kind: kind,
             range: s.range,

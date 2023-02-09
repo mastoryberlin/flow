@@ -4,7 +4,10 @@ export declare function useFlowToLocale(flow: string, rootNodeId?: string): {
             messages: {};
             buttonIntents: {};
             skeleton: {};
+            interpolation: {};
+            tutorialMessages: {};
         };
+        challenge: {};
     };
     visitor: import("../chevrotain").DslVisitorWithDefaults;
 };

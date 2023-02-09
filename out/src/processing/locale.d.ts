@@ -7,7 +7,9 @@ export declare function useFlowToLocale(flow: string, rootNodeId?: string): {
             interpolation: {};
             tutorialMessages: {};
         };
-        challenge: {};
+        challenge: {
+            goals: {};
+        };
     };
     visitor: import("../chevrotain").DslVisitorWithDefaults;
 };

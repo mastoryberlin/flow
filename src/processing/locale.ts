@@ -12,7 +12,7 @@ export function useFlowToLocale(flow: string, rootNodeId = '<ROOT>') {
   useIssueTracker(parser, visitor, flow, rootNodeId, true)
   const pathsArray = {} as Record<string, string>
   const intentsArray = {} as Record<string, string>
-  const json = { flow: { messages: {}, buttonIntents: {}, skeleton: {}, interpolation: {}, tutorialMessages: {} }, challenge: {} }
+  const json = { flow: { messages: {}, buttonIntents: {}, skeleton: {}, interpolation: {}, tutorialMessages: {} }, challenge: { goals: {} } }
   json.flow.messages = pathsArray
   json.flow.buttonIntents = intentsArray
   stateNodeToJsonRecursive(rootName, null, pathsArray, intentsArray)

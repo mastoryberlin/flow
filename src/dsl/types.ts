@@ -101,6 +101,7 @@ export interface EventTransition extends BaseTransition {
 
 export interface AfterTransition extends BaseTransition {
   timeout: number
+  dots: boolean
 }
 
 export interface AlwaysTransition extends BaseTransition {

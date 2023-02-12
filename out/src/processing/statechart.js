@@ -124,6 +124,9 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
         }
         var transitions = visitor.transitionsBySourcePath[fqPath]; // node.transitions is currently empty
         var on = void 0, after = void 0, always = void 0;
+        if (node.final) {
+            always = "#".concat(rootName, ".__FLOW_DONE__");
+        }
         if (transitions) {
             var eventTransitions = transitions.filter(function (t) { return t.type === 'event'; });
             var afterTransitions = transitions.filter(function (t) { return t.type === 'after'; });
@@ -163,7 +166,7 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
         }
         var assignments = node.assignVariables;
         if (assignments) {
-            json.exit = {
+            json.entry = {
                 type: '_assignToContext_',
                 assignments: assignments
             };
@@ -193,7 +196,9 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                     always = "#".concat(rootName, ".__FLOW_DONE__");
                     break;
                 case 'subflow':
+                    json.entry = { type: 'loadSubflow', id: directive.arg };
                     invoke.src = { type: 'subflow', id: directive.arg };
+                    json.exit = { type: 'unloadSubflow' };
                     break;
                 case 'focusApp':
                     {
@@ -279,9 +284,6 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                 sender: sender,
                 message: kind === 'text' ? node.path.join('.') : ((_b = node.message.source) === null || _b === void 0 ? void 0 : _b.toString()) || ''
             };
-        }
-        if (node.final) {
-            json.always = "#".concat(rootName, ".__FLOW_DONE__");
         }
         return json;
     }

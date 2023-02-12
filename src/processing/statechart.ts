@@ -104,6 +104,8 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
 
     const transitions = visitor.transitionsBySourcePath[fqPath] // node.transitions is currently empty
     let on, after, always
+    if (node.final) { always = `#${rootName}.__FLOW_DONE__` }
+
     if (transitions) {
       const eventTransitions = transitions.filter(t => t.type === 'event') as dsl.EventTransition[]
       const afterTransitions = transitions.filter(t => t.type === 'after') as dsl.AfterTransition[]
@@ -159,7 +161,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
 
     const assignments = node.assignVariables
     if (assignments) {
-      json.exit = {
+      json.entry = {
         type: '_assignToContext_',
         assignments
       }
@@ -181,7 +183,11 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
           break
         case 'cinema': invoke.src = { type: 'cinema', source: directive.arg }; break
         case 'done': always = `#${rootName}.__FLOW_DONE__`; break
-        case 'subflow': invoke.src = { type: 'subflow', id: directive.arg }; break
+        case 'subflow':
+          json.entry = { type: 'loadSubflow', id: directive.arg }
+          invoke.src = { type: 'subflow', id: directive.arg }
+          json.exit = { type: 'unloadSubflow' }
+          break
         case 'focusApp':
           {
             if (!directive.arg) { throw new Error('.focusApp directive must have at least one argument: appId') }
@@ -255,10 +261,6 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
         type: 'SEND_MESSAGE', kind, sender,
         message: kind === 'text' ? node.path.join('.') : (node.message as dsl.MediaMessage).source?.toString() || ''
       }
-    }
-
-    if (node.final) {
-      json.always = `#${rootName}.__FLOW_DONE__`
     }
 
     return json

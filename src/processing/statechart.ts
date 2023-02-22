@@ -183,6 +183,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
           break
         case 'cinema': invoke.src = { type: 'cinema', source: directive.arg }; break
         case 'done': always = `#${rootName}.__FLOW_DONE__`; break
+        case 'assert': always = { target: `${rootName}.__ASSERTION_FAILED__`, cond: {type: '_assertionFailed_', assertion: directive.arg}}; break
         case 'subflow':
           json.entry = { type: 'loadSubflow', id: directive.arg }
           invoke.src = { type: 'subflow', id: directive.arg }
@@ -267,6 +268,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
   } else {
     // Root Node
     childStates.__FLOW_DONE__ = { type: 'final' }
+    childStates.__ASSERTION_FAILED__ = { type: 'final' }
     return {
       id: rootName,
       predictableActionArguments: true,

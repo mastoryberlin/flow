@@ -219,12 +219,19 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                     break;
                 case 'reach':
                     {
-                        var args = directive.arg.trim().split(' ');
-                        var section = args[0];
-                        var path = args[1];
+                        var args_2 = directive.arg.trim().split(' ');
+                        var section = args_2[0];
+                        var path = args_2[1];
                         json.entry = { type: '_showEntry', section: section, path: path };
                     }
                     break;
+                case 'tut':
+                    {
+                        var args = directive.arg.trim().split(' ');
+                        var elementId = args[0];
+                        var message = args[1];
+                        json.entry = { type: '_tutorial', elementId: elementId, message: message };
+                    }
                 case 'goal':
                     {
                         var goalString = directive.arg.trim();
@@ -242,15 +249,15 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                         if (!directive.arg) {
                             throw new Error('.inChallenge directive must have at least one argument: eventName');
                         }
-                        var args_2 = directive.arg.replace(argSplitter, sepHelper).split(sepHelper);
-                        var character = constants_1.allNpcs.find(function (c) { return c.toLowerCase() === args_2[0].toLowerCase(); });
+                        var args_3 = directive.arg.replace(argSplitter, sepHelper).split(sepHelper);
+                        var character = constants_1.allNpcs.find(function (c) { return c.toLowerCase() === args_3[0].toLowerCase(); });
                         if (character) {
-                            args_2 = args_2[1].replace(argSplitter, sepHelper).split(sepHelper);
+                            args_3 = args_3[1].replace(argSplitter, sepHelper).split(sepHelper);
                         }
-                        var eventName = args_2[0];
+                        var eventName = args_3[0];
                         var eventData = "{}";
-                        if (args_2.length > 1 && args_2[1].trim()) {
-                            eventData = args_2[1].trim();
+                        if (args_3.length > 1 && args_3[1].trim()) {
+                            eventData = args_3[1].trim();
                         }
                         if (character) {
                             eventData = eventData.replace('{', "{_pretendCausedByNpc:\"".concat(character, "\","));

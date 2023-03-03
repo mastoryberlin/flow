@@ -1,0 +1,204 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Mastory Flow",
+	"patterns": [
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#constants"
+		},
+		{
+			"include": "#expressions"
+		},
+		{
+			"include": "#functions"
+		},
+		{
+			"include": "#events"
+		},
+		{
+			"include": "#messages"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#variables"
+		},
+		{
+			"include": "#labels"
+		},
+		{
+			"include": "#directives"
+		}
+	],
+	"repository": {
+		"comments": {
+			"patterns": [
+				{
+					"name": "comment.line.double-slash.flow",
+					"match": "(?<!\\w:)\\/\\/(?:.(?!\\bTODO))*|(?<=\\/\\/.*\\bTODO\\b)(?:.(?!\\bTODO))*"
+				},
+				{
+					"name": "keyword.control.less.todo.flow",
+					"match": "TODO"
+				}
+			]
+		},
+		"constants": {
+			"patterns": [
+				{
+					"name": "constant.numeric.flow",
+					"match": "(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:ms|milliseconds?|s(?:ec(?:ond)?s?)?|m(?:in(?:ute)?s?)?|h(?:ours?)?)|\\d{1,2}:\\d{2}"
+				}
+			]
+		},
+		"expressions": {
+			"patterns": [
+				{
+					"match": "(?<=\\bif\\b).*?(?=\\n|->)|\\S+\\s*(?=:=)|(?<=:=)[^\\n]*",
+					"captures": {
+						"0": {
+							"name": "meta.embedded.inline.typescript",
+							"patterns": [
+								{
+									"include": "source.ts"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		"events": {
+			"patterns": [
+				{
+					"name": "entity.name.class.flow",
+					"match": "(?<=\\bon\\b)\\s*\\w*\\s*(?=\\n|->)"
+				}
+			]
+		},
+		"variables": {
+			"patterns": [
+				{
+					"match": "\\b(?:lastPlayedMedia|userName|className|teacherName)\\b",
+					"name": "support.variable.name.flow"
+				},
+				{
+					"begin": "^\\s*!",
+					"end": "(?=//)|$",
+					"patterns": [
+						{
+							"match": "\\w+\\s*(?==)",
+							"name": "variable.name.flow"
+						}
+					]
+				},
+				{
+					"match": "(?<=(?:IMAGE|AUDIO|VIDEO|\\S*www\\.\\S+)(?:\\s*\"[^\"]*\")?\\s*=\\s*)\\w+",
+					"name": "variable.name.flow"
+				}
+			]
+		},
+		"functions": {
+			"patterns": [
+				{
+					"match": "\\b(?:length)(?=\\([^)]*\\))",
+					"name": "support.function.flow"
+				}
+			]
+		},
+		"keywords": {
+			"patterns": [
+				{
+					"name": "keyword.control.operator.flow",
+					"match": "->|!"
+				},
+				{
+					"name": "keyword.control.flow",
+					"match": "\\b(on|after|if|when)\\b"
+				}
+			]
+		},
+		"messages": {
+			"name": "string.quoted.double.flow",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.flow",
+					"match": "\\\\."
+				},
+				{
+					"begin": "\\$\\{",
+					"end": "\\}",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.code.open"
+						}
+					},
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.code.close"
+						}
+					},
+					"name": "meta.embedded.inline.typescript",
+					"patterns": [
+						{
+							"include": "source.ts"
+						}
+					]
+				},
+				{
+					"match": "\\$(\\w+)|\\{([^{}]*(?:(?:\\{[^{}]*\\}[^{}]*)*))\\}",
+					"captures": {
+						"1": {
+							"name": "punctuation.code.open"
+						},
+						"2": {
+							"name": "meta.embedded.inline.typescript",
+							"patterns": [
+								{
+									"include": "source.ts"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		"strings": {
+			"patterns": [
+				{
+					"name": "markup.underline.link.flow",
+					"match": "\\w+://\\S+"
+				},
+				{
+					"name": "string.regexp.flow",
+					"match": "(?<!\\w)/[^/].*/"
+				}
+			]
+		},
+		"labels": {
+			"patterns": [
+				{
+					"name": "entity.name.tag.flow",
+					"match": "@\\w+"
+				}
+			]
+		},
+		"directives": {
+			"patterns": [
+				{
+					"name": "entity.name.function.flow",
+					"match": "\\.\\w+"
+				}
+			]
+		}
+	},
+	"scopeName": "source.flow"
+}

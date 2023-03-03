@@ -1,6 +1,6 @@
 {
   "name": "@mastoryberlin/flow",
-  "version": "0.8.15",
+  "version": "0.8.16",
   "type": "commonjs",
   "description": "",
   "main": "./out/index.js",
@@ -21,7 +21,7 @@
     "preview": "vite preview --port 4173",
     "test:unit": "vitest --environment jsdom",
     "build-only": "vite build",
-    "build-module": "tsc --declaration --outDir out ./index.ts",
+    "build-module": "tsc --declaration --resolveJsonModule --outDir out ./index.ts",
     "type-check": "vue-tsc --noEmit -p tsconfig.vitest.json --composite false",
     "build:scripts": "tsc --outDir out ./gen-spec ./gen-types ./bump-version",
     "gen-spec": "node out/gen-spec",

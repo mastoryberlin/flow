@@ -71,7 +71,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             range: s.range,
             severity: severity
         }); }));
-        console.log('deadEnds:', deadEnds);
+        // console.log('deadEnds:', deadEnds)
     };
     var checkDuplicateStateNodeNames = function () {
         kind = 'state name is used multiple times in the same scope';
@@ -234,7 +234,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             throw new Error("Flow DSL Error ".concat(name, " at line ").concat(i.range.start.line, ", col ").concat(i.range.start.character, ": ").concat(JSON.stringify(i.payload)));
         });
     }
-    console.log('issues:', issues);
+    // console.log('issues:', issues)
     return issues;
 }
 exports.useIssueTracker = useIssueTracker;

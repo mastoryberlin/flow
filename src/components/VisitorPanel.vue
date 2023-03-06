@@ -22,7 +22,7 @@ let issueArray = ref([] as Issue[])
 watch(flowProp, () => {
   issueArray.value = useIssueTracker(parser, visitor, props.flow, '<ROOT>', true)
 })
-console.log('issueArray', issueArray)
+// console.log('issueArray', issueArray)
 const cstProp = computed(() => props.cst)
 watch(cstProp, () => {
   allStateNodes.value = props.visitor.allStateNodes()
@@ -67,13 +67,13 @@ const currentTransitionNumber = ref<number | null>(null)
         {{ t.target?.label ? '@' + t.target!.label : t.target?.path?.join('.') }}
         {{ t.target?.unknown ? '???' : '' }}
         {{
-        (t.guard as IfTransitionGuard | undefined)?.condition ?
-  `[if ${(t.guard as IfTransitionGuard).condition}]` :
-  (t.guard as WhenTransitionGuard | undefined)?.refState ?
-    `[when in: ${(t.guard as WhenTransitionGuard).refState.label ?
-      '@' + (t.guard as WhenTransitionGuard).refState.label :
-      (t.guard as WhenTransitionGuard).refState.path!.join('.')}]` :
-    ''
+          (t.guard as IfTransitionGuard | undefined)?.condition ?
+          `[if ${(t.guard as IfTransitionGuard).condition}]` :
+          (t.guard as WhenTransitionGuard | undefined)?.refState ?
+            `[when in: ${(t.guard as WhenTransitionGuard).refState.label ?
+              '@' + (t.guard as WhenTransitionGuard).refState.label :
+              (t.guard as WhenTransitionGuard).refState.path!.join('.')}]` :
+            ''
         }}
       </option>
     </select>

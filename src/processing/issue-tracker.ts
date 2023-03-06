@@ -65,7 +65,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
       range: s.range,
       severity,
     })))
-    console.log('deadEnds:', deadEnds)
+    // console.log('deadEnds:', deadEnds)
   }
 
   const checkDuplicateStateNodeNames = () => {
@@ -229,6 +229,6 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
       throw new Error(`Flow DSL Error ${name} at line ${i.range.start.line}, col ${i.range.start.character}: ${JSON.stringify(i.payload)}`)
     })
   }
-  console.log('issues:', issues)
+  // console.log('issues:', issues)
   return issues
 }

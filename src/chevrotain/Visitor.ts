@@ -93,7 +93,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
               stateNodeSiblings = this.topLevelStateNodes()
               transitionSiblings = this.transitionsBySourcePath[''] || []
             }
-            console.log('PROCESSING SHORTCUT TRANSITION', line)
+            // console.log('PROCESSING SHORTCUT TRANSITION', line)
             const siblings = [...stateNodeSiblings, ...transitionSiblings]
             console.log('Siblings: ', siblings)
             const isTargetOnSameLine = t.type === 'after' && (t as dsl.AfterTransition).dots
@@ -103,14 +103,14 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
             const subsequentSiblings = siblings.filter(s => s.range.start.line >= (isTargetOnSameLine ? line : line + 1))
             const precedingStateNode = precedingStateNodeSiblings.find(s => !precedingSiblings.some(t => t.range.end.line > s.range.end.line))
             const followingStateNode = subsequentStateNodeSiblings.find(s => !subsequentSiblings.some(t => t.range.start.line < s.range.start.line))
-            console.log('Preceding State Node:', precedingStateNode)
-            console.log('Following State Node:', followingStateNode)
-            console.log('Subsequent Siblings: ', subsequentSiblings)
-            console.log('Subsequent State Node Siblings: ', subsequentStateNodeSiblings)
+            // console.log('Preceding State Node:', precedingStateNode)
+            // console.log('Following State Node:', followingStateNode)
+            // console.log('Subsequent Siblings: ', subsequentSiblings)
+            // console.log('Subsequent State Node Siblings: ', subsequentStateNodeSiblings)
             if (precedingStateNode && followingStateNode) {
-              console.log('SETTING THE SOURCE TO', precedingStateNode.path)
+              // console.log('SETTING THE SOURCE TO', precedingStateNode.path)
               t.sourcePath = precedingStateNode.path
-              console.log('SETTING THE TARGET TO', followingStateNode.path)
+              // console.log('SETTING THE TARGET TO', followingStateNode.path)
               t.target.path = followingStateNode.path
               t.target.unknown = false
               const asString = t.sourcePath.join('.')
@@ -429,7 +429,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
             const image = c.TimeSpan[0].image
             const m = image.match(
               /(0|[1-9]\d*):(\d{2})|(0|[1-9]\d*)(\.\d+)?(?:\s*(?:(ms|milli(?:seconds?)?)|(s(?:ec(?:onds?)?)?)|(m(?:in(?:utes?)?)?)|(h(?:ours?)?))?\b)?/
-              )
+            )
             if (m) {
               if (m[1] && m[2]) {
                 ms = (parseInt(m[1]) * 60 + parseInt(m[2])) * 1000

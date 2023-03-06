@@ -115,7 +115,7 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                             stateNodeSiblings = this_1.topLevelStateNodes();
                             transitionSiblings = this_1.transitionsBySourcePath[''] || [];
                         }
-                        console.log('PROCESSING SHORTCUT TRANSITION', line_1);
+                        // console.log('PROCESSING SHORTCUT TRANSITION', line)
                         var siblings = __spreadArray(__spreadArray([], stateNodeSiblings, true), transitionSiblings, true);
                         console.log('Siblings: ', siblings);
                         var isTargetOnSameLine_1 = t.type === 'after' && t.dots;
@@ -125,14 +125,14 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                         var subsequentSiblings_1 = siblings.filter(function (s) { return s.range.start.line >= (isTargetOnSameLine_1 ? line_1 : line_1 + 1); });
                         var precedingStateNode = precedingStateNodeSiblings.find(function (s) { return !precedingSiblings_1.some(function (t) { return t.range.end.line > s.range.end.line; }); });
                         var followingStateNode = subsequentStateNodeSiblings.find(function (s) { return !subsequentSiblings_1.some(function (t) { return t.range.start.line < s.range.start.line; }); });
-                        console.log('Preceding State Node:', precedingStateNode);
-                        console.log('Following State Node:', followingStateNode);
-                        console.log('Subsequent Siblings: ', subsequentSiblings_1);
-                        console.log('Subsequent State Node Siblings: ', subsequentStateNodeSiblings);
+                        // console.log('Preceding State Node:', precedingStateNode)
+                        // console.log('Following State Node:', followingStateNode)
+                        // console.log('Subsequent Siblings: ', subsequentSiblings)
+                        // console.log('Subsequent State Node Siblings: ', subsequentStateNodeSiblings)
                         if (precedingStateNode && followingStateNode) {
-                            console.log('SETTING THE SOURCE TO', precedingStateNode.path);
+                            // console.log('SETTING THE SOURCE TO', precedingStateNode.path)
                             t.sourcePath = precedingStateNode.path;
-                            console.log('SETTING THE TARGET TO', followingStateNode.path);
+                            // console.log('SETTING THE TARGET TO', followingStateNode.path)
                             t.target.path = followingStateNode.path;
                             t.target.unknown = false;
                             var asString = t.sourcePath.join('.');

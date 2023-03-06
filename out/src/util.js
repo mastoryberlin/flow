@@ -2,7 +2,7 @@
 exports.__esModule = true;
 exports.unescapeDots = exports.escapeDots = exports.tr = exports.dig = void 0;
 function dig(obj, keys) {
-    console.log('DIGGING into ', obj, keys);
+    // console.log('DIGGING into ', obj, keys)
     return keys.split('.').reduce(function (prev, curr) {
         return prev ? prev = prev[curr] : undefined;
     }, obj);

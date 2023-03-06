@@ -216,6 +216,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
             var message = args[1];
             json.entry = { type: '_tutorial', elementId: elementId, message: message };
           }
+          break;
         case 'goal': {
           const goalString = directive.arg.trim()
           json.entry = { type: '_setWireGoal', goalString }

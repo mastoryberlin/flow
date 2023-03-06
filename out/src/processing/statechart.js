@@ -232,6 +232,7 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                         var message = args[1];
                         json.entry = { type: '_tutorial', elementId: elementId, message: message };
                     }
+                    break;
                 case 'goal':
                     {
                         var goalString = directive.arg.trim();

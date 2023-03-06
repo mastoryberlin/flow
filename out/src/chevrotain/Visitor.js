@@ -117,7 +117,7 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                         }
                         // console.log('PROCESSING SHORTCUT TRANSITION', line)
                         var siblings = __spreadArray(__spreadArray([], stateNodeSiblings, true), transitionSiblings, true);
-                        console.log('Siblings: ', siblings);
+                        // console.log('Siblings: ', siblings)
                         var isTargetOnSameLine_1 = t.type === 'after' && t.dots;
                         var precedingStateNodeSiblings = stateNodeSiblings.filter(function (s) { return s.range.end.line < line_1; });
                         var subsequentStateNodeSiblings = stateNodeSiblings.filter(function (s) { return s.range.start.line >= (isTargetOnSameLine_1 ? line_1 : line_1 + 1); });

@@ -29,7 +29,7 @@ const parser = useParser()
 const visitor = useVisitor()
 const parse = (flowCode: string) => {
   parser.parse(flowCode)
-  console.log('COMMENTS: ', parser.comments)
+  // console.log('COMMENTS: ', parser.comments)
   cst.value = parser.cst
   visitor.visit(parser.cst)
 }
@@ -44,6 +44,4 @@ onMounted(() => { parse(code.value) })
   <ResultsPane v-if="cst" :cst="cst" :visitor="visitor" :flow="code" />
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

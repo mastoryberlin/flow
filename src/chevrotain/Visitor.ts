@@ -95,7 +95,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
             }
             // console.log('PROCESSING SHORTCUT TRANSITION', line)
             const siblings = [...stateNodeSiblings, ...transitionSiblings]
-            console.log('Siblings: ', siblings)
+            // console.log('Siblings: ', siblings)
             const isTargetOnSameLine = t.type === 'after' && (t as dsl.AfterTransition).dots
             const precedingStateNodeSiblings = stateNodeSiblings.filter(s => s.range.end.line < line)
             const subsequentStateNodeSiblings = stateNodeSiblings.filter(s => s.range.start.line >= (isTargetOnSameLine ? line : line + 1))

@@ -213,7 +213,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
           {
             var args = directive.arg.trim().split(' ');
             var elementId = args[0];
-            var message = args[1];
+            var message = args.splice(1).join(' ');
             invoke.src = { type: '_tutorial', elementId, message };
           }
           break;

@@ -244,6 +244,26 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
             json.entry = { type: 'IN_CHALLENGE', eventName, eventData }
           }
           break
+        case 'inEpisode':
+          {
+            if (!directive.arg) { throw new Error('.inEpisode directive must have at least one argument: eventName') }
+            let args = directive.arg.replace(argSplitter, sepHelper).split(sepHelper)
+
+            const character = allNpcs.find(c => c.toLowerCase() === args[0].toLowerCase())
+            if (character) {
+              args = args[1].replace(argSplitter, sepHelper).split(sepHelper)
+            }
+            let eventName = args[0]
+
+            let eventData = "{}"
+            if (args.length > 1 && args[1].trim()) {
+              eventData = args[1].trim()
+            }
+
+            if (character) { eventData = eventData.replace('{', `{_pretendCausedByNpc:"${character}",`) }
+            json.entry = { type: 'IN_EPISODE', eventName, eventData }
+          }
+          break
         default:
           throw new Error(`Unknown directive .${directive.name} at ${fqPath}`)
       }

@@ -266,6 +266,27 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                         json.entry = { type: 'IN_CHALLENGE', eventName: eventName, eventData: eventData };
                     }
                     break;
+                case 'inEpisode':
+                    {
+                        if (!directive.arg) {
+                            throw new Error('.inEpisode directive must have at least one argument: eventName');
+                        }
+                        var args_4 = directive.arg.replace(argSplitter, sepHelper).split(sepHelper);
+                        var character = constants_1.allNpcs.find(function (c) { return c.toLowerCase() === args_4[0].toLowerCase(); });
+                        if (character) {
+                            args_4 = args_4[1].replace(argSplitter, sepHelper).split(sepHelper);
+                        }
+                        var eventName = args_4[0];
+                        var eventData = "{}";
+                        if (args_4.length > 1 && args_4[1].trim()) {
+                            eventData = args_4[1].trim();
+                        }
+                        if (character) {
+                            eventData = eventData.replace('{', "{_pretendCausedByNpc:\"".concat(character, "\","));
+                        }
+                        json.entry = { type: 'IN_EPISODE', eventName: eventName, eventData: eventData };
+                    }
+                    break;
                 default:
                     throw new Error("Unknown directive .".concat(directive.name, " at ").concat(fqPath));
             }

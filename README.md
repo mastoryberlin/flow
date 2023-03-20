@@ -47,13 +47,13 @@ TODO: Describe paths
 To define a [→state node](https://xstate.js.org/docs/guides/statenodes.html), just write its name on a line of its own.
 Names of state nodes may contain any word, non-word or whitespace characters except `|`, `{`, `[`.
 Special syntax like `//` or `->` is also not permitted.
-```swift
+```flow
 My 1st State (couldn't think of a better name) // normal parentheses are allowed, too
 ```
 
 A [→compound state](https://xstate.js.org/docs/guides/hierarchical.html) is denoted by a pair of braces {}.
 State nodes nested inside the braces are considered child nodes
-```swift
+```flow
 State 2 {
     State 2a // The first child state will be automatically deemed the "initial" one
     State 2b // This one won't be auto-selected
@@ -61,7 +61,7 @@ State 2 {
 ```
 
 Using brackets [] instead of curly braces defines a [→"parallel" compound state](https://xstate.js.org/docs/guides/statenodes.html#state-node-types)
-```swift
+```flow
 Parallel State [
     I will be selected ...
     I will, too { // any combinations of [] and {} are valid, too
@@ -85,7 +85,7 @@ Transition targets are looked up within the current compound state's scope first
 if no matching target is found, the search continues one level higher until a match is found.
 
 Combine `->` with the `on` keyword to define an event transition triggered by `SOME_EVENT`
-```swift
+```flow
 Some State {
     on SOME_EVENT -> Another State 
 }
@@ -95,7 +95,7 @@ You can also define "after transitions" based on a timeout with the `after` keyw
 Valid units for the time span are ms|milliseconds?|s|sec(ond)?s?|m|min(ute)?s?|h|hours?
 Omitting the unit means milliseconds by default.
 As a convenience, the format m:ss can be used to specify a combination of mins and secs: 3:25 is equivalent to 205s
-```swift
+```flow
 Some Other State { 
     after 20s -> Another State
     after 3:25 -> Yet another state
@@ -106,14 +106,14 @@ Yet another state // This will be selected after 3 minutes and 25 seconds
 
 Transitions without `on` or `after` become ["always transitions"](https://xstate.js.org/docs/guides/transitions.html#eventless-always-transitions):
 As soon as the state is entered, it is "redirected" to @omg
-```swift
+```flow
 Transitory {
     -> @omg
 }
 ```
 
 Nested transition targets can be qualified by separating the scopes with a pipe `|` sign
-```swift
+```flow
 Unrelated State {
     after 2min -> Parallel State | I will, too | C // this will only transition if someGuard evaluates to true
 }
@@ -121,7 +121,7 @@ C // If the above transition target had just been specified as `-> C`, this woul
 ```
 
 Prepend a state node definition with `@someLabel` to assign `someLabel` to the state node for easier reference in transitions
-```swift
+```flow
 @short This state has a very long name ...
 Good we don't have to type all that again {
     on MY_EVENT -> @short
@@ -146,14 +146,14 @@ Inside Flow scripts, you have access to two kinds of variables:
 2. Variables in the current [Episode Scope](#episode-scope)
 
 All available variables can be used for message interpolation by preceding their name with a `$` sign:
-```swift
+```flow
 Intro {
         Nick "Hello, $userName"
 }
 ```
 
 You can also modify variable values using inline TypeScript expressions by wrapping them in `${...}`:
-```swift
+```flow
 VZ "We are ${classSize + 2} people (including Nick and myself)"
 ```
 
@@ -195,7 +195,7 @@ groupSize: 0,
 
 ##### Assigning Variables
 If a state node name is of the form
-```swift
+```flow
 varname := expression
 ```
 
@@ -210,7 +210,7 @@ connect them to other states with transitions.
 After assigning a value to it, `varname` can be used in message interpolation or [conditional transitions](#conditional-transitions).
 
 Example:
-```swift
+```flow
 State A {
     groupSize := classSize / 5
     .. Do something else
@@ -225,13 +225,13 @@ State A {
 If a transition definition contains an `if` clause, it becomes a [→"guarded" (conditional) transition](https://xstate.js.org/docs/guides/guards.html).
 The condition can be either the name of a (globally predefined) guard 
 or any JS expression referring to the current Flow variables
-```swift
+```flow
 after 2min if someCondition -> Target // this will only transition if `someCondition` evaluates to true
 on MY_EVENT if a == 3 || userName != 'phil' -> Target // assuming `a` is defined somewhere
 ```
 
 Replacing `if` by `when` + a state node reference will check if that state is (also) selected; only then the transition will happen
-```swift
+```flow
 after 5min when Parallel State | I will, too | A -> Talkative
 ```
 
@@ -245,7 +245,7 @@ after 5min when Parallel State | I will, too | A -> Talkative
 
 To define a sequence of states where two subsequent states are connected by exactly one transition,
 you can use a special shortcut syntax without `->`
-```swift
+```flow
 State A
 after 1s
 State B
@@ -254,7 +254,7 @@ State C
 ```
 
 The above is equivalent to the more verbose definition
-```swift
+```flow
 State A {
     after 1s -> State B
 }
@@ -267,7 +267,7 @@ State C
 The most frequent case of timeout transitions in a flow is the "fast succession" *A, then B* - where "then"
 is a placeholder for a short period of time. For this special case, the `after` statement from above can be
 abbreviated even more to an *ellipsis prefix* of 2, 3, or 4 dots in the same line as the target state:
-```swift
+```flow
 State A
 .. State B     // 2 dots means "after 2s"
 ... State C    // 3 dots means "after 3s"
@@ -289,7 +289,7 @@ side effects - e.g., we can send messages and listen to user input just by follo
 However, there are situations where one needs to trigger more specific side-effects, like displaying a video in full-screen
 cinema mode or loading up a math challenge in the Wire app. These and similar effects can be achieved through Flow *directives*,
 which are single-word commands (similar to function names in other programming languages) preceded by one leading dot:
-```swift
+```flow
 beware of the dog! {
     .biteUser
 }
@@ -300,7 +300,7 @@ directive's name on the same line (except comments) is considered its argument(s
 depends entirely on the directive in question. This is much like the way command-line tools work: Each
 command has its own way of interpreting the command line, and ideally, that way is the most convenient
 one for its specific use-case. Here are some examples for directives with arguments:
-```swift
+```flow
 .showApp Dictionary
 .loadChallenge Drone {droneProp: 3.5}
 .let VZ appear in Wire
@@ -312,7 +312,7 @@ one for its specific use-case. Here are some examples for directives with argume
 connect them to other states with transitions.
 
 Just like with other states, shortcut syntax can be used to make the flow more readable:
-```swift
+```flow
 Beware of the dog! {
     .bark
     after 3s
@@ -324,7 +324,7 @@ Beware of the dog! {
 
 > Careful when using ellipses in combination with directives! You need to separate the transition part from the directive with
 > whitespace, or else the directive will not be recognized as such.
-```swift
+```flow
 .bark
 .. .bark louder // this works
 ....even louder    // but this doesn't!
@@ -350,7 +350,7 @@ Optional arguments are denoted by [brackets]; all other listed arguments are man
 - [unloadSubflow](#unloadsubflow)
 
 #### `.actorPoints`
-```swift
+```flow
 .actorPoints {at: UIElementDataId}
 ```
 
@@ -364,7 +364,7 @@ directive is executing. For example, if there is a button UI element defined lik
 <button data-avatar-target="closeButton"> Close! </button>
 ```
 then you could fake an effect as if an NPC was clicking on that button via:
-```swift
+```flow
 .actorPoints {at: 'closeButton'}
 ```
 
@@ -376,7 +376,7 @@ If `_pretendCausedByNpc` is unset, it is assumed that the current directive was 
 and it will have no effect.
 
 #### `.alert`
-```swift
+```flow
 .alert {text: MessageText, title: PopupWindowTitle}
 ```
 
@@ -386,7 +386,7 @@ and it will have no effect.
 Displays a popup overlay dialog with a title and a (text) message, similar to JS's native `alert()` function.
 
 #### `.cinema`
-```swift
+```flow
 .cinema VideoUrl
 ```
 
@@ -397,7 +397,7 @@ Loads the video specified with `VideoUrl` and displays it in "cinema mode", i.e.
 Although the video can be jumped using a slider bar (to re-watch missed parts, for example), there is no close button provided and the overlay remains open until the video was watched to the end.
 
 #### `.done`
-```swift
+```flow
 .done
 ```
 
@@ -409,7 +409,7 @@ This directive is internally translated into a "final" state; reaching it will i
 Using it in a main episode flow will mark the episode itself as finished and cause the Mastory app to return to the overview page (TBD).
 
 #### `.focusApp`
-```swift
+```flow
 .focusApp AppName
 ```
 
@@ -418,7 +418,7 @@ Using it in a main episode flow will mark the episode itself as finished and cau
 Ensures that `AppName` is visible for the user, switching the "currently selected app" to `AppName` if necessary.
 
 #### `.inChallenge`
-```swift
+```flow
 .inChallenge [ActorName] EventName OptionsObject
 ```
 
@@ -441,7 +441,7 @@ Then, if the event leads to an [.actorPoints](#actorpoints) directive in the cha
 will be displayed.
 
 #### `.loadChallenge`
-```swift
+```flow
 .loadChallenge ChallengeId
 ```
 
@@ -455,7 +455,7 @@ Note that `.loadChallenge` does not automatically focus the Wire app. To do so, 
 a [`.focusApp`](#focusapp) directive after loading the challenge.
 
 #### `.loadSubflow`
-```swift
+```flow
 .loadSubflow SubflowId
 ```
 
@@ -468,7 +468,7 @@ manner.
 > To load and *wait* for a subflow to finish, use [`.subflow`](#subflow) instead.
 
 #### `.reach`
-```swift
+```flow
 .reach SkeletonPart [EntryId]
 ```
 
@@ -482,7 +482,7 @@ The exact usage depends on what piece of the current episode's skeleton (as defi
 - For any other value passed as `SkeletonPart`, `EntryId` is expected to be a simple string, which is interpreted as the key identifying the entry to be enabled within the respective section object.
 
 #### `.subflow`
-```swift
+```flow
 .subflow SubflowId
 ```
 
@@ -495,7 +495,7 @@ The current flow will wait until the subflow reaches its final state (last state
 > To run a subflow without stopping the current flow, use [`.loadSubflow`](#loadsubflow) instead.
 
 #### `.unloadChallenge`
-```swift
+```flow
 .unloadChallenge
 ```
 
@@ -503,7 +503,7 @@ The current flow will wait until the subflow reaches its final state (last state
 Unloads any currently loaded challenge, leaving the Wire app in the state where it reads "No challenge available".
 
 #### `.unloadSubflow`
-```swift
+```flow
 .unloadSubflow
 ```
 
@@ -526,7 +526,7 @@ TBD
 
 State names ending with a "quoted" string are interpreted as *messages*:
 When they are entered, the message will be sent either in the chat or by the assistant.
-```swift
+```flow
 Talkative {
     Alicia "Hi!"    // Specify the name of the sender (NPC) before the message
     after 1s
@@ -542,7 +542,7 @@ Talkative {
 ```
 
 Interactive conversations ("NLU contexts") can be defined by adding a state node called ? as the initial child of a compound state:
-```swift
+```flow
 VZ "Hi, did you also get Alicia's messages?" {
     ? // This will wait for user input, process it, and select the best match among the provided intents
     "yes" {
@@ -579,7 +579,7 @@ on SOME_EVENT // transition shortcuts also work on the root level: on the SOME_E
 ```
 
 In conversations, regular expressions can also be used as "intents" - those will be tested before any NLU processing takes place
-```swift
+```flow
 Nick "Any idea what point this could be?"
 .. @askPoint _ {
     ?
@@ -611,14 +611,14 @@ Nick "Any idea what point this could be?"
 ```
 
 Values of captured/set variables can also be used in (message) strings with the $ + identifier syntax:
-```swift
+```flow
 @correct Nick "Okay, I'll check the point ($x, $y)!"
 after 1s
 @wrong Nick "Hmm, that didn't really work out. Any other ideas?" -> 
 ```
 
 To avoid repetitive responses, we can define a compound state with a sequence of "time of re-entry" children:
-```swift
+```flow
 Greeting {
     // Re-entry substates have just a plain integer as their name
     1 { "Hi!" } // This child state will be selected when Greeting is entered for the first time ...
@@ -652,7 +652,7 @@ using [`.subflow`](#subflow) or [`.loadSubflow`](#loadsubflow) directives:
 └─ meta.json      <-- metadata
 ```
 In the above example structure, `MyEpisode.flow` defines the main flow for the *MyEpisode* episode, and it could look something like this:
-```swift
+```flow
 Intro {
     .cinema some_starter_video
     .. .subflow Intro // run the subflow defined in Intro.flow - this state will remain active until the subflow completes

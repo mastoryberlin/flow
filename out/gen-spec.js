@@ -47,7 +47,7 @@ function generateSpecMarkdown() {
             }
             else {
                 if (!inCodeBlock) {
-                    md += "".concat(codeBlock, "swift\n");
+                    md += "".concat(codeBlock, "flow\n");
                 }
                 inCodeBlock = true;
                 md += l.replace(/\s{2}/g, '    ') + '\n';
@@ -58,7 +58,7 @@ function generateSpecMarkdown() {
         }
         return md;
     }).join("\n\n");
-    md = md.replace(/```swift\n+```\n/g, '').replace(/\n{2,}```\n/g, '\n```\n');
+    md = md.replace(/```flow\n+```\n/g, '').replace(/\n{2,}```\n/g, '\n```\n');
     (0, fs_1.writeFile)(mdPath, md, function () {
         console.log('DONE!');
     });

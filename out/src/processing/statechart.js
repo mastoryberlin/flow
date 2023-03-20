@@ -225,6 +225,12 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                         json.entry = { type: '_showEntry', section: section, path: path };
                     }
                     break;
+                case 'confetti':
+                    {
+                        var intensity = Number.parseInt(directive.arg) || 5;
+                        json.entry = { type: '_party', intensity: intensity };
+                    }
+                    break;
                 case 'tut':
                     {
                         var args = directive.arg.trim().split(' ');

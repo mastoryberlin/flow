@@ -51,7 +51,7 @@ function generateSpecMarkdown() {
         md += l.replace(/\s*\/\/\s*/, '') + '\n'
       } else {
         if (!inCodeBlock) {
-          md += `${codeBlock}swift\n`
+          md += `${codeBlock}flow\n`
         }
         inCodeBlock = true
         md += l.replace(/\s{2}/g, '    ') + '\n'
@@ -62,7 +62,7 @@ function generateSpecMarkdown() {
     }
     return md
   }).join(`\n\n`)
-  md = md.replace(/```swift\n+```\n/g, '').replace(/\n{2,}```\n/g, '\n```\n')
+  md = md.replace(/```flow\n+```\n/g, '').replace(/\n{2,}```\n/g, '\n```\n')
 
   writeFile(mdPath, md, () => {
     console.log('DONE!')

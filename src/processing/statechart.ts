@@ -209,6 +209,11 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
           json.entry = { type: '_showEntry', section, path }
         }
           break;
+        case 'confetti': {
+          const intensity = Number.parseInt(directive.arg) || 5
+          json.entry = { type: '_party', intensity }
+        }
+          break;
         case 'tut':
           {
             var args = directive.arg.trim().split(' ');

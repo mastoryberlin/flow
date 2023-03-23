@@ -2,8 +2,12 @@
 exports.__esModule = true;
 exports.getGlobalJumpEvent = void 0;
 //@ts-nocheck
-function getGlobalJumpEvent(json, visitor) {
-    console.log('getGlobalJSON:', json, Object.keys(visitor.stateNodeByPath));
+function getGlobalJumpEvent(fqPath, visitor) {
+    // console.log('Fqpath:', fqPath, ((!fqPath.startsWith('Episode')) && fqPath.split('.').length !== 1))
+    // if ((fqPath.startsWith('Episode') && (fqPath.split('.').length !== 2)) || ((!fqPath.startsWith('Episode')) && fqPath.split('.').length !== 1)) {
+    //     return null
+    // }
+    // console.log('getGlobalJSON:', fqPath, Object.keys(visitor.stateNodeByPath))
     var allStates = Object.keys(visitor.stateNodeByPath);
     var conditions = [];
     for (var _i = 0, allStates_1 = allStates; _i < allStates_1.length; _i++) {
@@ -15,7 +19,7 @@ function getGlobalJumpEvent(json, visitor) {
         condition.cond.comp = '#' + state;
         conditions.push(condition);
     }
-    console.log('conditions:', { _jump: conditions });
+    // console.log('conditions:', { _jump: conditions })
     return { _jump: conditions };
 }
 exports.getGlobalJumpEvent = getGlobalJumpEvent;

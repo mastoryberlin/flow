@@ -17,6 +17,7 @@ export function useFlowToStatechart(flow: string, rootNodeId = '<ROOT>') {
 
 function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentInfo?: any): any {
   // console.log(`stateNodeToJsonRecursive called - fqPath=${fqPath}`)
+
   let children
   let availableIntents: string[]
   if (node) {
@@ -35,11 +36,13 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
     }
   }
 
+  // console.log('parentInfo-1:', fqPath)
   const childStates = Object.fromEntries(children.map(childNode => {
     const sub = stateNodeToJsonRecursive(`${fqPath}.${childNode.name}`, childNode, childNode.name === '?' ? { availableIntents } : undefined)
     return [childNode.name, sub]
   }))
 
+  // console.log('parentInfo0:', fqPath)
   if (node) {
     const json: any = {}
     if (children.length) {
@@ -75,6 +78,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
     if (node.label) {
       json.id = node.label
     }
+    // console.log('parentInfo1:', fqPath)
 
     if (node.name === '?') {
       const intents = parentInfo.availableIntents as string[]
@@ -106,6 +110,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
     const transitions = visitor.transitionsBySourcePath[fqPath] // node.transitions is currently empty
     let on, after, always
     if (node.final) { always = `#${rootName}.__FLOW_DONE__` }
+    // console.log('parentInfo2:', fqPath)
 
     if (transitions) {
       const eventTransitions = transitions.filter(t => t.type === 'event') as dsl.EventTransition[]
@@ -136,6 +141,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
           return group;
         }, {} as any)
       }
+      // console.log('parentInfo3:', fqPath)
 
       if (afterTransitions.length) {
         after = afterTransitions.reduce((group, t) => {
@@ -168,12 +174,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
       }
     }
 
-    //jumpDirective
-    if (typeof on === 'object') {
-      on.assign(getGlobalJumpEvent(json, visitor))
-    } else {
-      on = getGlobalJumpEvent(json, visitor)
-    }
+
 
     const directive = node.directive
     if (directive) {
@@ -304,17 +305,21 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
         message: kind === 'text' ? node.path.join('.') : (node.message as dsl.MediaMessage).source?.toString() || ''
       }
     }
-
     return json
   } else {
     // Root Node
+
+    const on = getGlobalJumpEvent(fqPath, visitor)
+
     childStates.__FLOW_DONE__ = { type: 'final' }
     childStates.__ASSERTION_FAILED__ = { type: 'final' }
     return {
       id: rootName,
       predictableActionArguments: true,
       initial: children[0].name,
-      states: childStates
+      states: childStates,
+      on: on
     }
   }
+
 }

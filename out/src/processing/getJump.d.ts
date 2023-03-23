@@ -1,3 +1,3 @@
-export declare function getGlobalJumpEvent(json: any, visitor: any): {
+export declare function getGlobalJumpEvent(fqPath: String, visitor: any): {
     _jump: any[];
 };

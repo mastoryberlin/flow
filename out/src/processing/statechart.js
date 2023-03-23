@@ -37,8 +37,8 @@ function useFlowToStatechart(flow, rootNodeId) {
 }
 exports.useFlowToStatechart = useFlowToStatechart;
 function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
-    var _a, _b;
     // console.log(`stateNodeToJsonRecursive called - fqPath=${fqPath}`)
+    var _a, _b;
     var children;
     var availableIntents;
     if (node) {
@@ -60,10 +60,12 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
             return { id: rootName };
         }
     }
+    // console.log('parentInfo-1:', fqPath)
     var childStates = Object.fromEntries(children.map(function (childNode) {
         var sub = stateNodeToJsonRecursive("".concat(fqPath, ".").concat(childNode.name), childNode, childNode.name === '?' ? { availableIntents: availableIntents } : undefined);
         return [childNode.name, sub];
     }));
+    // console.log('parentInfo0:', fqPath)
     if (node) {
         var json = {};
         if (children.length) {
@@ -101,6 +103,7 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
         if (node.label) {
             json.id = node.label;
         }
+        // console.log('parentInfo1:', fqPath)
         if (node.name === '?') {
             var intents = parentInfo.availableIntents;
             // ================================================================
@@ -128,6 +131,7 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
         if (node.final) {
             always = "#".concat(rootName, ".__FLOW_DONE__");
         }
+        // console.log('parentInfo2:', fqPath)
         if (transitions) {
             var eventTransitions = transitions.filter(function (t) { return t.type === 'event'; });
             var afterTransitions = transitions.filter(function (t) { return t.type === 'after'; });
@@ -151,6 +155,7 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                     return group;
                 }, {});
             }
+            // console.log('parentInfo3:', fqPath)
             if (afterTransitions.length) {
                 after = afterTransitions.reduce(function (group, t) {
                     var _a;
@@ -171,13 +176,6 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                 type: '_assignToContext_',
                 assignments: assignments
             };
-        }
-        //jumpDirective
-        if (typeof on === 'object') {
-            on.assign((0, getJump_1.getGlobalJumpEvent)(json, visitor));
-        }
-        else {
-            on = (0, getJump_1.getGlobalJumpEvent)(json, visitor);
         }
         var directive = node.directive;
         if (directive) {
@@ -335,13 +333,15 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
     }
     else {
         // Root Node
+        var on = (0, getJump_1.getGlobalJumpEvent)(fqPath, visitor);
         childStates.__FLOW_DONE__ = { type: 'final' };
         childStates.__ASSERTION_FAILED__ = { type: 'final' };
         return {
             id: rootName,
             predictableActionArguments: true,
             initial: children[0].name,
-            states: childStates
+            states: childStates,
+            on: on
         };
     }
 }

@@ -2,6 +2,7 @@ import { useParser, useVisitor } from "../chevrotain";
 import { useIssueTracker } from "./issue-tracker";
 import type * as dsl from "../dsl/types"
 import { allNpcs } from "../constants";
+import { getGlobalJumpEvent } from "./getJump";
 
 let rootName: string
 const parser = useParser()
@@ -165,6 +166,13 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
         type: '_assignToContext_',
         assignments
       }
+    }
+
+    //jumpDirective
+    if (typeof on === 'object') {
+      on.assign(getGlobalJumpEvent(json, visitor))
+    } else {
+      on = getGlobalJumpEvent(json, visitor)
     }
 
     const directive = node.directive

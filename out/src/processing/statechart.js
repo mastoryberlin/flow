@@ -24,6 +24,7 @@ exports.useFlowToStatechart = void 0;
 var chevrotain_1 = require("../chevrotain");
 var issue_tracker_1 = require("./issue-tracker");
 var constants_1 = require("../constants");
+var getJump_1 = require("./getJump");
 var rootName;
 var parser = (0, chevrotain_1.useParser)();
 var visitor = (0, chevrotain_1.useVisitor)();
@@ -170,6 +171,13 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                 type: '_assignToContext_',
                 assignments: assignments
             };
+        }
+        //jumpDirective
+        if (typeof on === 'object') {
+            on.assign((0, getJump_1.getGlobalJumpEvent)(json, visitor));
+        }
+        else {
+            on = (0, getJump_1.getGlobalJumpEvent)(json, visitor);
         }
         var directive = node.directive;
         if (directive) {

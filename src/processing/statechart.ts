@@ -1,7 +1,7 @@
 import { useParser, useVisitor } from "../chevrotain";
 import { useIssueTracker } from "./issue-tracker";
 import type * as dsl from "../dsl/types"
-import { allNpcs } from "../constants";
+import { allDirectives, allNpcs } from "../constants";
 import { getGlobalJumpEvent } from "./getJump";
 
 let rootName: string
@@ -174,8 +174,6 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
       }
     }
 
-
-
     const directive = node.directive
     if (directive) {
       directive.arg = directive.arg?.replace(/\\r/g, '')
@@ -185,19 +183,6 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
         onDone: '__DIRECTIVE_DONE__'
       } as any
       switch (directive.name) {
-        case 'actorPoints': invoke.src = { type: 'actorPoints', actorPointsData: directive.arg }; break
-        case 'alert':
-          if (!directive.arg) { throw new Error('.alert directive must have an object argument: {title: ..., text: ...}') }
-          invoke.src = { type: 'alert', alertData: directive.arg }
-          break
-        case 'cinema': invoke.src = { type: 'cinema', source: directive.arg }; break
-        case 'done': always = `#${rootName}.__FLOW_DONE__`; break
-        case 'assert': always = { target: `#${rootName}.__ASSERTION_FAILED__`, cond: { type: '_assertionFailed_', assertion: directive.arg } }; break
-        case 'subflow':
-          json.entry = { type: 'loadSubflow', id: directive.arg }
-          invoke.src = { type: 'subflow', id: directive.arg }
-          json.exit = { type: 'unloadSubflow' }
-          break
         case 'focusApp':
           {
             if (!directive.arg) { throw new Error('.focusApp directive must have at least one argument: appId') }
@@ -279,7 +264,47 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
           }
           break
         default:
-          throw new Error(`Unknown directive .${directive.name} at ${fqPath}`)
+          let valid = true
+          for (const [dname, d] of Object.entries(allDirectives)) {
+            if (directive.name === dname) {
+              const args = d.args(directive.arg) as any
+              for (const key of ['entry', 'exit', 'invoke'] as const) {
+                if (key in d) {
+                  const out = {} as any
+                  for (const [k, v] of Object.entries(d[key]!)) {
+                    out[k] = typeof v === 'function' ? v(args) : v
+                  }
+                  if (key === 'invoke') {
+                    invoke.src = out
+                  } else {
+                    json[key] = out
+                  }
+                }
+              }
+
+              if ('always' in d) {
+                const def = d.always!
+                if (typeof def === 'function') {
+                  always = def(args, rootName)
+                } else {
+                  const cond = {} as any
+                  for (const [k, v] of Object.entries(def.cond)) {
+                    cond[k] = typeof v === 'function' ? v(args) : v
+                  }
+                  always = {
+                    target: def.target(args, rootName),
+                    cond,
+                  }
+                }
+              }
+              
+              valid = true
+              break
+            }
+          }
+          if (!valid) {
+            throw new Error(`Unknown directive .${directive.name} at ${fqPath}`)
+          }
       }
       if (invoke.src) {
         json.initial = '__DIRECTIVE_ACTIVE__'
@@ -303,6 +328,9 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
       json.entry = {
         type: 'SEND_MESSAGE', kind, sender,
         message: kind === 'text' ? node.path.join('.') : (node.message as dsl.MediaMessage).source?.toString() || ''
+      }
+      if (node.message.type !== 'text' && (node.message as dsl.MediaMessage).showcase) {
+        json.entry.showcase = (node.message as dsl.MediaMessage).showcase
       }
     }
     return json

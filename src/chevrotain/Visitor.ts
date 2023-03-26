@@ -18,6 +18,23 @@ const parser = useParser()
 
 const BaseVisitorWithDefaults = parser.getBaseCstVisitorConstructorWithDefaults()
 
+const timeRegExpString = '(0|[1-9]\\d*):(\\d{2})|(0|[1-9]\\d*)(\\.\\d+)?(?:\\s*(?:(ms|milli(?:seconds?)?)|(s(?:ec(?:onds?)?)?)|(m(?:in(?:utes?)?)?)|(h(?:ours?)?))?\\b)?'
+function toMilliseconds(m: RegExpMatchArray) {
+  try {
+    if (m[1] && m[2]) {
+      return (parseInt(m[1]) * 60 + parseInt(m[2])) * 1000
+    } else if (m[3]) {
+      const v = parseFloat(m[3] + (m[4] || ''))
+      const factor = m[5] ? 1 : m[6] ? 1000 : m[7] ? 60000 : m[8] ? 3600000 : 1
+      return Math.floor(v * factor)
+    }
+  } catch (e) {
+    console.warn('Error in toMilliseconds:', e)
+    return 0
+  }
+  return 0 // fallback
+}
+
 export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
   rootNodeId = 'Current Episode'
   stateNodeByPath = {} as Record<string, dsl.StateNode>
@@ -220,31 +237,39 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
       const messagePattern = new RegExp(
         `^(?:((?:(?!"|${mediaTypes.join('|')})(?:\\S(?!://))+\\s+)+))?` +
         `(?:(${mediaTypes.join('|')}|${urlPattern})\\s+)?` +
-        `"([^"]*)"$`,
+        `"([^"]*)"(?:\\s+(${timeRegExpString}))?$`,
         'i'
       )
       const messageMatch = name.match(messagePattern)
       if (messageMatch) {
-        const [_, alias, mediaTypeOrUrl, textOrPlaceholder] = messageMatch
+        const [_, alias, mediaTypeOrUrl, textOrPlaceholder, showcaseTimeout] = messageMatch
         const sender = alias ? Object.entries(allSenderAliases).find(([_, aliases]) => aliases.includes(alias.trim().toLowerCase()))?.[0] as dsl.NPC : undefined
 
         if (mediaTypeOrUrl) {
-          let type: dsl.MessageType, source: vscode.Uri | undefined
+          let type: dsl.MessageType, source: vscode.Uri | undefined, showcase: number | undefined
           // Media message
           if (mediaTypes.includes(mediaTypeOrUrl.toLowerCase())) {
             type = mediaTypeOrUrl.toLowerCase() as dsl.MessageType
           } else {
             type = 'image' // fallback unless overwritten
+            
             const url = unescapeDots(mediaTypeOrUrl)
             const extension = url.match(/\.(\w+)$/)
+            
             if (extension && extension[1]) {
               if (['png', 'jpg', 'gif'].includes(extension[1])) { type = 'image' }
               else if (['mp3', 'ogg', 'wav'].includes(extension[1])) { type = 'audio' }
               else if (['mp4'].includes(extension[1])) { type = 'video' }
             }
+            
+            if (showcaseTimeout) {
+              const showcaseMatch = showcaseTimeout.match(new RegExp(timeRegExpString))
+              showcase = toMilliseconds(showcaseMatch!)
+            }
+            
             source = vscode.Uri.parse(url)
           }
-          message = { sender, type, source, title: unescapeDots(textOrPlaceholder) }
+          message = { sender, type, source, title: unescapeDots(textOrPlaceholder), showcase }
         } else {
           // Text message
           message = { sender, type: 'text' as dsl.MessageType, text: unescapeDots(textOrPlaceholder) }
@@ -427,17 +452,9 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
             ms = parseInt(c.NumberLiteral[0].image)
           } else if (c.TimeSpan) {
             const image = c.TimeSpan[0].image
-            const m = image.match(
-              /(0|[1-9]\d*):(\d{2})|(0|[1-9]\d*)(\.\d+)?(?:\s*(?:(ms|milli(?:seconds?)?)|(s(?:ec(?:onds?)?)?)|(m(?:in(?:utes?)?)?)|(h(?:ours?)?))?\b)?/
-            )
+            const m = image.match(new RegExp(timeRegExpString))
             if (m) {
-              if (m[1] && m[2]) {
-                ms = (parseInt(m[1]) * 60 + parseInt(m[2])) * 1000
-              } else if (m[3]) {
-                const v = parseFloat(m[3] + (m[4] || ''))
-                const factor = m[5] ? 1 : m[6] ? 1000 : m[7] ? 60000 : m[8] ? 3600000 : 1
-                ms = Math.floor(v * factor)
-              }
+              ms = toMilliseconds(m)
             } else {
               ms = parseInt(image)
             }

@@ -18,6 +18,7 @@ export interface TextMessage extends BaseMessage {
 export interface MediaMessage extends BaseMessage {
     title: string;
     source?: Uri;
+    showcase?: number;
 }
 export declare type Message = TextMessage | MediaMessage;
 export interface NLUContext {

@@ -63,7 +63,7 @@ const tokenDefinitions = {
   Pipe: /\|/,
   Newline: /\n/,
   Arrow: /->/,
-  Ellipsis: /\.{2,4}/,
+  Ellipsis: /\.{1,4}(?=\s)/,
   LengthFunction: /\blength\([^)]*\)\s*(?:[-+]\s*)?/,
   After: /\bafter\b/,
   OnEvent: /\bon\s+\S+\b/,

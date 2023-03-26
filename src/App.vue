@@ -10,18 +10,7 @@ import { useVisitor } from './chevrotain/Visitor';
 import type { IToken } from 'chevrotain';
 
 const code = ref(`
-userWillWorkAlone := true
-.. userWillDiscussFormula := true
-.. choosed := 'surface'
-.. "no, I want to look for a different formula on my own." {
-    VZ "Okay. Just delete the current formula and write another one in there."
-    .. _ {
-        -> @waitingForGeneralFormulaInput
-    }
-}
-.. userWillWorkAlone := false
-.. userWillDiscussFormula := false
-.. .done
+VZ https://dud.com/some.mp4 "My Video" 5
 `)
 
 const lexer = useLexer()

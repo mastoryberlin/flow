@@ -25,6 +25,7 @@ export interface TextMessage extends BaseMessage {
 export interface MediaMessage extends BaseMessage {
   title: string
   source?: Uri
+  showcase?: number
 }  
 
 export type Message = TextMessage | MediaMessage

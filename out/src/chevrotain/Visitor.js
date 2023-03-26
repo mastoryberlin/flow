@@ -36,6 +36,24 @@ var Parser_1 = require("./Parser");
 var util_1 = require("../util");
 var parser = (0, Parser_1.useParser)();
 var BaseVisitorWithDefaults = parser.getBaseCstVisitorConstructorWithDefaults();
+var timeRegExpString = '(0|[1-9]\\d*):(\\d{2})|(0|[1-9]\\d*)(\\.\\d+)?(?:\\s*(?:(ms|milli(?:seconds?)?)|(s(?:ec(?:onds?)?)?)|(m(?:in(?:utes?)?)?)|(h(?:ours?)?))?\\b)?';
+function toMilliseconds(m) {
+    try {
+        if (m[1] && m[2]) {
+            return (parseInt(m[1]) * 60 + parseInt(m[2])) * 1000;
+        }
+        else if (m[3]) {
+            var v = parseFloat(m[3] + (m[4] || ''));
+            var factor = m[5] ? 1 : m[6] ? 1000 : m[7] ? 60000 : m[8] ? 3600000 : 1;
+            return Math.floor(v * factor);
+        }
+    }
+    catch (e) {
+        console.warn('Error in toMilliseconds:', e);
+        return 0;
+    }
+    return 0; // fallback
+}
 var DslVisitorWithDefaults = /** @class */ (function (_super) {
     __extends(DslVisitorWithDefaults, _super);
     function DslVisitorWithDefaults() {
@@ -253,16 +271,16 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
             var urlPattern = '\\w+://\\S+';
             var messagePattern = new RegExp("^(?:((?:(?!\"|".concat(mediaTypes.join('|'), ")(?:\\S(?!://))+\\s+)+))?") +
                 "(?:(".concat(mediaTypes.join('|'), "|").concat(urlPattern, ")\\s+)?") +
-                "\"([^\"]*)\"$", 'i');
+                "\"([^\"]*)\"(?:\\s+(".concat(timeRegExpString, "))?$"), 'i');
             var messageMatch = name.match(messagePattern);
             if (messageMatch) {
-                var _ = messageMatch[0], alias_1 = messageMatch[1], mediaTypeOrUrl = messageMatch[2], textOrPlaceholder = messageMatch[3];
+                var _ = messageMatch[0], alias_1 = messageMatch[1], mediaTypeOrUrl = messageMatch[2], textOrPlaceholder = messageMatch[3], showcaseTimeout = messageMatch[4];
                 var sender = alias_1 ? (_a = Object.entries(allSenderAliases).find(function (_a) {
                     var _ = _a[0], aliases = _a[1];
                     return aliases.includes(alias_1.trim().toLowerCase());
                 })) === null || _a === void 0 ? void 0 : _a[0] : undefined;
                 if (mediaTypeOrUrl) {
-                    var type = void 0, source 
+                    var type = void 0, source = void 0, showcase 
                     // Media message
                     = void 0;
                     // Media message
@@ -284,9 +302,13 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                                 type = 'video';
                             }
                         }
+                        if (showcaseTimeout) {
+                            var showcaseMatch = showcaseTimeout.match(new RegExp(timeRegExpString));
+                            showcase = toMilliseconds(showcaseMatch);
+                        }
                         source = vscode.Uri.parse(url);
                     }
-                    message = { sender: sender, type: type, source: source, title: (0, util_1.unescapeDots)(textOrPlaceholder) };
+                    message = { sender: sender, type: type, source: source, title: (0, util_1.unescapeDots)(textOrPlaceholder), showcase: showcase };
                 }
                 else {
                     // Text message
@@ -468,16 +490,9 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                     }
                     else if (c.TimeSpan) {
                         var image = c.TimeSpan[0].image;
-                        var m = image.match(/(0|[1-9]\d*):(\d{2})|(0|[1-9]\d*)(\.\d+)?(?:\s*(?:(ms|milli(?:seconds?)?)|(s(?:ec(?:onds?)?)?)|(m(?:in(?:utes?)?)?)|(h(?:ours?)?))?\b)?/);
+                        var m = image.match(new RegExp(timeRegExpString));
                         if (m) {
-                            if (m[1] && m[2]) {
-                                ms = (parseInt(m[1]) * 60 + parseInt(m[2])) * 1000;
-                            }
-                            else if (m[3]) {
-                                var v = parseFloat(m[3] + (m[4] || ''));
-                                var factor = m[5] ? 1 : m[6] ? 1000 : m[7] ? 60000 : m[8] ? 3600000 : 1;
-                                ms = Math.floor(v * factor);
-                            }
+                            ms = toMilliseconds(m);
                         }
                         else {
                             ms = parseInt(image);

@@ -186,29 +186,6 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                 onDone: '__DIRECTIVE_DONE__'
             };
             switch (directive.name) {
-                case 'actorPoints':
-                    invoke.src = { type: 'actorPoints', actorPointsData: directive.arg };
-                    break;
-                case 'alert':
-                    if (!directive.arg) {
-                        throw new Error('.alert directive must have an object argument: {title: ..., text: ...}');
-                    }
-                    invoke.src = { type: 'alert', alertData: directive.arg };
-                    break;
-                case 'cinema':
-                    invoke.src = { type: 'cinema', source: directive.arg };
-                    break;
-                case 'done':
-                    always = "#".concat(rootName, ".__FLOW_DONE__");
-                    break;
-                case 'assert':
-                    always = { target: "#".concat(rootName, ".__ASSERTION_FAILED__"), cond: { type: '_assertionFailed_', assertion: directive.arg } };
-                    break;
-                case 'subflow':
-                    json.entry = { type: 'loadSubflow', id: directive.arg };
-                    invoke.src = { type: 'subflow', id: directive.arg };
-                    json.exit = { type: 'unloadSubflow' };
-                    break;
                 case 'focusApp':
                     {
                         if (!directive.arg) {
@@ -300,7 +277,51 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                     }
                     break;
                 default:
-                    throw new Error("Unknown directive .".concat(directive.name, " at ").concat(fqPath));
+                    var valid = true;
+                    for (var _d = 0, _e = Object.entries(constants_1.allDirectives); _d < _e.length; _d++) {
+                        var _f = _e[_d], dname = _f[0], d = _f[1];
+                        if (directive.name === dname) {
+                            var args_5 = d.args(directive.arg);
+                            for (var _g = 0, _h = ['entry', 'exit', 'invoke']; _g < _h.length; _g++) {
+                                var key = _h[_g];
+                                if (key in d) {
+                                    var out = {};
+                                    for (var _j = 0, _k = Object.entries(d[key]); _j < _k.length; _j++) {
+                                        var _l = _k[_j], k = _l[0], v = _l[1];
+                                        out[k] = typeof v === 'function' ? v(args_5) : v;
+                                    }
+                                    if (key === 'invoke') {
+                                        invoke.src = out;
+                                    }
+                                    else {
+                                        json[key] = out;
+                                    }
+                                }
+                            }
+                            if ('always' in d) {
+                                var def = d.always;
+                                if (typeof def === 'function') {
+                                    always = def(args_5, rootName);
+                                }
+                                else {
+                                    var cond = {};
+                                    for (var _m = 0, _o = Object.entries(def.cond); _m < _o.length; _m++) {
+                                        var _p = _o[_m], k = _p[0], v = _p[1];
+                                        cond[k] = typeof v === 'function' ? v(args_5) : v;
+                                    }
+                                    always = {
+                                        target: def.target(args_5, rootName),
+                                        cond: cond
+                                    };
+                                }
+                            }
+                            valid = true;
+                            break;
+                        }
+                    }
+                    if (!valid) {
+                        throw new Error("Unknown directive .".concat(directive.name, " at ").concat(fqPath));
+                    }
             }
             if (invoke.src) {
                 json.initial = '__DIRECTIVE_ACTIVE__';
@@ -321,13 +342,16 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
             json.always = always;
         }
         if (node.message) {
-            var _d = node.message, kind = _d.type, sender = _d.sender;
+            var _q = node.message, kind = _q.type, sender = _q.sender;
             json.entry = {
                 type: 'SEND_MESSAGE',
                 kind: kind,
                 sender: sender,
                 message: kind === 'text' ? node.path.join('.') : ((_b = node.message.source) === null || _b === void 0 ? void 0 : _b.toString()) || ''
             };
+            if (node.message.type !== 'text' && node.message.showcase) {
+                json.entry.showcase = node.message.showcase;
+            }
         }
         return json;
     }

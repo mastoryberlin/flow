@@ -274,6 +274,14 @@ State A
 .... State D // 4 dots means "after 4s"
 ```
 
+A special case of these is the "immediate succession" of two states, indicated by a single dot:
+```flow
+State A
+. State B // this state is selected "immediately after" State A, i.e. this amounts to an [always transition](https://stately.ai/docs/xstate/transitions-and-choices/always)
+```
+
+This is particularly useful for variable assignments and certain directives such as [`.show`](#show.
+
 
 ###  Directives
 
@@ -341,10 +349,12 @@ Optional arguments are denoted by [brackets]; all other listed arguments are man
 - [cinema](#cinema)
 - [done](#done)
 - [focusApp](#focusapp)
+- [hide](#hide)
 - [inChallenge](#inchallenge)
 - [loadChallenge](#loadchallenge)
 - [loadSubflow](#loadsubflow)
 - [reach](#reach)
+- [show](#show)
 - [subflow](#subflow)
 - [unloadChallenge](#unloadchallenge)
 - [unloadSubflow](#unloadsubflow)
@@ -417,6 +427,15 @@ Using it in a main episode flow will mark the episode itself as finished and cau
 
 Ensures that `AppName` is visible for the user, switching the "currently selected app" to `AppName` if necessary.
 
+#### `.hide`
+```flow
+.hide uiElement
+```
+
+- `uiElement` – the UI element to hide. Currently, only `submitButton` is available.
+
+Hides `uiElement` if it was previously visible.
+
 #### `.inChallenge`
 ```flow
 .inChallenge [ActorName] EventName OptionsObject
@@ -480,6 +499,15 @@ The exact usage depends on what piece of the current episode's skeleton (as defi
 - For the episode's `mission`, `EntryId` is ignored and can be left out.
 - For the episode's `actionPlan`, `EntryId` is interpreted as a "JSON path" (dot-separated string, e.g. `firstGoal.analyze.solveSecret`) to identify the nesting position of the entry that should be enabled.
 - For any other value passed as `SkeletonPart`, `EntryId` is expected to be a simple string, which is interpreted as the key identifying the entry to be enabled within the respective section object.
+
+#### `.show`
+```flow
+.show uiElement
+```
+
+- `uiElement` – the UI element to show. Currently, only `submitButton` is available.
+
+Shows `uiElement` if it was previously hidden.
 
 #### `.subflow`
 ```flow

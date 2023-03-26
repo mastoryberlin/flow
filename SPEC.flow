@@ -181,6 +181,11 @@ State A
 ... State C  // 3 dots means "after 3s"
 .... State D // 4 dots means "after 4s"
 
+// A special case of these is the "immediate succession" of two states, indicated by a single dot:
+State A
+. State B // this state is selected "immediately after" State A, i.e. this amounts to an [always transition](https://stately.ai/docs/xstate/transitions-and-choices/always)
+// This is particularly useful for variable assignments and certain directives such as [`.show`](#show.
+
 // # Directives
 // |wip|tbd|done|done|done|wip|tbd|
 // When composing a flow, some state nodes are merely useful for the logical order of things while others carry out
@@ -233,10 +238,12 @@ Beware of the dog! {
 // - [cinema](#cinema)
 // - [done](#done)
 // - [focusApp](#focusapp)
+// - [hide](#hide)
 // - [inChallenge](#inchallenge)
 // - [loadChallenge](#loadchallenge)
 // - [loadSubflow](#loadsubflow)
 // - [reach](#reach)
+// - [show](#show)
 // - [subflow](#subflow)
 // - [unloadChallenge](#unloadchallenge)
 // - [unloadSubflow](#unloadsubflow)
@@ -291,6 +298,12 @@ Beware of the dog! {
 //
 // Ensures that `AppName` is visible for the user, switching the "currently selected app" to `AppName` if necessary.
 //
+// #### `.hide`
+.hide uiElement
+// - `uiElement` – the UI element to hide. Currently, only `submitButton` is available.
+//
+// Hides `uiElement` if it was previously visible.
+//
 // #### `.inChallenge`
 .inChallenge [ActorName] EventName OptionsObject
 // - `ActorName` (*optional*) – the name of an NPC which can be used to fake a UI interaction, see [.actorPoints](#actorpoints).
@@ -342,6 +355,12 @@ Beware of the dog! {
 // - For the episode's `mission`, `EntryId` is ignored and can be left out.
 // - For the episode's `actionPlan`, `EntryId` is interpreted as a "JSON path" (dot-separated string, e.g. `firstGoal.analyze.solveSecret`) to identify the nesting position of the entry that should be enabled.
 // - For any other value passed as `SkeletonPart`, `EntryId` is expected to be a simple string, which is interpreted as the key identifying the entry to be enabled within the respective section object.
+//
+// #### `.show`
+.show uiElement
+// - `uiElement` – the UI element to show. Currently, only `submitButton` is available.
+//
+// Shows `uiElement` if it was previously hidden.
 //
 // #### `.subflow`
 .subflow SubflowId

@@ -10,6 +10,7 @@ export function getGlobalJumpEvent(fqPath: String, visitor) {
     for (const state of allStates) {
         let condition = {}
         condition.target = '#' + state
+        condition.internal = false
         condition.cond = {}
         condition.cond.type = 'equalsJumpTarget'
         condition.cond.comp = '#' + state

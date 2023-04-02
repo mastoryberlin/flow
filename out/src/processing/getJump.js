@@ -14,6 +14,7 @@ function getGlobalJumpEvent(fqPath, visitor) {
         var state = allStates_1[_i];
         var condition = {};
         condition.target = '#' + state;
+        condition.internal = false;
         condition.cond = {};
         condition.cond.type = 'equalsJumpTarget';
         condition.cond.comp = '#' + state;

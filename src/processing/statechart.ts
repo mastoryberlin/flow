@@ -208,6 +208,10 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
           json.entry = { type: '_party', intensity }
         }
           break;
+        case 'leaveConversation': {
+          json.entry = { type: 'LEAVE_NLU_CONTEXT' }
+
+        } break;
         case 'tut':
           {
             var args = directive.arg.trim().split(' ');
@@ -297,7 +301,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
                   }
                 }
               }
-              
+
               valid = true
               break
             }

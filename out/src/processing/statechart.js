@@ -214,6 +214,11 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                         json.entry = { type: '_party', intensity: intensity };
                     }
                     break;
+                case 'leaveConversation':
+                    {
+                        json.entry = { type: 'LEAVE_NLU_CONTEXT' };
+                    }
+                    break;
                 case 'tut':
                     {
                         var args = directive.arg.trim().split(' ');

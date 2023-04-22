@@ -7,7 +7,7 @@ declare type ConditionalJumpTarget = {
         comp: string;
     };
 };
-export declare function getGlobalJumpEvent(fqPath: String, visitor: DslVisitorWithDefaults): {
+export declare function getGlobalJumpEvent(visitor: DslVisitorWithDefaults): {
     _jump: ConditionalJumpTarget[];
 };
 export {};

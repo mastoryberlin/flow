@@ -9,8 +9,17 @@ import ResultsPane from './components/ResultsPane.vue';
 import { useVisitor } from './chevrotain/Visitor';
 import type { IToken } from 'chevrotain';
 
-const code = ref(`VZ https://dud.com/some.mp4 "My Video" 5
-@label State With Label`)
+const code = ref(`A
+B {
+  VZ https://dud.com/some.mp4 "My Video" 5
+}
+@label State With Label {
+  some {
+    @another Label {
+      wow
+    }
+  }
+}`)
 
 const lexer = useLexer()
 const parser = useParser()

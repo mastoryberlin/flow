@@ -9,17 +9,24 @@ type ConditionalJumpTarget = {
     }
 }
 
-export function getGlobalJumpEvent(fqPath: String, visitor: DslVisitorWithDefaults) {
+export function getGlobalJumpEvent(visitor: DslVisitorWithDefaults) {
     const allStates = visitor.allStateNodes()
     const conditionalJumpTargets: ConditionalJumpTarget[] = []
     for (const state of allStates) {
-        let target = '#'
-        if (state.label) {
-            target += state.label
-        } else {
-            target += state.path.join('.')
+        const p = [...state.path]
+        let target = '#' + p.join('.')
+        if (p.length > 1) {
+            p.shift()
+            p.reverse()
+            for (let i = 0; i < p.length; i++) {
+                const ancestor = visitor.stateNodeByPath[state.path.slice(0, p.length - i + 1).join('.')]
+                if (ancestor.label) {
+                    target = '#' + ancestor.label + state.path.slice(p.length - i + 1).map(t => '.' + t).join('')
+                    break
+                }
+            }
         }
-
+        
         const t: ConditionalJumpTarget = {
             target,
             internal: false,
@@ -30,6 +37,5 @@ export function getGlobalJumpEvent(fqPath: String, visitor: DslVisitorWithDefaul
         }            
         conditionalJumpTargets.push(t)
     }
-    // console.log('conditions:', { _jump: conditions })
     return { _jump: conditionalJumpTargets }
 }

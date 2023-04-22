@@ -341,7 +341,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
   } else {
     // Root Node
 
-    const on = getGlobalJumpEvent(fqPath, visitor)
+    const on = getGlobalJumpEvent(visitor)
 
     childStates.__FLOW_DONE__ = { type: 'final' }
     childStates.__ASSERTION_FAILED__ = { type: 'final' }

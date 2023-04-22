@@ -362,7 +362,7 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
     }
     else {
         // Root Node
-        var on = (0, getJump_1.getGlobalJumpEvent)(fqPath, visitor);
+        var on = (0, getJump_1.getGlobalJumpEvent)(visitor);
         childStates.__FLOW_DONE__ = { type: 'final' };
         childStates.__ASSERTION_FAILED__ = { type: 'final' };
         return {

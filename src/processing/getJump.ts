@@ -1,21 +1,35 @@
-//@ts-nocheck
-export function getGlobalJumpEvent(fqPath: String, visitor) {
-    // console.log('Fqpath:', fqPath, ((!fqPath.startsWith('Episode')) && fqPath.split('.').length !== 1))
-    // if ((fqPath.startsWith('Episode') && (fqPath.split('.').length !== 2)) || ((!fqPath.startsWith('Episode')) && fqPath.split('.').length !== 1)) {
-    //     return null
-    // }
-    // console.log('getGlobalJSON:', fqPath, Object.keys(visitor.stateNodeByPath))
-    const allStates = Object.keys(visitor.stateNodeByPath)
-    const conditions = []
+import type { DslVisitorWithDefaults } from "../chevrotain"
+
+type ConditionalJumpTarget = {
+    target: string
+    internal: boolean
+    cond: {
+        type: 'equalsJumpTarget'
+        comp: string
+    }
+}
+
+export function getGlobalJumpEvent(fqPath: String, visitor: DslVisitorWithDefaults) {
+    const allStates = visitor.allStateNodes()
+    const conditionalJumpTargets: ConditionalJumpTarget[] = []
     for (const state of allStates) {
-        let condition = {}
-        condition.target = '#' + state
-        condition.internal = false
-        condition.cond = {}
-        condition.cond.type = 'equalsJumpTarget'
-        condition.cond.comp = '#' + state
-        conditions.push(condition)
+        let target = '#'
+        if (state.label) {
+            target += state.label
+        } else {
+            target += state.path.join('.')
+        }
+
+        const t: ConditionalJumpTarget = {
+            target,
+            internal: false,
+            cond: {
+                type: 'equalsJumpTarget',
+                comp: target,
+            },
+        }            
+        conditionalJumpTargets.push(t)
     }
     // console.log('conditions:', { _jump: conditions })
-    return { _jump: conditions }
+    return { _jump: conditionalJumpTargets }
 }

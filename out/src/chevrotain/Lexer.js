@@ -76,7 +76,7 @@ var tokenDefinitions = {
     LengthFunction: /\blength\([^)]*\)\s*(?:[-+]\s*)?/,
     After: /\bafter\b/,
     OnEvent: /\bon\s+\S+\b/,
-    IfCondition: /\bif\b\s*(?:.(?!->))*/,
+    IfCondition: /\bif\b\s*(?:.(?!->))*(?:.(?=->))?/,
     When: /\bwhen\b/,
     Label: /@\w+\b/,
     NumberLiteral: { pattern: /(?:0|[1-9]\d*)(?:\.\d+)?/, longer_alt: TimeSpan },

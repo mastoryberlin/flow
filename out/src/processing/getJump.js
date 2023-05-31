@@ -9,8 +9,8 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
     return to.concat(ar || Array.prototype.slice.call(from));
 };
 exports.__esModule = true;
-exports.getGlobalJumpEvent = void 0;
-function getGlobalJumpEvent(visitor) {
+exports.getJumpEvents = void 0;
+function getJumpEvents(visitor) {
     var allStates = visitor.allStateNodes();
     var conditionalJumpTargets = [];
     for (var _i = 0, allStates_1 = allStates; _i < allStates_1.length; _i++) {
@@ -40,4 +40,4 @@ function getGlobalJumpEvent(visitor) {
     }
     return { _jump: conditionalJumpTargets };
 }
-exports.getGlobalJumpEvent = getGlobalJumpEvent;
+exports.getJumpEvents = getJumpEvents;

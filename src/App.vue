@@ -9,17 +9,13 @@ import ResultsPane from './components/ResultsPane.vue';
 import { useVisitor } from './chevrotain/Visitor';
 import type { IToken } from 'chevrotain';
 
-const code = ref(`A
-B {
-  VZ https://dud.com/some.mp4 "My Video" 5
-}
-@label State With Label {
-  some {
-    @another Label {
-      wow
-    }
-  }
-}`)
+const code = ref(`
+//Nick "Does the formula \${simpleF} work?"
+//after 3s
+//VZ "Yes, I think so!"
+.subflow fix-sub
+.. simpleF := rawFormula\`\\frac 1 \\sqrt{ \${ simpleF }}\`
+.. VZ "But what if it was \${simpleF}?"`)
 
 const lexer = useLexer()
 const parser = useParser()

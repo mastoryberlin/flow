@@ -9,7 +9,7 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
     return to.concat(ar || Array.prototype.slice.call(from));
 };
 exports.__esModule = true;
-exports.allDirectives = exports.allIssueKinds = exports.allWarnings = exports.allErrors = exports.allNpcs = exports.allPanelIds = void 0;
+exports.allDirectives = exports.allStatechartVariants = exports.allIssueKinds = exports.allWarnings = exports.allErrors = exports.allNpcs = exports.allPanelIds = void 0;
 var directives_1 = require("./processing/directives");
 exports.allPanelIds = [
     'parser',
@@ -38,6 +38,7 @@ exports.allWarnings = [
     'transition will jump nowhere because the target state includes the transition definition',
 ];
 exports.allIssueKinds = __spreadArray(__spreadArray([], exports.allErrors, true), exports.allWarnings, true);
+exports.allStatechartVariants = ['mainflow', 'subflow', 'ui'];
 exports.allDirectives = {
     actorPoints: (0, directives_1.defineDirective)({
         args: function (s) { return ({
@@ -160,8 +161,9 @@ exports.allDirectives = {
             /** The ID of a subflow to load */
             subflowId: s
         }); },
-        entry: { type: 'loadSubflow', id: function (a) { return a.subflowId; } },
-        invoke: { type: 'subflow', id: function (a) { return a.subflowId; } },
-        exit: { type: 'unloadSubflow' }
+        invoke: {
+            id: function (a) { return a.subflowId; },
+            src: function (a) { return "sub ".concat(a.subflowId); }
+        }
     })
 };

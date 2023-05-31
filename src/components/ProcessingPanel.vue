@@ -6,6 +6,7 @@ import type { TopLevelSequenceCstNode } from '../chevrotain/types';
 
 import { useFlowToLocale } from '../processing/locale';
 import { useFlowToStatechart } from '../processing/statechart';
+import type { StatechartVariant } from '../types';
 
 const props = defineProps<{
   cst: TopLevelSequenceCstNode
@@ -16,7 +17,7 @@ const props = defineProps<{
 const statechart = computed(() => {
   try {
     return {
-      data: useFlowToStatechart(props.flow, rootNodeId.value),
+      data: useFlowToStatechart(props.flow, rootNodeId.value, variant.value),
       error: ''
     }
   } catch (e) {
@@ -38,7 +39,8 @@ const locale = computed(() => {
   }
 })
 
-const rootNodeId = ref('<ROOT>')
+const rootNodeId = ref('<unit root>')
+const variant = ref('subflow' as StatechartVariant)
 </script>
 
 <template>
@@ -46,6 +48,12 @@ const rootNodeId = ref('<ROOT>')
     <h3>Statechart JSON</h3>
     <label for="rootId">Root Node ID:</label>
     <input type="text" name="rootId" id="rootId" v-model="rootNodeId">
+            <label for="variant">Variant:</label>
+            <select v-model="variant" name="variant" id="variant">
+              <option value="mainflow">Main Flow</option>
+              <option value="subflow">Subflow</option>
+              <option value="ui">UI Flow</option>
+            </select>
     <div class="wrapper">
       <textarea class="output-code" rows="20" readonly>{{ statechart.data?.json }}</textarea>
       <div class="error">{{ statechart.error }}</div>

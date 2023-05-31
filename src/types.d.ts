@@ -1,4 +1,4 @@
-import { allPanelIds, allIssueKinds, allDirectives } from "./constants";
+import { allPanelIds, allIssueKinds, allDirectives, allStatechartVariants } from "./constants";
 import { FqStateNodePath } from "./dsl/types";
 import { Range } from "./dsl/vscode";
 
@@ -24,3 +24,5 @@ export interface Issue {
   range: Range,
   payload?: any
 }
+
+export type StatechartVariant = typeof allStatechartVariants[number]

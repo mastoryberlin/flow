@@ -2,20 +2,21 @@ import { useParser, useVisitor } from "../chevrotain";
 import { useIssueTracker } from "./issue-tracker";
 import type * as dsl from "../dsl/types"
 import { allDirectives, allNpcs } from "../constants";
-import { getGlobalJumpEvent } from "./getJump";
+import { getJumpEvents } from "./getJump";
+import type { StatechartVariant } from "../types";
 
 let rootName: string
 const parser = useParser()
 const visitor = useVisitor()
 
-export function useFlowToStatechart(flow: string, rootNodeId = '<ROOT>') {
+export function useFlowToStatechart(flow: string, rootNodeId = '<ROOT>', variant: StatechartVariant = 'mainflow') {
   rootName = rootNodeId
   useIssueTracker(parser, visitor, flow, rootNodeId, true)
-  const json = stateNodeToJsonRecursive(rootNodeId)
+  const json = stateNodeToJsonRecursive(rootNodeId, variant)
   return { json, visitor }
 }
 
-function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentInfo?: any): any {
+function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, node?: dsl.StateNode, parentInfo?: any): any {
   // console.log(`stateNodeToJsonRecursive called - fqPath=${fqPath}`)
 
   let children
@@ -38,7 +39,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
 
   // console.log('parentInfo-1:', fqPath)
   const childStates = Object.fromEntries(children.map(childNode => {
-    const sub = stateNodeToJsonRecursive(`${fqPath}.${childNode.name}`, childNode, childNode.name === '?' ? { availableIntents } : undefined)
+    const sub = stateNodeToJsonRecursive(`${fqPath}.${childNode.name}`, variant, childNode, childNode.name === '?' ? { availableIntents } : undefined)
     return [childNode.name, sub]
   }))
 
@@ -168,10 +169,15 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
 
     const assignments = node.assignVariables
     if (assignments) {
-      json.entry = {
-        type: '_assignToContext_',
-        assignments
-      }
+      json.entry = [
+        {
+          type: '_assignToContext_',
+          assignments
+        },
+        {
+          type: '_shareContextWithParent',
+        },
+      ]
     }
 
     const directive = node.directive
@@ -337,11 +343,34 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
         json.entry.showcase = (node.message as dsl.MediaMessage).showcase
       }
     }
+
+    if (variant !== 'mainflow') {
+      const shareAction = { type: '_shareStateWithParent', path: node.path.join('.') }
+      json.entry = json.entry ? [
+        shareAction,
+        json.entry,
+      ] : shareAction
+    }
     return json
   } else {
     // Root Node
 
-    const on = getGlobalJumpEvent(visitor)
+    const on = getJumpEvents(visitor) as any
+
+    if (variant === 'mainflow') {
+      on.CHANGED_STATE_IN_CHILD_MACHINE = {
+        actions: [
+          // '_persist',
+          // '_updateChildMachineState'
+        ]
+      }
+      on.CHANGED_CONTEXT_IN_CHILD_MACHINE = {
+        actions: [
+          '_copyContext',
+          // '_persist',
+        ]
+      }
+    }
 
     childStates.__FLOW_DONE__ = { type: 'final' }
     childStates.__ASSERTION_FAILED__ = { type: 'final' }
@@ -350,7 +379,7 @@ function stateNodeToJsonRecursive(fqPath: string, node?: dsl.StateNode, parentIn
       predictableActionArguments: true,
       initial: children[0].name,
       states: childStates,
-      on: on
+      on
     }
   }
 

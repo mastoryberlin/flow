@@ -9,7 +9,7 @@ type ConditionalJumpTarget = {
     }
 }
 
-export function getGlobalJumpEvent(visitor: DslVisitorWithDefaults) {
+export function getJumpEvents(visitor: DslVisitorWithDefaults) {
     const allStates = visitor.allStateNodes()
     const conditionalJumpTargets: ConditionalJumpTarget[] = []
     for (const state of allStates) {

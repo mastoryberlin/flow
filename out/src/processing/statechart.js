@@ -28,15 +28,16 @@ var getJump_1 = require("./getJump");
 var rootName;
 var parser = (0, chevrotain_1.useParser)();
 var visitor = (0, chevrotain_1.useVisitor)();
-function useFlowToStatechart(flow, rootNodeId) {
+function useFlowToStatechart(flow, rootNodeId, variant) {
     if (rootNodeId === void 0) { rootNodeId = '<ROOT>'; }
+    if (variant === void 0) { variant = 'mainflow'; }
     rootName = rootNodeId;
     (0, issue_tracker_1.useIssueTracker)(parser, visitor, flow, rootNodeId, true);
-    var json = stateNodeToJsonRecursive(rootNodeId);
+    var json = stateNodeToJsonRecursive(rootNodeId, variant);
     return { json: json, visitor: visitor };
 }
 exports.useFlowToStatechart = useFlowToStatechart;
-function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
+function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
     // console.log(`stateNodeToJsonRecursive called - fqPath=${fqPath}`)
     var _a, _b;
     var children;
@@ -62,7 +63,7 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
     }
     // console.log('parentInfo-1:', fqPath)
     var childStates = Object.fromEntries(children.map(function (childNode) {
-        var sub = stateNodeToJsonRecursive("".concat(fqPath, ".").concat(childNode.name), childNode, childNode.name === '?' ? { availableIntents: availableIntents } : undefined);
+        var sub = stateNodeToJsonRecursive("".concat(fqPath, ".").concat(childNode.name), variant, childNode, childNode.name === '?' ? { availableIntents: availableIntents } : undefined);
         return [childNode.name, sub];
     }));
     // console.log('parentInfo0:', fqPath)
@@ -172,10 +173,15 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
         }
         var assignments = node.assignVariables;
         if (assignments) {
-            json.entry = {
-                type: '_assignToContext_',
-                assignments: assignments
-            };
+            json.entry = [
+                {
+                    type: '_assignToContext_',
+                    assignments: assignments
+                },
+                {
+                    type: '_shareContextWithParent'
+                },
+            ];
         }
         var directive = node.directive;
         if (directive) {
@@ -358,11 +364,32 @@ function stateNodeToJsonRecursive(fqPath, node, parentInfo) {
                 json.entry.showcase = node.message.showcase;
             }
         }
+        if (variant !== 'mainflow') {
+            var shareAction = { type: '_shareStateWithParent', path: node.path.join('.') };
+            json.entry = json.entry ? [
+                shareAction,
+                json.entry,
+            ] : shareAction;
+        }
         return json;
     }
     else {
         // Root Node
-        var on = (0, getJump_1.getGlobalJumpEvent)(visitor);
+        var on = (0, getJump_1.getJumpEvents)(visitor);
+        if (variant === 'mainflow') {
+            on.CHANGED_STATE_IN_CHILD_MACHINE = {
+                actions: [
+                // '_persist',
+                // '_updateChildMachineState'
+                ]
+            };
+            on.CHANGED_CONTEXT_IN_CHILD_MACHINE = {
+                actions: [
+                    '_copyContext',
+                    // '_persist',
+                ]
+            };
+        }
         childStates.__FLOW_DONE__ = { type: 'final' };
         childStates.__ASSERTION_FAILED__ = { type: 'final' };
         return {

@@ -35,6 +35,8 @@ export const allIssueKinds = [
   ...allWarnings,
 ]
 
+export const allStatechartVariants = ['mainflow', 'subflow', 'ui'] as const
+
 export const allDirectives = {
   actorPoints: defineDirective({
     args: s => ({
@@ -154,8 +156,9 @@ export const allDirectives = {
       /** The ID of a subflow to load */
       subflowId: s,
     }),
-    entry: { type: 'loadSubflow', id: a => a.subflowId },
-    invoke: { type: 'subflow', id: a => a.subflowId },
-    exit: { type: 'unloadSubflow' }
+    invoke: {
+      id: a => a.subflowId,
+      src: a => `sub ${a.subflowId}`,
+    },
   }),
 }

@@ -302,18 +302,30 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
               const args = d.args(directive.arg) as any
               for (const key of ['entry', 'exit', 'invoke'] as const) {
                 if (key in d) {
-                  const out = {} as any
-                  for (const [k, v] of Object.entries(d[key]!)) {
-                    out[k] = typeof v === 'function' ? v(args) : v
-                  }
-                  if (key === 'invoke') {
-                    if ('src' in out) {
-                      Object.assign(invoke, out)
-                    } else {
-                      invoke.src = out
+                  const impl = d[key]!
+                  if (Array.isArray(impl)) {
+                    json[key] = []
+                    for (const i of impl) {
+                      const out = {} as any
+                      for (const [k, v] of Object.entries(i!)) {
+                        out[k] = typeof v === 'function' ? v(args) : v
+                      }
+                      json[key].push(out)
                     }
                   } else {
-                    json[key] = out
+                    const out = {} as any
+                    for (const [k, v] of Object.entries(impl!)) {
+                      out[k] = typeof v === 'function' ? v(args) : v
+                    }
+                    if (key === 'invoke') {
+                      if ('src' in out) {
+                        Object.assign(invoke, out)
+                      } else {
+                        invoke.src = out
+                      }
+                    } else {
+                      json[key] = out
+                    }
                   }
                 }
               }

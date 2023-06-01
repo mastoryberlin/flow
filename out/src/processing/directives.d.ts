@@ -3,7 +3,8 @@ declare type TransitionDef<A extends DirectiveArgumentsTypes> = TransitionTarget
     target: TransitionTargetFunction<A>;
     cond: ImplementationRef<A>;
 };
-declare type ImplementationRef<A extends DirectiveArgumentsTypes> = {
+declare type SingleOrArray<V> = V | V[];
+declare type ImplementationRef<A extends DirectiveArgumentsTypes> = SingleOrArray<{
     type: string;
 } | {
     [other: string]: (args: A) => any;
@@ -13,7 +14,7 @@ declare type ImplementationRef<A extends DirectiveArgumentsTypes> = {
 } | {
     [other: string]: any;
     [notAnArrayLike: number]: never;
-});
+})>;
 declare type DirectiveArgumentInfo<T> = T | {
     value: T;
     optional?: boolean;

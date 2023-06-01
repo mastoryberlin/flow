@@ -115,9 +115,13 @@ exports.supportedDirectives = {
      */
     loadChallenge: defineDirective({
         args: function (s) { return ({}); },
-        entry: {
-            type: '_loadChallenge'
-        }
+        entry: [
+            {
+                raw: function (s) { return "assign({$ui: (context) => spawn(UIMachine.withContext(context))})"; },
+                unquoted: function (s) { return true; }
+            },
+            { type: '_loadChallenge' },
+        ]
     }),
     /**
      * Unloads the current unit's challenge UI and turns the Wire page into the idle state with "No Challenge Available".

@@ -10,6 +10,7 @@ import { useVisitor } from './chevrotain/Visitor';
 import type { IToken } from 'chevrotain';
 
 const code = ref(`
+.loadChallenge
 //Nick "Does the formula \${simpleF} work?"
 //after 3s
 //VZ "Yes, I think so!"

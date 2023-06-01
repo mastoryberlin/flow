@@ -294,21 +294,36 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                             for (var _g = 0, _h = ['entry', 'exit', 'invoke']; _g < _h.length; _g++) {
                                 var key = _h[_g];
                                 if (key in d) {
-                                    var out = {};
-                                    for (var _j = 0, _k = Object.entries(d[key]); _j < _k.length; _j++) {
-                                        var _l = _k[_j], k = _l[0], v = _l[1];
-                                        out[k] = typeof v === 'function' ? v(args_5) : v;
-                                    }
-                                    if (key === 'invoke') {
-                                        if ('src' in out) {
-                                            Object.assign(invoke, out);
-                                        }
-                                        else {
-                                            invoke.src = out;
+                                    var impl = d[key];
+                                    if (Array.isArray(impl)) {
+                                        json[key] = [];
+                                        for (var _j = 0, impl_1 = impl; _j < impl_1.length; _j++) {
+                                            var i = impl_1[_j];
+                                            var out = {};
+                                            for (var _k = 0, _l = Object.entries(i); _k < _l.length; _k++) {
+                                                var _m = _l[_k], k = _m[0], v = _m[1];
+                                                out[k] = typeof v === 'function' ? v(args_5) : v;
+                                            }
+                                            json[key].push(out);
                                         }
                                     }
                                     else {
-                                        json[key] = out;
+                                        var out = {};
+                                        for (var _o = 0, _p = Object.entries(impl); _o < _p.length; _o++) {
+                                            var _q = _p[_o], k = _q[0], v = _q[1];
+                                            out[k] = typeof v === 'function' ? v(args_5) : v;
+                                        }
+                                        if (key === 'invoke') {
+                                            if ('src' in out) {
+                                                Object.assign(invoke, out);
+                                            }
+                                            else {
+                                                invoke.src = out;
+                                            }
+                                        }
+                                        else {
+                                            json[key] = out;
+                                        }
                                     }
                                 }
                             }
@@ -319,8 +334,8 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                                 }
                                 else {
                                     var cond = {};
-                                    for (var _m = 0, _o = Object.entries(def.cond); _m < _o.length; _m++) {
-                                        var _p = _o[_m], k = _p[0], v = _p[1];
+                                    for (var _r = 0, _s = Object.entries(def.cond); _r < _s.length; _r++) {
+                                        var _t = _s[_r], k = _t[0], v = _t[1];
                                         cond[k] = typeof v === 'function' ? v(args_5) : v;
                                     }
                                     always = {
@@ -356,7 +371,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             json.always = always;
         }
         if (node.message) {
-            var _q = node.message, kind = _q.type, sender = _q.sender;
+            var _u = node.message, kind = _u.type, sender = _u.sender;
             json.entry = {
                 type: 'SEND_MESSAGE',
                 kind: kind,

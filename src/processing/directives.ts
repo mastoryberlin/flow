@@ -6,7 +6,9 @@ type TransitionDef<A extends DirectiveArgumentsTypes> = TransitionTargetFunction
   cond: ImplementationRef<A>
 }
 
-type ImplementationRef<A extends DirectiveArgumentsTypes> = {
+type SingleOrArray<V> = V | V[]
+
+type ImplementationRef<A extends DirectiveArgumentsTypes> = SingleOrArray<{
   type: string
 } | {
   [other: string]: (args: A) => any
@@ -16,7 +18,7 @@ type ImplementationRef<A extends DirectiveArgumentsTypes> = {
 } | {
   [other: string]: any
   [notAnArrayLike: number]: never;
-})
+  })>
 
 type DirectiveArgumentInfo<T> = T | {
   value: T
@@ -143,9 +145,13 @@ export const supportedDirectives = {
    */
   loadChallenge: defineDirective({
     args: s => ({}),
-    entry: {
-      type: '_loadChallenge',
-    }
+    entry: [
+      {
+        raw: s => `assign({$ui: (context) => spawn(UIMachine.withContext(context))})`,
+        unquoted: s => true,
+      },
+      { type: '_loadChallenge' },
+    ]
   }),
   /**
    * Unloads the current unit's challenge UI and turns the Wire page into the idle state with "No Challenge Available".

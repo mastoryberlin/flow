@@ -285,7 +285,11 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
                     out[k] = typeof v === 'function' ? v(args) : v
                   }
                   if (key === 'invoke') {
-                    invoke.src = out
+                    if ('src' in out) {
+                      Object.assign(invoke, out)
+                    } else {
+                      invoke.src = out
+                    }
                   } else {
                     json[key] = out
                   }

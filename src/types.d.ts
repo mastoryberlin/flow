@@ -1,4 +1,4 @@
-import { allPanelIds, allIssueKinds, allDirectives, allStatechartVariants } from "./constants";
+import { allPanelIds, allIssueKinds, allStatechartVariants } from "./constants";
 import { FqStateNodePath } from "./dsl/types";
 import { Range } from "./dsl/vscode";
 

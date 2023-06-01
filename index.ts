@@ -10,12 +10,12 @@ import { useIssueTracker } from "./src/processing/issue-tracker";
 
 import { unquotedJSONstringify } from './src/util'
 
-import type { Issue, IssueKind, IssueSeverity } from './src/types.d'
+import type { Issue, IssueKind, IssueSeverity, StatechartVariant } from './src/types.d'
 
 export {
   useTokens, useLexer, useParser, useVisitor,
   useFlowToStatechart, useFlowToLocale, useIssueTracker,
   getTextMateGrammar, unquotedJSONstringify
 }
-export type { Issue, IssueKind, IssueSeverity }
+export type { Issue, IssueKind, IssueSeverity, StatechartVariant }
 export * from "./src/dsl/types"

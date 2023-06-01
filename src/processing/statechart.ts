@@ -1,7 +1,8 @@
 import { useParser, useVisitor } from "../chevrotain";
 import { useIssueTracker } from "./issue-tracker";
 import type * as dsl from "../dsl/types"
-import { allDirectives, allNpcs } from "../constants";
+import { allNpcs } from "../constants";
+import { supportedDirectives } from './directives'
 import { getJumpEvents } from "./getJump";
 import type { StatechartVariant } from "../types";
 
@@ -254,8 +255,6 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
           json.entry = { type: '_setWireGoal', goalString }
         }
           break;
-        case 'loadChallenge': json.entry = { type: 'SET_CHALLENGE', challengeId: directive.arg }; break
-        case 'unloadChallenge': json.entry = { type: 'UNLOAD_CHALLENGE_COMPONENT' }; break
         case 'inChallenge':
           {
             if (!directive.arg) { throw new Error('.inChallenge directive must have at least one argument: eventName') }
@@ -298,7 +297,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
           break
         default:
           let valid = true
-          for (const [dname, d] of Object.entries(allDirectives)) {
+          for (const [dname, d] of Object.entries(supportedDirectives)) {
             if (directive.name === dname) {
               const args = d.args(directive.arg) as any
               for (const key of ['entry', 'exit', 'invoke'] as const) {

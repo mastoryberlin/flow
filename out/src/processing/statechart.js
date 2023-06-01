@@ -24,6 +24,7 @@ exports.useFlowToStatechart = void 0;
 var chevrotain_1 = require("../chevrotain");
 var issue_tracker_1 = require("./issue-tracker");
 var constants_1 = require("../constants");
+var directives_1 = require("./directives");
 var getJump_1 = require("./getJump");
 var rootName;
 var parser = (0, chevrotain_1.useParser)();
@@ -242,12 +243,6 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                         json.entry = { type: '_setWireGoal', goalString: goalString };
                     }
                     break;
-                case 'loadChallenge':
-                    json.entry = { type: 'SET_CHALLENGE', challengeId: directive.arg };
-                    break;
-                case 'unloadChallenge':
-                    json.entry = { type: 'UNLOAD_CHALLENGE_COMPONENT' };
-                    break;
                 case 'inChallenge':
                     {
                         if (!directive.arg) {
@@ -292,7 +287,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                     break;
                 default:
                     var valid = true;
-                    for (var _d = 0, _e = Object.entries(constants_1.allDirectives); _d < _e.length; _d++) {
+                    for (var _d = 0, _e = Object.entries(directives_1.supportedDirectives); _d < _e.length; _d++) {
                         var _f = _e[_d], dname = _f[0], d = _f[1];
                         if (directive.name === dname) {
                             var args_5 = d.args(directive.arg);

@@ -187,8 +187,10 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         })
       }
     }
+    //@ts-ignore
     const __returnValue__ = ${value}
     for (const [key] of Object.entries(context)) {
+      //@ts-ignore
       delete globalThis[key]
     }
     return __returnValue__

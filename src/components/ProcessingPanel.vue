@@ -7,6 +7,7 @@ import type { TopLevelSequenceCstNode } from '../chevrotain/types';
 import { useFlowToLocale } from '../processing/locale';
 import { useFlowToStatechart } from '../processing/statechart';
 import type { StatechartVariant } from '../types';
+import { unquotedJSONstringify } from '../util';
 
 const props = defineProps<{
   cst: TopLevelSequenceCstNode
@@ -55,7 +56,7 @@ const variant = ref('subflow' as StatechartVariant)
               <option value="ui">UI Flow</option>
             </select>
     <div class="wrapper">
-      <textarea class="output-code" rows="20" readonly>{{ statechart.data?.json }}</textarea>
+        <textarea class="output-code" rows="20" readonly>{{ statechart.data?.json ? unquotedJSONstringify(statechart.data.json, 2) : '' }}</textarea>
       <div class="error">{{ statechart.error }}</div>
     </div>
     <h3>Default Locale JSON</h3>

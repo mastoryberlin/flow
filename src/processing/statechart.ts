@@ -171,13 +171,34 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     if (assignments) {
       json.entry = [
         {
-          type: '_assignToContext_',
-          assignments
-        },
-        {
-          type: '_shareContextWithParent',
+          unquoted: true,
+          raw:
+            `assign({
+  ${assignments.map(({ varName, value }) => `${varName}: context => {
+    for (const [key, value] of Object.entries(context)) {
+      if (key in globalThis) {
+        throw new Error('Illegal name for context variable: "' + key + '" is already defined as a global property. Please use a different name!')
+      } else {
+        Object.defineProperty(globalThis, key, {
+          value,
+          enumerable: false,
+          configurable: true,
+          writable: true,
+        })
+      }
+    }
+    const __returnValue__ = ${value}
+    for (const [key] of Object.entries(context)) {
+      delete globalThis[key]
+    }
+    return __returnValue__
+  }`).join(',\n')}
+})`,
         },
       ]
+      if (variant !== 'mainflow') {
+        json.entry.push('_shareContextWithParent')
+      }
     }
 
     const directive = node.directive
@@ -350,10 +371,13 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
 
     if (variant !== 'mainflow') {
       const shareAction = { type: '_shareStateWithParent', path: node.path.join('.') }
-      json.entry = json.entry ? [
+      json.entry = json.entry ? (Array.isArray(json.entry) ? [
+        shareAction,
+        ...json.entry,
+      ] : [
         shareAction,
         json.entry,
-      ] : shareAction
+      ]) : shareAction
     }
     return json
   } else {

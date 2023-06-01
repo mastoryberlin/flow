@@ -175,13 +175,16 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         if (assignments) {
             json.entry = [
                 {
-                    type: '_assignToContext_',
-                    assignments: assignments
-                },
-                {
-                    type: '_shareContextWithParent'
+                    unquoted: true,
+                    raw: "assign({\n  ".concat(assignments.map(function (_a) {
+                        var varName = _a.varName, value = _a.value;
+                        return "".concat(varName, ": context => {\n    for (const [key, value] of Object.entries(context)) {\n      if (key in globalThis) {\n        throw new Error('Illegal name for context variable: \"' + key + '\" is already defined as a global property. Please use a different name!')\n      } else {\n        Object.defineProperty(globalThis, key, {\n          value,\n          enumerable: false,\n          configurable: true,\n          writable: true,\n        })\n      }\n    }\n    const __returnValue__ = ").concat(value, "\n    for (const [key] of Object.entries(context)) {\n      delete globalThis[key]\n    }\n    return __returnValue__\n  }");
+                    }).join(',\n'), "\n})")
                 },
             ];
+            if (variant !== 'mainflow') {
+                json.entry.push('_shareContextWithParent');
+            }
         }
         var directive = node.directive;
         if (directive) {
@@ -371,10 +374,12 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         }
         if (variant !== 'mainflow') {
             var shareAction = { type: '_shareStateWithParent', path: node.path.join('.') };
-            json.entry = json.entry ? [
+            json.entry = json.entry ? (Array.isArray(json.entry) ? __spreadArray([
+                shareAction
+            ], json.entry, true) : [
                 shareAction,
                 json.entry,
-            ] : shareAction;
+            ]) : shareAction;
         }
         return json;
     }

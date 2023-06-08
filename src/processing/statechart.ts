@@ -373,7 +373,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
 function interpretTransitions(fqPath: string, node?: dsl.StateNode) {
   let always = {} as any
   let on = {} as any
-  let after = {} as any
+  let after = [] as any
   const transitions = visitor.transitionsBySourcePath[fqPath]; // node.transitions is currently empty
   if (node?.final) { always = `#${rootName}.__FLOW_DONE__`; }
 

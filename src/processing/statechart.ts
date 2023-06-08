@@ -339,7 +339,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
   } else {
     // Root Node
 
-    let { on, after, always } = interpretTransitions(fqPath);
+    let { on, after, always } = interpretTransitions(rootName);
     Object.assign(on, getJumpEvents(visitor) as any)
 
     if (variant === 'mainflow') {
@@ -364,7 +364,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       predictableActionArguments: true,
       initial: children[0].name,
       states: childStates,
-      on
+      on, after, always
     }
   }
 

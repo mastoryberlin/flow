@@ -352,7 +352,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
     }
     else {
         // Root Node
-        var _w = interpretTransitions(fqPath), on = _w.on, after = _w.after, always = _w.always;
+        var _w = interpretTransitions(rootName), on = _w.on, after = _w.after, always = _w.always;
         Object.assign(on, (0, getJump_1.getJumpEvents)(visitor));
         if (variant === 'mainflow') {
             on.CHANGED_STATE_IN_CHILD_MACHINE = {
@@ -375,7 +375,9 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             predictableActionArguments: true,
             initial: children[0].name,
             states: childStates,
-            on: on
+            on: on,
+            after: after,
+            always: always
         };
     }
 }

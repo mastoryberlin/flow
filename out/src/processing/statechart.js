@@ -382,9 +382,9 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
     }
 }
 function interpretTransitions(fqPath, node) {
-    var always = {};
+    var always = [];
     var on = {};
-    var after = [];
+    var after = {};
     var transitions = visitor.transitionsBySourcePath[fqPath]; // node.transitions is currently empty
     if (node === null || node === void 0 ? void 0 : node.final) {
         always = "#".concat(rootName, ".__FLOW_DONE__");

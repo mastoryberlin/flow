@@ -109,64 +109,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       }
     }
 
-    const transitions = visitor.transitionsBySourcePath[fqPath] // node.transitions is currently empty
-    let on, after, always
-    if (node.final) { always = `#${rootName}.__FLOW_DONE__` }
-    // console.log('parentInfo2:', fqPath)
-
-    if (transitions) {
-      const eventTransitions = transitions.filter(t => t.type === 'event') as dsl.EventTransition[]
-      const afterTransitions = transitions.filter(t => t.type === 'after') as dsl.AfterTransition[]
-      const alwaysTransitions = transitions.filter(t => t.type === 'always') as dsl.AlwaysTransition[]
-
-      const getTransitionTarget = (t: dsl.BaseTransition) => t.target
-        ? (t.target.unknown
-          ? undefined
-          : '#' + (t.target.label || t.target.path!.join('.')))
-        : undefined
-
-      const getTransitionGuard = (t: dsl.BaseTransition) => t.guard
-        ? ('condition' in t.guard)
-          ? { cond: { type: '_expressionEval_', expression: t.guard.condition } }
-          : { in: t.guard.refState.label ? '#' + t.guard.refState.label : t.guard.refState.path } //TODO: this could be a relative path!
-        : {}
-
-      if (eventTransitions.length) {
-        on = eventTransitions.reduce((group, t) => {
-          const { eventName } = t;
-          group[eventName] = group[eventName] ?? [];
-          group[eventName].push({
-            target: getTransitionTarget(t),
-            internal: true,
-            ...getTransitionGuard(t),
-          });
-          return group;
-        }, {} as any)
-      }
-      // console.log('parentInfo3:', fqPath)
-
-      if (afterTransitions.length) {
-        after = afterTransitions.reduce((group, t) => {
-          const { timeout } = t;
-          const key = timeout.toString()
-          group[key] = group[key] ?? [];
-          group[key].push({
-            target: getTransitionTarget(t),
-            internal: true,
-            ...getTransitionGuard(t),
-          });
-          return group;
-        }, {} as any)
-      }
-
-      if (alwaysTransitions.length) {
-        always = alwaysTransitions.map(t => ({
-          target: getTransitionTarget(t),
-          internal: true,
-          ...getTransitionGuard(t),
-        }))
-      }
-    }
+    let { on, after, always } = interpretTransitions(fqPath, node);
 
     const assignments = node.assignVariables
     if (assignments) {
@@ -396,7 +339,8 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
   } else {
     // Root Node
 
-    const on = getJumpEvents(visitor) as any
+    let { on, after, always } = interpretTransitions(fqPath);
+    Object.assign(on, getJumpEvents(visitor) as any)
 
     if (variant === 'mainflow') {
       on.CHANGED_STATE_IN_CHILD_MACHINE = {
@@ -424,4 +368,64 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     }
   }
 
+}
+
+function interpretTransitions(fqPath: string, node?: dsl.StateNode) {
+  let always: any, on: any, after: any
+  const transitions = visitor.transitionsBySourcePath[fqPath]; // node.transitions is currently empty
+  if (node?.final) { always = `#${rootName}.__FLOW_DONE__`; }
+
+  if (transitions) {
+    const eventTransitions = transitions.filter(t => t.type === 'event') as dsl.EventTransition[];
+    const afterTransitions = transitions.filter(t => t.type === 'after') as dsl.AfterTransition[];
+    const alwaysTransitions = transitions.filter(t => t.type === 'always') as dsl.AlwaysTransition[];
+
+    const getTransitionTarget = (t: dsl.BaseTransition) => t.target
+      ? (t.target.unknown
+        ? undefined
+        : '#' + (t.target.label || t.target.path!.join('.')))
+      : undefined;
+
+    const getTransitionGuard = (t: dsl.BaseTransition) => t.guard
+      ? ('condition' in t.guard)
+        ? { cond: { type: '_expressionEval_', expression: t.guard.condition } }
+        : { in: t.guard.refState.label ? '#' + t.guard.refState.label : t.guard.refState.path } //TODO: this could be a relative path!
+      : {};
+
+    if (eventTransitions.length) {
+      on = eventTransitions.reduce((group, t) => {
+        const { eventName } = t;
+        group[eventName] = group[eventName] ?? [];
+        group[eventName].push({
+          target: getTransitionTarget(t),
+          internal: true,
+          ...getTransitionGuard(t),
+        });
+        return group;
+      }, {} as any);
+    }
+    // console.log('parentInfo3:', fqPath)
+    if (afterTransitions.length) {
+      after = afterTransitions.reduce((group, t) => {
+        const { timeout } = t;
+        const key = timeout.toString();
+        group[key] = group[key] ?? [];
+        group[key].push({
+          target: getTransitionTarget(t),
+          internal: true,
+          ...getTransitionGuard(t),
+        });
+        return group;
+      }, {} as any);
+    }
+
+    if (alwaysTransitions.length) {
+      always = alwaysTransitions.map(t => ({
+        target: getTransitionTarget(t),
+        internal: true,
+        ...getTransitionGuard(t),
+      }));
+    }
+  }
+  return { always, on, after };
 }

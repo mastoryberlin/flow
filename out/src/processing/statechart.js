@@ -128,50 +128,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 }); }), true)
             };
         }
-        var transitions = visitor.transitionsBySourcePath[fqPath]; // node.transitions is currently empty
-        var on = void 0, after = void 0, always = void 0;
-        if (node.final) {
-            always = "#".concat(rootName, ".__FLOW_DONE__");
-        }
-        // console.log('parentInfo2:', fqPath)
-        if (transitions) {
-            var eventTransitions = transitions.filter(function (t) { return t.type === 'event'; });
-            var afterTransitions = transitions.filter(function (t) { return t.type === 'after'; });
-            var alwaysTransitions = transitions.filter(function (t) { return t.type === 'always'; });
-            var getTransitionTarget_1 = function (t) { return t.target
-                ? (t.target.unknown
-                    ? undefined
-                    : '#' + (t.target.label || t.target.path.join('.')))
-                : undefined; };
-            var getTransitionGuard_1 = function (t) { return t.guard
-                ? ('condition' in t.guard)
-                    ? { cond: { type: '_expressionEval_', expression: t.guard.condition } }
-                    : { "in": t.guard.refState.label ? '#' + t.guard.refState.label : t.guard.refState.path } //TODO: this could be a relative path!
-                : {}; };
-            if (eventTransitions.length) {
-                on = eventTransitions.reduce(function (group, t) {
-                    var _a;
-                    var eventName = t.eventName;
-                    group[eventName] = (_a = group[eventName]) !== null && _a !== void 0 ? _a : [];
-                    group[eventName].push(__assign({ target: getTransitionTarget_1(t), internal: true }, getTransitionGuard_1(t)));
-                    return group;
-                }, {});
-            }
-            // console.log('parentInfo3:', fqPath)
-            if (afterTransitions.length) {
-                after = afterTransitions.reduce(function (group, t) {
-                    var _a;
-                    var timeout = t.timeout;
-                    var key = timeout.toString();
-                    group[key] = (_a = group[key]) !== null && _a !== void 0 ? _a : [];
-                    group[key].push(__assign({ target: getTransitionTarget_1(t), internal: true }, getTransitionGuard_1(t)));
-                    return group;
-                }, {});
-            }
-            if (alwaysTransitions.length) {
-                always = alwaysTransitions.map(function (t) { return (__assign({ target: getTransitionTarget_1(t), internal: true }, getTransitionGuard_1(t))); });
-            }
-        }
+        var _d = interpretTransitions(fqPath, node), on = _d.on, after = _d.after, always = _d.always;
         var assignments = node.assignVariables;
         if (assignments) {
             json.entry = [
@@ -287,21 +244,21 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                     break;
                 default:
                     var valid = true;
-                    for (var _d = 0, _e = Object.entries(directives_1.supportedDirectives); _d < _e.length; _d++) {
-                        var _f = _e[_d], dname = _f[0], d = _f[1];
+                    for (var _e = 0, _f = Object.entries(directives_1.supportedDirectives); _e < _f.length; _e++) {
+                        var _g = _f[_e], dname = _g[0], d = _g[1];
                         if (directive.name === dname) {
                             var args_5 = d.args(directive.arg);
-                            for (var _g = 0, _h = ['entry', 'exit', 'invoke']; _g < _h.length; _g++) {
-                                var key = _h[_g];
+                            for (var _h = 0, _j = ['entry', 'exit', 'invoke']; _h < _j.length; _h++) {
+                                var key = _j[_h];
                                 if (key in d) {
                                     var impl = d[key];
                                     if (Array.isArray(impl)) {
                                         json[key] = [];
-                                        for (var _j = 0, impl_1 = impl; _j < impl_1.length; _j++) {
-                                            var i = impl_1[_j];
+                                        for (var _k = 0, impl_1 = impl; _k < impl_1.length; _k++) {
+                                            var i = impl_1[_k];
                                             var out = {};
-                                            for (var _k = 0, _l = Object.entries(i); _k < _l.length; _k++) {
-                                                var _m = _l[_k], k = _m[0], v = _m[1];
+                                            for (var _l = 0, _m = Object.entries(i); _l < _m.length; _l++) {
+                                                var _o = _m[_l], k = _o[0], v = _o[1];
                                                 out[k] = typeof v === 'function' ? v(args_5) : v;
                                             }
                                             json[key].push(out);
@@ -309,8 +266,8 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                                     }
                                     else {
                                         var out = {};
-                                        for (var _o = 0, _p = Object.entries(impl); _o < _p.length; _o++) {
-                                            var _q = _p[_o], k = _q[0], v = _q[1];
+                                        for (var _p = 0, _q = Object.entries(impl); _p < _q.length; _p++) {
+                                            var _r = _q[_p], k = _r[0], v = _r[1];
                                             out[k] = typeof v === 'function' ? v(args_5) : v;
                                         }
                                         if (key === 'invoke') {
@@ -334,8 +291,8 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                                 }
                                 else {
                                     var cond = {};
-                                    for (var _r = 0, _s = Object.entries(def.cond); _r < _s.length; _r++) {
-                                        var _t = _s[_r], k = _t[0], v = _t[1];
+                                    for (var _s = 0, _t = Object.entries(def.cond); _s < _t.length; _s++) {
+                                        var _u = _t[_s], k = _u[0], v = _u[1];
                                         cond[k] = typeof v === 'function' ? v(args_5) : v;
                                     }
                                     always = {
@@ -371,7 +328,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             json.always = always;
         }
         if (node.message) {
-            var _u = node.message, kind = _u.type, sender = _u.sender;
+            var _v = node.message, kind = _v.type, sender = _v.sender;
             json.entry = {
                 type: 'SEND_MESSAGE',
                 kind: kind,
@@ -395,7 +352,8 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
     }
     else {
         // Root Node
-        var on = (0, getJump_1.getJumpEvents)(visitor);
+        var _w = interpretTransitions(fqPath), on = _w.on, after = _w.after, always = _w.always;
+        Object.assign(on, (0, getJump_1.getJumpEvents)(visitor));
         if (variant === 'mainflow') {
             on.CHANGED_STATE_IN_CHILD_MACHINE = {
                 actions: [
@@ -420,4 +378,50 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             on: on
         };
     }
+}
+function interpretTransitions(fqPath, node) {
+    var always, on, after;
+    var transitions = visitor.transitionsBySourcePath[fqPath]; // node.transitions is currently empty
+    if (node === null || node === void 0 ? void 0 : node.final) {
+        always = "#".concat(rootName, ".__FLOW_DONE__");
+    }
+    if (transitions) {
+        var eventTransitions = transitions.filter(function (t) { return t.type === 'event'; });
+        var afterTransitions = transitions.filter(function (t) { return t.type === 'after'; });
+        var alwaysTransitions = transitions.filter(function (t) { return t.type === 'always'; });
+        var getTransitionTarget_1 = function (t) { return t.target
+            ? (t.target.unknown
+                ? undefined
+                : '#' + (t.target.label || t.target.path.join('.')))
+            : undefined; };
+        var getTransitionGuard_1 = function (t) { return t.guard
+            ? ('condition' in t.guard)
+                ? { cond: { type: '_expressionEval_', expression: t.guard.condition } }
+                : { "in": t.guard.refState.label ? '#' + t.guard.refState.label : t.guard.refState.path } //TODO: this could be a relative path!
+            : {}; };
+        if (eventTransitions.length) {
+            on = eventTransitions.reduce(function (group, t) {
+                var _a;
+                var eventName = t.eventName;
+                group[eventName] = (_a = group[eventName]) !== null && _a !== void 0 ? _a : [];
+                group[eventName].push(__assign({ target: getTransitionTarget_1(t), internal: true }, getTransitionGuard_1(t)));
+                return group;
+            }, {});
+        }
+        // console.log('parentInfo3:', fqPath)
+        if (afterTransitions.length) {
+            after = afterTransitions.reduce(function (group, t) {
+                var _a;
+                var timeout = t.timeout;
+                var key = timeout.toString();
+                group[key] = (_a = group[key]) !== null && _a !== void 0 ? _a : [];
+                group[key].push(__assign({ target: getTransitionTarget_1(t), internal: true }, getTransitionGuard_1(t)));
+                return group;
+            }, {});
+        }
+        if (alwaysTransitions.length) {
+            always = alwaysTransitions.map(function (t) { return (__assign({ target: getTransitionTarget_1(t), internal: true }, getTransitionGuard_1(t))); });
+        }
+    }
+    return { always: always, on: on, after: after };
 }

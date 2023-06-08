@@ -42,7 +42,6 @@ function unquotedJSONstringify(object, space) {
         return value;
     }, space);
     return markedForRaw.replace(new RegExp("( *)\"".concat(N, "(.+)").concat(N, "\""), 'g'), function (fullMatch, indentation, raw) {
-        console.log('INDENTATIONLENGTH', indentation.length);
         var lines = JSON.parse("\"".concat(raw, "\"")).split('\n');
         return lines.map(function (l) { return indentation + l; }).join('\n');
     });

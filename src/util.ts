@@ -39,7 +39,6 @@ export function unquotedJSONstringify(object: any, space?: string | number) {
     return value;
   }, space);
   return markedForRaw.replace(new RegExp(`( *)"${N}(.+)${N}"`, 'g'), (fullMatch, indentation, raw) => {
-    console.log('INDENTATIONLENGTH', indentation.length)
     const lines = JSON.parse(`"${raw}"`).split('\n') as string[]
     return lines.map(l => indentation + l).join('\n')
   });

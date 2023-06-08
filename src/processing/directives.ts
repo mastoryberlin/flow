@@ -147,7 +147,7 @@ export const supportedDirectives = {
     args: s => ({}),
     entry: [
       {
-        raw: s => `assign({$ui: (context) => spawn(UIMachine.withContext(context))})`,
+        raw: s => `assign({ $ui: (context) => spawn(UIMachine.withContext(context), { autoForward: true }) })`,
         unquoted: s => true,
       },
       { type: '_loadChallenge' },
@@ -187,6 +187,7 @@ export const supportedDirectives = {
     }),
     invoke: {
       id: a => a.subflowId,
+      autoForward: a => true,
       src: a => `sub ${a.subflowId}`,
     },
   }),

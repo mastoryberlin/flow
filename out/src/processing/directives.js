@@ -117,7 +117,7 @@ exports.supportedDirectives = {
         args: function (s) { return ({}); },
         entry: [
             {
-                raw: function (s) { return "assign({$ui: (context) => spawn(UIMachine.withContext(context))})"; },
+                raw: function (s) { return "assign({ $ui: (context) => spawn(UIMachine.withContext(context), { autoForward: true }) })"; },
                 unquoted: function (s) { return true; }
             },
             { type: '_loadChallenge' },
@@ -155,6 +155,7 @@ exports.supportedDirectives = {
         }); },
         invoke: {
             id: function (a) { return a.subflowId; },
+            autoForward: function (a) { return true; },
             src: function (a) { return "sub ".concat(a.subflowId); }
         }
     })

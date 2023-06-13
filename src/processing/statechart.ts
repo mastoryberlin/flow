@@ -139,7 +139,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     }
     return __returnValue__
   }`).join(',\n')}
-}),`,
+})`,
         },
       ]
       if (variant === 'mainflow') {
@@ -149,7 +149,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
 `raise({
   type: 'HAVE_CONTEXT_VARIABLES_CHANGED',
   namesOfChangedVariables: [${assignments.map(({ varName }) => `'${varName}'`).join(', ')}]
-}),`
+})`
         })
       } else {
         json.entry.push('_shareContextWithParent')

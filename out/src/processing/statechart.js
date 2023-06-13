@@ -137,7 +137,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                     raw: "assign({\n  ".concat(assignments.map(function (_a) {
                         var varName = _a.varName, value = _a.value;
                         return "    ".concat(varName, ": context => {\n    for (const [key, value] of Object.entries(context)) {\n      if (key in globalThis) {\n        throw new Error('Illegal name for context variable: \"' + key + '\" is already defined as a global property. Please use a different name!')\n      } else {\n        Object.defineProperty(globalThis, key, {\n          value,\n          enumerable: false,\n          configurable: true,\n          writable: true,\n        })\n      }\n    }\n    //@ts-ignore\n    const __returnValue__ = ").concat(value, "\n    for (const [key] of Object.entries(context)) {\n      //@ts-ignore\n      delete globalThis[key]\n    }\n    return __returnValue__\n  }");
-                    }).join(',\n'), "\n}),")
+                    }).join(',\n'), "\n})")
                 },
             ];
             if (variant === 'mainflow') {
@@ -146,7 +146,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                     raw: "raise({\n  type: 'HAVE_CONTEXT_VARIABLES_CHANGED',\n  namesOfChangedVariables: [".concat(assignments.map(function (_a) {
                         var varName = _a.varName;
                         return "'".concat(varName, "'");
-                    }).join(', '), "]\n}),")
+                    }).join(', '), "]\n})")
                 });
             }
             else {

@@ -355,16 +355,29 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         var _w = interpretTransitions(rootName), on = _w.on, after = _w.after, always = _w.always;
         Object.assign(on, (0, getJump_1.getJumpEvents)(visitor));
         if (variant === 'mainflow') {
+            on.CHANGED_CONTEXT_IN_STATE_STORE = {
+                actions: [
+                    '_copyContext',
+                    '_persist',
+                ]
+            };
             on.CHANGED_STATE_IN_CHILD_MACHINE = {
                 actions: [
-                // '_persist',
-                // '_updateChildMachineState'
+                    '_persist',
+                    // '_updateChildMachineState',
                 ]
             };
             on.CHANGED_CONTEXT_IN_CHILD_MACHINE = {
                 actions: [
                     '_copyContext',
-                    // '_persist',
+                    '_persist',
+                ]
+            };
+        }
+        else {
+            on.CHANGED_CONTEXT_IN_STATE_STORE = {
+                actions: [
+                    '_copyContext',
                 ]
             };
         }

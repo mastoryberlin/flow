@@ -343,16 +343,28 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     Object.assign(on, getJumpEvents(visitor) as any)
 
     if (variant === 'mainflow') {
+      on.CHANGED_CONTEXT_IN_STATE_STORE = {
+        actions: [
+          '_copyContext',
+          '_persist',
+        ]
+      }
       on.CHANGED_STATE_IN_CHILD_MACHINE = {
         actions: [
-          // '_persist',
-          // '_updateChildMachineState'
+          '_persist',
+          // '_updateChildMachineState',
         ]
       }
       on.CHANGED_CONTEXT_IN_CHILD_MACHINE = {
         actions: [
           '_copyContext',
-          // '_persist',
+          '_persist',
+        ]
+      }
+    } else {
+      on.CHANGED_CONTEXT_IN_STATE_STORE = {
+        actions: [
+          '_copyContext',
         ]
       }
     }

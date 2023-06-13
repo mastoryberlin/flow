@@ -117,35 +117,41 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         {
           unquoted: true,
           raw:
-            `[
-  assign({
-    ${assignments.map(({ varName, value }) => `    ${varName}: context => {
-      for (const [key, value] of Object.entries(context)) {
-        if (key in globalThis) {
-          throw new Error('Illegal name for context variable: "' + key + '" is already defined as a global property. Please use a different name!')
-        } else {
-          Object.defineProperty(globalThis, key, {
-            value,
-            enumerable: false,
-            configurable: true,
-            writable: true,
-          })
-        }
+`assign({
+  ${assignments.map(({ varName, value }) => `    ${varName}: context => {
+    for (const [key, value] of Object.entries(context)) {
+      if (key in globalThis) {
+        throw new Error('Illegal name for context variable: "' + key + '" is already defined as a global property. Please use a different name!')
+      } else {
+        Object.defineProperty(globalThis, key, {
+          value,
+          enumerable: false,
+          configurable: true,
+          writable: true,
+        })
       }
+    }
+    //@ts-ignore
+    const __returnValue__ = ${value}
+    for (const [key] of Object.entries(context)) {
       //@ts-ignore
-      const __returnValue__ = ${value}
-      for (const [key] of Object.entries(context)) {
-        //@ts-ignore
-        delete globalThis[key]
-      }
-      return __returnValue__
-    }`).join(',\n')}
-  }),
-  raise({type: 'HAVE_CONTEXT_VARIABLES_CHANGED', namesOfChangedVariables: [${assignments.map(({ varName }) => varName).join(', ')}]),
-]`,
+      delete globalThis[key]
+    }
+    return __returnValue__
+  }`).join(',\n')}
+}),`,
         },
       ]
-      if (variant !== 'mainflow') {
+      if (variant === 'mainflow') {
+        json.entry.push({
+          unquoted: true,
+          raw:
+`raise({
+  type: 'HAVE_CONTEXT_VARIABLES_CHANGED',
+  namesOfChangedVariables: [${assignments.map(({ varName }) => `'${varName}'`).join(', ')}]
+}),`
+        })
+      } else {
         json.entry.push('_shareContextWithParent')
       }
     }

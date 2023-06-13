@@ -117,29 +117,32 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         {
           unquoted: true,
           raw:
-            `assign({
-  ${assignments.map(({ varName, value }) => `${varName}: context => {
-    for (const [key, value] of Object.entries(context)) {
-      if (key in globalThis) {
-        throw new Error('Illegal name for context variable: "' + key + '" is already defined as a global property. Please use a different name!')
-      } else {
-        Object.defineProperty(globalThis, key, {
-          value,
-          enumerable: false,
-          configurable: true,
-          writable: true,
-        })
+            `[
+  assign({
+    ${assignments.map(({ varName, value }) => `    ${varName}: context => {
+      for (const [key, value] of Object.entries(context)) {
+        if (key in globalThis) {
+          throw new Error('Illegal name for context variable: "' + key + '" is already defined as a global property. Please use a different name!')
+        } else {
+          Object.defineProperty(globalThis, key, {
+            value,
+            enumerable: false,
+            configurable: true,
+            writable: true,
+          })
+        }
       }
-    }
-    //@ts-ignore
-    const __returnValue__ = ${value}
-    for (const [key] of Object.entries(context)) {
       //@ts-ignore
-      delete globalThis[key]
-    }
-    return __returnValue__
-  }`).join(',\n')}
-})`,
+      const __returnValue__ = ${value}
+      for (const [key] of Object.entries(context)) {
+        //@ts-ignore
+        delete globalThis[key]
+      }
+      return __returnValue__
+    }`).join(',\n')}
+  }),
+  raise({type: 'HAVE_CONTEXT_VARIABLES_CHANGED', namesOfChangedVariables: [${assignments.map(({ varName }) => varName).join(', ')}]),
+]`,
         },
       ]
       if (variant !== 'mainflow') {
@@ -359,7 +362,15 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         actions: [
           '_copyContext',
           '_persist',
+          {
+            unquoted: true,
+            raw: `raise({type: 'HAVE_CONTEXT_VARIABLES_CHANGED', namesOfChangedVariables: [...Object.keys(context)]}),`
+          },
         ]
+      }
+      on.HAVE_CONTEXT_VARIABLES_CHANGED = {
+        unquoted: true,
+        raw: `derivedRecomputeActions,`
       }
     } else {
       on.CHANGED_CONTEXT_IN_STATE_STORE = {

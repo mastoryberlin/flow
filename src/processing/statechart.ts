@@ -376,7 +376,9 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       }
       on.HAVE_CONTEXT_VARIABLES_CHANGED = {
         unquoted: true,
-        raw: `derivedRecomputeActions,`
+        raw: `{
+  actions: derivedRecomputeActions,
+}`
       }
     } else {
       on.CHANGED_CONTEXT_IN_STATE_STORE = {

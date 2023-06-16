@@ -388,7 +388,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             };
             on.HAVE_CONTEXT_VARIABLES_CHANGED = {
                 unquoted: true,
-                raw: "derivedRecomputeActions,"
+                raw: "{\n  actions: derivedRecomputeActions,\n}"
             };
         }
         else {

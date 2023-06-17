@@ -171,22 +171,14 @@ exports.supportedDirectives = {
      */
     loadChallenge: defineDirective({
         args: function (s) { return ({}); },
-        entry: [
-            {
-                unquoted: function (s) { return true; },
-                raw: function (s) { return "assign({ $ui: (context) => spawn(UIMachine.withContext(context), { autoForward: true }) }),\n'_shareContextWithParent'"; }
-            },
-            { type: '_loadChallenge' },
-        ]
+        entry: { type: '_loadChallenge' }
     }),
     /**
      * Unloads the current unit's challenge UI and turns the Wire page into the idle state with "No Challenge Available".
      */
     unloadChallenge: defineDirective({
         args: function (s) { return ({}); },
-        entry: {
-            type: '_unloadChallenge'
-        }
+        entry: { type: '_unloadChallenge' }
     }),
     /**
      * Shows a UI element if it was previously hidden.

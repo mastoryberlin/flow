@@ -321,6 +321,16 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
   actions: derivedRecomputeActions,
 }`
       }
+      on.REQUEST_UI_START = {
+        actions: [
+          '_loadChallenge',
+        ]
+      }
+      on.REQUEST_UI_STOP = {
+        actions: [
+          '_unloadChallenge',
+        ]
+      }
     } else {
       on.CHANGED_CONTEXT_IN_STATE_STORE = {
         actions: [

@@ -349,6 +349,16 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 unquoted: true,
                 raw: "{\n  actions: derivedRecomputeActions,\n}"
             };
+            on.REQUEST_UI_START = {
+                actions: [
+                    '_loadChallenge',
+                ]
+            };
+            on.REQUEST_UI_STOP = {
+                actions: [
+                    '_unloadChallenge',
+                ]
+            };
         }
         else {
             on.CHANGED_CONTEXT_IN_STATE_STORE = {

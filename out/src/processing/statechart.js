@@ -320,55 +320,61 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
     }
     else {
         // Root Node
-        var _w = interpretTransitions(rootName), on = _w.on, after = _w.after, always = _w.always;
-        Object.assign(on, (0, getJump_1.getJumpEvents)(visitor));
-        if (variant === 'mainflow') {
-            on.CHANGED_CONTEXT_IN_STATE_STORE = {
-                actions: [
-                    '_copyContext',
-                    '_persist',
-                ]
-            };
-            on.CHANGED_STATE_IN_CHILD_MACHINE = {
-                actions: [
-                    '_persist',
-                    // '_updateChildMachineState',
-                ]
-            };
-            on.CHANGED_CONTEXT_IN_CHILD_MACHINE = {
-                actions: [
-                    '_copyContext',
-                    '_persist',
-                    {
-                        unquoted: true,
-                        raw: "raise({type: 'HAVE_CONTEXT_VARIABLES_CHANGED', namesOfChangedVariables: [...Object.keys(context)]}),"
-                    },
-                ]
-            };
-            on.HAVE_CONTEXT_VARIABLES_CHANGED = {
-                unquoted: true,
-                raw: "{\n  actions: derivedRecomputeActions,\n}"
-            };
-            on.REQUEST_UI_START = {
-                actions: [
-                    '_loadChallenge',
-                ]
-            };
-            on.REQUEST_UI_STOP = {
-                actions: [
-                    '_unloadChallenge',
-                ]
-            };
-        }
-        else {
-            on.CHANGED_CONTEXT_IN_STATE_STORE = {
-                actions: [
-                    '_copyContext',
-                ]
-            };
-        }
         childStates.__FLOW_DONE__ = { type: 'final' };
         childStates.__ASSERTION_FAILED__ = { type: 'final' };
+        var _w = interpretTransitions(rootName), on = _w.on, after = _w.after, always = _w.always;
+        Object.assign(on, (0, getJump_1.getJumpEvents)(visitor));
+        on.CHANGED_CONTEXT_IN_STATE_STORE = {
+            actions: [
+                '_copyContext',
+            ]
+        };
+        switch (variant) {
+            case 'ui':
+                childStates.__FLOW_DONE__.entry = {
+                    unquoted: true,
+                    raw: "sendParent('UI_DONE'),"
+                };
+                break;
+            case 'mainflow':
+                on.CHANGED_CONTEXT_IN_STATE_STORE.actions.push('_persist');
+                on.CHANGED_STATE_IN_CHILD_MACHINE = {
+                    actions: [
+                        '_persist',
+                        // '_updateChildMachineState',
+                    ]
+                };
+                on.CHANGED_CONTEXT_IN_CHILD_MACHINE = {
+                    actions: [
+                        '_copyContext',
+                        '_persist',
+                        {
+                            unquoted: true,
+                            raw: "raise({type: 'HAVE_CONTEXT_VARIABLES_CHANGED', namesOfChangedVariables: [...Object.keys(context)]}),"
+                        },
+                    ]
+                };
+                on.HAVE_CONTEXT_VARIABLES_CHANGED = {
+                    unquoted: true,
+                    raw: "{\n    actions: derivedRecomputeActions,\n  }"
+                };
+                on.REQUEST_UI_START = {
+                    actions: [
+                        '_loadChallenge',
+                    ]
+                };
+                on.REQUEST_UI_STOP = {
+                    actions: [
+                        '_unloadChallenge',
+                    ]
+                };
+                on.UI_DONE = {
+                    actions: [
+                        '_unloadChallenge',
+                    ]
+                };
+                break;
+        }
         return {
             id: rootName,
             predictableActionArguments: true,

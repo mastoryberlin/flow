@@ -174,7 +174,7 @@ exports.supportedDirectives = {
         entry: [
             {
                 unquoted: function (s) { return true; },
-                raw: function (s) { return "[\n  assign({ $ui: (context) => spawn(UIMachine.withContext(context), { autoForward: true }) }),\n  '_shareContextWithParent',\n]"; }
+                raw: function (s) { return "assign({ $ui: (context) => spawn(UIMachine.withContext(context), { autoForward: true }) }),\n'_shareContextWithParent'"; }
             },
             { type: '_loadChallenge' },
         ]

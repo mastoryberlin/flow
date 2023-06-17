@@ -222,10 +222,8 @@ export const supportedDirectives = {
     entry: [
       {
         unquoted: s => true,
-        raw: s => `[
-  assign({ $ui: (context) => spawn(UIMachine.withContext(context), { autoForward: true }) }),
-  '_shareContextWithParent',
-]`,
+        raw: s => `assign({ $ui: (context) => spawn(UIMachine.withContext(context), { autoForward: true }) }),
+'_shareContextWithParent'`,
       },
       { type: '_loadChallenge' },
     ]

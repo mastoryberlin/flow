@@ -2,10 +2,18 @@
 exports.__esModule = true;
 exports.supportedDirectives = exports.defineDirective = void 0;
 var constants_1 = require("../constants");
+var unit_context_1 = require("./unit-context");
 function defineDirective(d) {
     return d;
 }
 exports.defineDirective = defineDirective;
+var sepHelper = '&.&';
+var splitArgs = {
+    byWhiteSpace: function (s) {
+        var argSplitter = new RegExp('\\s+|(?<!^)\\b(?!$)');
+        return s.replace(argSplitter, sepHelper).split(sepHelper);
+    }
+};
 // ========================================================================================================================
 // Supported Directives
 // ========================================================================================================================
@@ -81,12 +89,10 @@ exports.supportedDirectives = {
      */
     focusApp: defineDirective({
         args: function (s) {
-            var sepHelper = '&.&';
-            var argSplitter = new RegExp('\\s+|(?<!^)\\b(?!$)');
-            var args = s.replace(argSplitter, sepHelper).split(sepHelper);
+            var args = splitArgs.byWhiteSpace(s);
             var character = constants_1.allNpcs.find(function (c) { return c.toLowerCase() === args[0].toLowerCase(); });
             if (character) {
-                args = args[1].replace(argSplitter, sepHelper).split(sepHelper);
+                args = splitArgs.byWhiteSpace(args[1]);
             }
             var appId = args[0].trim().toLowerCase();
             return { appId: appId, character: character };
@@ -110,6 +116,56 @@ exports.supportedDirectives = {
             element: function (a) { return a.uiElement; }
         }
     }),
+    inChallenge: defineDirective({
+        args: function (s) {
+            var args = splitArgs.byWhiteSpace(s);
+            var character = constants_1.allNpcs.find(function (c) { return c.toLowerCase() === args[0].toLowerCase(); });
+            if (character) {
+                args = splitArgs.byWhiteSpace(args[1]);
+            }
+            var eventName = args[0];
+            var eventData = "{}";
+            if (args.length > 1 && args[1].trim()) {
+                eventData = args[1].trim();
+            }
+            if (character) {
+                eventData = eventData.replace('{', "{_pretendCausedByNpc:\"".concat(character, "\","));
+            }
+            return { eventName: eventName, eventData: eventData };
+        },
+        entry: {
+            unquoted: function () { return true; },
+            raw: function (a) {
+                var event = a.eventData === '{}' ? "'".concat(a.eventName, "'") : "(context: Context) => ({\n      type: '".concat(a.eventName, "',\n      ...(").concat((0, unit_context_1.evaluateInContext)(a.eventData), ")(context)\n    })");
+                return "choose([{\n  cond: (context: Context) => !!context.$ui,\n  actions: [\n    sendTo((context: Context) => context.$ui!, ".concat(event, ")\n  ]\n}, {\n  actions: [\n    escalate('Cannot send the ").concat(a.eventName, " event: $ui actor ref is undefined at this point.')\n  ]\n}])");
+            }
+        }
+    }),
+    inEpisode: defineDirective({
+        args: function (s) {
+            var args = splitArgs.byWhiteSpace(s);
+            var character = constants_1.allNpcs.find(function (c) { return c.toLowerCase() === args[0].toLowerCase(); });
+            if (character) {
+                args = splitArgs.byWhiteSpace(args[1]);
+            }
+            var eventName = args[0];
+            var eventData = "{}";
+            if (args.length > 1 && args[1].trim()) {
+                eventData = args[1].trim();
+            }
+            if (character) {
+                eventData = eventData.replace('{', "{_pretendCausedByNpc:\"".concat(character, "\","));
+            }
+            return { eventName: eventName, eventData: eventData };
+        },
+        entry: {
+            unquoted: function () { return true; },
+            raw: function (a) {
+                var event = a.eventData === '{}' ? "'".concat(a.eventName, "'") : "(context: Context) => ({\n      type: '".concat(a.eventName, "',\n      ...(").concat((0, unit_context_1.evaluateInContext)(a.eventData), ")(context)\n    })");
+                return "sendParent(".concat(event, ")");
+            }
+        }
+    }),
     /**
      * Loads the current unit's challenge UI and makes it appear on the Wire page.
      */
@@ -117,8 +173,8 @@ exports.supportedDirectives = {
         args: function (s) { return ({}); },
         entry: [
             {
-                raw: function (s) { return "assign({ $ui: (context) => spawn(UIMachine.withContext(context), { autoForward: true }) })"; },
-                unquoted: function (s) { return true; }
+                unquoted: function (s) { return true; },
+                raw: function (s) { return "[\n  assign({ $ui: (context) => spawn(UIMachine.withContext(context), { autoForward: true }) }),\n  '_shareContextWithParent',\n]"; }
             },
             { type: '_loadChallenge' },
         ]

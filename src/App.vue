@@ -10,14 +10,8 @@ import { useVisitor } from './chevrotain/Visitor';
 import type { IToken } from 'chevrotain';
 
 const code = ref(`
-on crashAgainstLocker -> @done
-.loadChallenge
-//Nick "Does the formula \${simpleF} work?"
-//after 3s
-//VZ "Yes, I think so!"
-.subflow fix-sub
-.. simpleF := rawFormula\`\\frac 1 \\sqrt{ \${ simpleF }}\`
-.. VZ "But what if it was \${simpleF}?"
+simpleF := rawFormula\`\\frac 1 \\sqrt{ \${ simpleF }}\`
+.inChallenge switchCam {formula: simpleF}
 `)
 
 const lexer = useLexer()

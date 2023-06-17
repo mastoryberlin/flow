@@ -25,6 +25,7 @@ var chevrotain_1 = require("../chevrotain");
 var issue_tracker_1 = require("./issue-tracker");
 var constants_1 = require("../constants");
 var directives_1 = require("./directives");
+var unit_context_1 = require("./unit-context");
 var getJump_1 = require("./getJump");
 var rootName;
 var parser = (0, chevrotain_1.useParser)();
@@ -136,7 +137,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                     unquoted: true,
                     raw: "assign({\n  ".concat(assignments.map(function (_a) {
                         var varName = _a.varName, value = _a.value;
-                        return "    ".concat(varName, ": context => {\n    for (const [key, value] of Object.entries(context)) {\n      if (key in globalThis) {\n        throw new Error('Illegal name for context variable: \"' + key + '\" is already defined as a global property. Please use a different name!')\n      } else {\n        Object.defineProperty(globalThis, key, {\n          value,\n          enumerable: false,\n          configurable: true,\n          writable: true,\n        })\n      }\n    }\n    //@ts-ignore\n    const __returnValue__ = ").concat(value, "\n    for (const [key] of Object.entries(context)) {\n      //@ts-ignore\n      delete globalThis[key]\n    }\n    return __returnValue__\n  }");
+                        return "    ".concat(varName, ": ").concat((0, unit_context_1.evaluateInContext)(value));
                     }).join(',\n'), "\n})")
                 },
             ];
@@ -209,54 +210,12 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                         json.entry = { type: '_setWireGoal', goalString: goalString };
                     }
                     break;
-                case 'inChallenge':
-                    {
-                        if (!directive.arg) {
-                            throw new Error('.inChallenge directive must have at least one argument: eventName');
-                        }
-                        var args_3 = directive.arg.replace(argSplitter, sepHelper).split(sepHelper);
-                        var character = constants_1.allNpcs.find(function (c) { return c.toLowerCase() === args_3[0].toLowerCase(); });
-                        if (character) {
-                            args_3 = args_3[1].replace(argSplitter, sepHelper).split(sepHelper);
-                        }
-                        var eventName = args_3[0];
-                        var eventData = "{}";
-                        if (args_3.length > 1 && args_3[1].trim()) {
-                            eventData = args_3[1].trim();
-                        }
-                        if (character) {
-                            eventData = eventData.replace('{', "{_pretendCausedByNpc:\"".concat(character, "\","));
-                        }
-                        json.entry = { type: 'IN_CHALLENGE', eventName: eventName, eventData: eventData };
-                    }
-                    break;
-                case 'inEpisode':
-                    {
-                        if (!directive.arg) {
-                            throw new Error('.inEpisode directive must have at least one argument: eventName');
-                        }
-                        var args_4 = directive.arg.replace(argSplitter, sepHelper).split(sepHelper);
-                        var character = constants_1.allNpcs.find(function (c) { return c.toLowerCase() === args_4[0].toLowerCase(); });
-                        if (character) {
-                            args_4 = args_4[1].replace(argSplitter, sepHelper).split(sepHelper);
-                        }
-                        var eventName = args_4[0];
-                        var eventData = "{}";
-                        if (args_4.length > 1 && args_4[1].trim()) {
-                            eventData = args_4[1].trim();
-                        }
-                        if (character) {
-                            eventData = eventData.replace('{', "{_pretendCausedByNpc:\"".concat(character, "\","));
-                        }
-                        json.entry = { type: 'IN_EPISODE', eventName: eventName, eventData: eventData };
-                    }
-                    break;
                 default:
                     var valid = true;
                     for (var _e = 0, _f = Object.entries(directives_1.supportedDirectives); _e < _f.length; _e++) {
                         var _g = _f[_e], dname = _g[0], d = _g[1];
                         if (directive.name === dname) {
-                            var args_5 = d.args(directive.arg);
+                            var args_3 = d.args(directive.arg);
                             for (var _h = 0, _j = ['entry', 'exit', 'invoke']; _h < _j.length; _h++) {
                                 var key = _j[_h];
                                 if (key in d) {
@@ -268,7 +227,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                                             var out = {};
                                             for (var _l = 0, _m = Object.entries(i); _l < _m.length; _l++) {
                                                 var _o = _m[_l], k = _o[0], v = _o[1];
-                                                out[k] = typeof v === 'function' ? v(args_5) : v;
+                                                out[k] = typeof v === 'function' ? v(args_3) : v;
                                             }
                                             json[key].push(out);
                                         }
@@ -277,7 +236,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                                         var out = {};
                                         for (var _p = 0, _q = Object.entries(impl); _p < _q.length; _p++) {
                                             var _r = _q[_p], k = _r[0], v = _r[1];
-                                            out[k] = typeof v === 'function' ? v(args_5) : v;
+                                            out[k] = typeof v === 'function' ? v(args_3) : v;
                                         }
                                         if (key === 'invoke') {
                                             if ('src' in out) {
@@ -296,16 +255,16 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                             if ('always' in d) {
                                 var def = d.always;
                                 if (typeof def === 'function') {
-                                    always = def(args_5, rootName);
+                                    always = def(args_3, rootName);
                                 }
                                 else {
                                     var cond = {};
                                     for (var _s = 0, _t = Object.entries(def.cond); _s < _t.length; _s++) {
                                         var _u = _t[_s], k = _u[0], v = _u[1];
-                                        cond[k] = typeof v === 'function' ? v(args_5) : v;
+                                        cond[k] = typeof v === 'function' ? v(args_3) : v;
                                     }
                                     always = {
-                                        target: def.target(args_5, rootName),
+                                        target: def.target(args_3, rootName),
                                         cond: cond
                                     };
                                 }

@@ -3,6 +3,7 @@ import { useIssueTracker } from "./issue-tracker";
 import type * as dsl from "../dsl/types"
 import { allNpcs } from "../constants";
 import { supportedDirectives } from './directives'
+import { evaluateInContext } from "./unit-context";
 import { getJumpEvents } from "./getJump";
 import type { StatechartVariant } from "../types";
 
@@ -118,27 +119,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
           unquoted: true,
           raw:
 `assign({
-  ${assignments.map(({ varName, value }) => `    ${varName}: context => {
-    for (const [key, value] of Object.entries(context)) {
-      if (key in globalThis) {
-        throw new Error('Illegal name for context variable: "' + key + '" is already defined as a global property. Please use a different name!')
-      } else {
-        Object.defineProperty(globalThis, key, {
-          value,
-          enumerable: false,
-          configurable: true,
-          writable: true,
-        })
-      }
-    }
-    //@ts-ignore
-    const __returnValue__ = ${value}
-    for (const [key] of Object.entries(context)) {
-      //@ts-ignore
-      delete globalThis[key]
-    }
-    return __returnValue__
-  }`).join(',\n')}
+  ${assignments.map(({ varName, value }) => `    ${varName}: ${evaluateInContext(value)}`).join(',\n')}
 })`,
         },
       ]
@@ -207,46 +188,6 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
           json.entry = { type: '_setWireGoal', goalString }
         }
           break;
-        case 'inChallenge':
-          {
-            if (!directive.arg) { throw new Error('.inChallenge directive must have at least one argument: eventName') }
-            let args = directive.arg.replace(argSplitter, sepHelper).split(sepHelper)
-
-            const character = allNpcs.find(c => c.toLowerCase() === args[0].toLowerCase())
-            if (character) {
-              args = args[1].replace(argSplitter, sepHelper).split(sepHelper)
-            }
-            let eventName = args[0]
-
-            let eventData = "{}"
-            if (args.length > 1 && args[1].trim()) {
-              eventData = args[1].trim()
-            }
-
-            if (character) { eventData = eventData.replace('{', `{_pretendCausedByNpc:"${character}",`) }
-            json.entry = { type: 'IN_CHALLENGE', eventName, eventData }
-          }
-          break
-        case 'inEpisode':
-          {
-            if (!directive.arg) { throw new Error('.inEpisode directive must have at least one argument: eventName') }
-            let args = directive.arg.replace(argSplitter, sepHelper).split(sepHelper)
-
-            const character = allNpcs.find(c => c.toLowerCase() === args[0].toLowerCase())
-            if (character) {
-              args = args[1].replace(argSplitter, sepHelper).split(sepHelper)
-            }
-            let eventName = args[0]
-
-            let eventData = "{}"
-            if (args.length > 1 && args[1].trim()) {
-              eventData = args[1].trim()
-            }
-
-            if (character) { eventData = eventData.replace('{', `{_pretendCausedByNpc:"${character}",`) }
-            json.entry = { type: 'IN_EPISODE', eventName, eventData }
-          }
-          break
         default:
           let valid = true
           for (const [dname, d] of Object.entries(supportedDirectives)) {

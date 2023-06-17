@@ -1,4 +1,5 @@
 import { allNpcs } from "../constants";
+import { evaluateInContext } from "./unit-context";
 
 type TransitionTargetFunction<A extends DirectiveArgumentsTypes> = (args: A, root: string) => string
 type TransitionDef<A extends DirectiveArgumentsTypes> = TransitionTargetFunction<A> | {
@@ -37,6 +38,14 @@ export type DirectiveInfo<A extends DirectiveArgumentsTypes> = {
 
 export function defineDirective<A extends DirectiveArgumentsTypes>(d: DirectiveInfo<A>) {
   return d
+}
+
+const sepHelper = '&.&'
+const splitArgs = {
+  byWhiteSpace(s: string) {
+    const argSplitter = new RegExp('\\s+|(?<!^)\\b(?!$)')
+    return s.replace(argSplitter, sepHelper).split(sepHelper)
+  }
 }
 
 // ========================================================================================================================
@@ -108,12 +117,10 @@ export const supportedDirectives = {
    */
   focusApp: defineDirective({
     args: s => {
-      const sepHelper = '&.&'
-      const argSplitter = new RegExp('\\s+|(?<!^)\\b(?!$)')
-      let args = s.replace(argSplitter, sepHelper).split(sepHelper)
+      let args = splitArgs.byWhiteSpace(s)
       const character = allNpcs.find(c => c.toLowerCase() === args[0].toLowerCase())
       if (character) {
-        args = args[1].replace(argSplitter, sepHelper).split(sepHelper)
+        args = splitArgs.byWhiteSpace(args[1])
       }
       let appId = args[0].trim().toLowerCase()
       return { appId, character }
@@ -140,6 +147,73 @@ export const supportedDirectives = {
     }
   }),
 
+  inChallenge: defineDirective({
+    args: s => {
+      let args = splitArgs.byWhiteSpace(s)
+      const character = allNpcs.find(c => c.toLowerCase() === args[0].toLowerCase())
+      if (character) {
+        args = splitArgs.byWhiteSpace(args[1])
+      }
+      let eventName = args[0]
+
+      let eventData = "{}"
+      if (args.length > 1 && args[1].trim()) {
+        eventData = args[1].trim()
+      }
+
+      if (character) { eventData = eventData.replace('{', `{_pretendCausedByNpc:"${character}",`) }
+      return { eventName, eventData }
+    },
+    entry: {
+      unquoted: () => true,
+      raw: (a) => {
+        const event = a.eventData === '{}' ? `'${a.eventName}'` : `(context: Context) => ({
+      type: '${a.eventName}',
+      ...(${evaluateInContext(a.eventData)})(context)
+    })`
+        return `choose([{
+  cond: (context: Context) => !!context.$ui,
+  actions: [
+    sendTo((context: Context) => context.$ui!, ${event})
+  ]
+}, {
+  actions: [
+    escalate('Cannot send the ${a.eventName} event: $ui actor ref is undefined at this point.')
+  ]
+}])`
+      }
+    }
+  }),
+
+  inEpisode: defineDirective({
+    args: s => {
+      let args = splitArgs.byWhiteSpace(s)
+      const character = allNpcs.find(c => c.toLowerCase() === args[0].toLowerCase())
+      if (character) {
+        args = splitArgs.byWhiteSpace(args[1])
+      }
+      let eventName = args[0]
+
+      let eventData = "{}"
+      if (args.length > 1 && args[1].trim()) {
+        eventData = args[1].trim()
+      }
+
+      if (character) { eventData = eventData.replace('{', `{_pretendCausedByNpc:"${character}",`) }
+      return { eventName, eventData }
+    },
+    entry: {
+      unquoted: () => true,
+      raw: (a) => {
+        const event = a.eventData === '{}' ? `'${a.eventName}'` : `(context: Context) => ({
+      type: '${a.eventName}',
+      ...(${evaluateInContext(a.eventData)})(context)
+    })`
+        return `sendParent(${event})`
+      }
+    }
+  }),
+
   /**
    * Loads the current unit's challenge UI and makes it appear on the Wire page.
    */
@@ -147,8 +221,11 @@ export const supportedDirectives = {
     args: s => ({}),
     entry: [
       {
-        raw: s => `assign({ $ui: (context) => spawn(UIMachine.withContext(context), { autoForward: true }) })`,
         unquoted: s => true,
+        raw: s => `[
+  assign({ $ui: (context) => spawn(UIMachine.withContext(context), { autoForward: true }) }),
+  '_shareContextWithParent',
+]`,
       },
       { type: '_loadChallenge' },
     ]

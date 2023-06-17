@@ -67,6 +67,14 @@ export declare const supportedDirectives: {
     hide: DirectiveInfo<{
         uiElement: "submitButton";
     }>;
+    inChallenge: DirectiveInfo<{
+        eventName: string;
+        eventData: string;
+    }>;
+    inEpisode: DirectiveInfo<{
+        eventName: string;
+        eventData: string;
+    }>;
     /**
      * Loads the current unit's challenge UI and makes it appear on the Wire page.
      */

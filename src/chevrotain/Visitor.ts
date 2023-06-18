@@ -445,7 +445,12 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
           let ms = 3000 // fallback
           if (c.Ellipsis) {
             // Set timeout to multiple of 4sec, depending on the number of dots in the ellipsis
-            ms = (c.Ellipsis[0].image.length - 1) * 4000
+            const factor = c.Ellipsis[0].image.length - 1
+            if (factor) {
+              ms = factor * 4000
+            } else {
+              ms = 80
+            }
           } else if (c.LengthFunction) {
             // !!! TBD !!!
           } else if (c.NumberLiteral) {

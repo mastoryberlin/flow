@@ -14,9 +14,6 @@ var splitArgs = {
         return s.replace(argSplitter, sepHelper).split(sepHelper);
     }
 };
-// ========================================================================================================================
-// Supported Directives
-// ========================================================================================================================
 exports.supportedDirectives = {
     actorPoints: defineDirective({
         args: function (s) { return ({
@@ -75,6 +72,15 @@ exports.supportedDirectives = {
                 var source = _a.source;
                 return source;
             }
+        }
+    }),
+    confetti: defineDirective({
+        args: function (s) { return ({
+            intensity: Number.parseInt(s) || 5
+        }); },
+        entry: {
+            type: '_confetti',
+            intensity: function (a) { return a.intensity; }
         }
     }),
     /**

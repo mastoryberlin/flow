@@ -166,11 +166,6 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
           json.entry = { type: '_showEntry', section, path }
         }
           break;
-        case 'confetti': {
-          const intensity = Number.parseInt(directive.arg) || 5
-          json.entry = { type: '_party', intensity }
-        }
-          break;
         case 'leaveConversation': {
           json.entry = { type: 'LEAVE_NLU_CONTEXT' }
 

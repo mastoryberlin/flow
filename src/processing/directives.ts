@@ -52,6 +52,8 @@ const splitArgs = {
 // Supported Directives
 // ========================================================================================================================
 
+export type UiElementId = 'submitButton' | 'callButton'
+
 export const supportedDirectives = {
   actorPoints: defineDirective({
     args: s => ({
@@ -104,6 +106,16 @@ export const supportedDirectives = {
     },
   }),
 
+  confetti: defineDirective({
+    args: s => ({
+      intensity: Number.parseInt(s) || 5,
+    }),
+    entry: {
+      type: '_confetti',
+      intensity: a => a.intensity
+    }
+  }),
+
   /**
    * Terminates the flow at this point.\n\nIf this directive appears in a subflow, it stops the subflow state machine and returns control back to the main flow. If it appears in an episode main flow, it stops the episode entirely. If it appears in a challenge flow, it unloads the challenge from the Wire.
    */
@@ -139,7 +151,7 @@ export const supportedDirectives = {
   hide: defineDirective({
     args: s => ({
       /** The UI element to hide */
-      uiElement: s as 'submitButton',
+      uiElement: s as UiElementId,
     }),
     entry: {
       type: '_hide',
@@ -235,7 +247,7 @@ export const supportedDirectives = {
   show: defineDirective({
     args: s => ({
       /** The UI element to show */
-      uiElement: s as 'submitButton',
+      uiElement: s as UiElementId,
     }),
     entry: {
       type: '_show',

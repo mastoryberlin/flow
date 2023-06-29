@@ -185,12 +185,6 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                         json.entry = { type: '_showEntry', section: section, path: path };
                     }
                     break;
-                case 'confetti':
-                    {
-                        var intensity = Number.parseInt(directive.arg) || 5;
-                        json.entry = { type: '_party', intensity: intensity };
-                    }
-                    break;
                 case 'leaveConversation':
                     {
                         json.entry = { type: 'LEAVE_NLU_CONTEXT' };

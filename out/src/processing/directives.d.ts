@@ -31,6 +31,7 @@ export declare type DirectiveInfo<A extends DirectiveArgumentsTypes> = {
     invoke?: ImplementationRef<A>;
 };
 export declare function defineDirective<A extends DirectiveArgumentsTypes>(d: DirectiveInfo<A>): DirectiveInfo<A>;
+export declare type UiElementId = 'submitButton' | 'callButton';
 export declare const supportedDirectives: {
     actorPoints: DirectiveInfo<{
         actorPointsData: string;
@@ -50,6 +51,9 @@ export declare const supportedDirectives: {
     cinema: DirectiveInfo<{
         source: string;
     }>;
+    confetti: DirectiveInfo<{
+        intensity: number;
+    }>;
     /**
      * Terminates the flow at this point.\n\nIf this directive appears in a subflow, it stops the subflow state machine and returns control back to the main flow. If it appears in an episode main flow, it stops the episode entirely. If it appears in a challenge flow, it unloads the challenge from the Wire.
      */
@@ -65,7 +69,7 @@ export declare const supportedDirectives: {
      * Hides a UI element if it was previously displayed.
      */
     hide: DirectiveInfo<{
-        uiElement: "submitButton";
+        uiElement: "submitButton" | "callButton";
     }>;
     inChallenge: DirectiveInfo<{
         eventName: string;
@@ -87,7 +91,7 @@ export declare const supportedDirectives: {
      * Shows a UI element if it was previously hidden.
      */
     show: DirectiveInfo<{
-        uiElement: "submitButton";
+        uiElement: "submitButton" | "callButton";
     }>;
     /**
      * Loads a flow statechart and executes it as a subflow.

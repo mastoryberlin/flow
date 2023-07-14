@@ -271,7 +271,7 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
             var urlPattern = '\\w+://\\S+';
             var messagePattern = new RegExp("^(?:((?:(?!\"|".concat(mediaTypes.join('|'), ")(?:\\S(?!://))+\\s+)+))?") +
                 "(?:(".concat(mediaTypes.join('|'), "|").concat(urlPattern, ")\\s+)?") +
-                "\"([^\"]*)\"(?:\\s+(".concat(timeRegExpString, "))?$"), 'i');
+                "\"([^\"]*)\"(?:\\s+(".concat(timeRegExpString, "))?$"), 'di');
             var messageMatch = name.match(messagePattern);
             if (messageMatch) {
                 var _ = messageMatch[0], alias_1 = messageMatch[1], mediaTypeOrUrl = messageMatch[2], textOrPlaceholder = messageMatch[3], showcaseTimeout = messageMatch[4];
@@ -312,7 +312,15 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                 }
                 else {
                     // Text message
-                    message = { sender: sender, type: 'text', text: (0, util_1.unescapeDots)(textOrPlaceholder) };
+                    //@ts-ignore
+                    var _b = messageMatch.indices[3], startOffset_1 = _b[0], endOffset = _b[1];
+                    message = {
+                        sender: sender,
+                        type: 'text',
+                        text: (0, util_1.unescapeDots)(textOrPlaceholder),
+                        startOffset: startOffset_1,
+                        endOffset: endOffset
+                    };
                 }
             }
             // ... NLU context details if applicable ...

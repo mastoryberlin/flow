@@ -14,6 +14,8 @@ export interface BaseMessage {
 }
 export interface TextMessage extends BaseMessage {
     text: string;
+    startOffset: number;
+    endOffset: number;
 }
 export interface MediaMessage extends BaseMessage {
     title: string;

@@ -238,7 +238,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
         `^(?:((?:(?!"|${mediaTypes.join('|')})(?:\\S(?!://))+\\s+)+))?` +
         `(?:(${mediaTypes.join('|')}|${urlPattern})\\s+)?` +
         `"([^"]*)"(?:\\s+(${timeRegExpString}))?$`,
-        'i'
+        'di'
       )
       const messageMatch = name.match(messagePattern)
       if (messageMatch) {
@@ -272,7 +272,14 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
           message = { sender, type, source, title: unescapeDots(textOrPlaceholder), showcase }
         } else {
           // Text message
-          message = { sender, type: 'text' as dsl.MessageType, text: unescapeDots(textOrPlaceholder) }
+          //@ts-ignore
+          const [startOffset, endOffset] = messageMatch.indices![3]
+          message = {
+            sender,
+            type: 'text' as dsl.MessageType,
+            text: unescapeDots(textOrPlaceholder),
+            startOffset, endOffset
+          }
         }
       }
 

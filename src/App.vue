@@ -10,8 +10,9 @@ import { useVisitor } from './chevrotain/Visitor';
 import type { IToken } from 'chevrotain';
 
 const code = ref(`
-simpleF := rawFormula\`\\frac 1 \\sqrt{ \${ simpleF }}\`
-.inChallenge switchCam {formula: simpleF}
+Nick "Hi people!"
+.. VZ image "smiley pic"
+... Alicia "What the fuck?" 4s
 `)
 
 const lexer = useLexer()

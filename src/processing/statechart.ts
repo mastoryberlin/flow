@@ -90,7 +90,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         type: 'ENTER_NLU_CONTEXT',
         pathInFlow: fqPath.split('.').slice(0, -1),
         contextId: '907415bb-cea1-4908-aa7c-548a27da14f2',
-        intents,
+        ...node.nluContext,
       }
       json.exit = 'LEAVE_NLU_CONTEXT'
       // ================================================================

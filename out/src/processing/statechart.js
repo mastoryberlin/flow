@@ -107,12 +107,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             // TODO: Setting the contextId in a reasonable (non-hardcoded) way
             //       should become a content post-production step - here it
             //       is only done for development purposes
-            json.entry = {
-                type: 'ENTER_NLU_CONTEXT',
-                pathInFlow: fqPath.split('.').slice(0, -1),
-                contextId: '907415bb-cea1-4908-aa7c-548a27da14f2',
-                intents: intents
-            };
+            json.entry = __assign({ type: 'ENTER_NLU_CONTEXT', pathInFlow: fqPath.split('.').slice(0, -1), contextId: '907415bb-cea1-4908-aa7c-548a27da14f2' }, node.nluContext);
             json.exit = 'LEAVE_NLU_CONTEXT';
             // ================================================================
             json.on = {

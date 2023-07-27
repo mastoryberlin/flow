@@ -1,6 +1,6 @@
 "use strict";
 exports.__esModule = true;
-exports.unquotedJSONstringify = exports.unescapeDots = exports.escapeDots = exports.tr = exports.dig = void 0;
+exports.promptStateRegExp = exports.unquotedJSONstringify = exports.unescapeDots = exports.escapeDots = exports.tr = exports.dig = void 0;
 function dig(obj, keys) {
     // console.log('DIGGING into ', obj, keys)
     return keys.split('.').reduce(function (prev, curr) {
@@ -47,3 +47,4 @@ function unquotedJSONstringify(object, space) {
     });
 }
 exports.unquotedJSONstringify = unquotedJSONstringify;
+exports.promptStateRegExp = /^\?\??$/;

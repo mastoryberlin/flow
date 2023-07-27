@@ -25,6 +25,7 @@ export interface MediaMessage extends BaseMessage {
 export declare type Message = TextMessage | MediaMessage;
 export interface NLUContext {
     intents: Intent[];
+    keepIntentsEnabled: boolean;
     regExps: RegExp[];
     includes: FqStateNodePath[];
 }

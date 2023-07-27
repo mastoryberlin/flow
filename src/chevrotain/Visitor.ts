@@ -12,7 +12,7 @@ import { useParser } from "./Parser";
 import type * as dsl from "../dsl/types"
 import type { CstNodeLocation, IToken } from "chevrotain";
 import type { NLUContext } from "../dsl/types";
-import { escapeDots, unescapeDots } from "../util";
+import { escapeDots, promptStateRegExp, unescapeDots } from "../util";
 
 const parser = useParser()
 
@@ -219,7 +219,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     const label = ctx.Label ? ctx.Label[0].image.substring(1) : undefined
 
     // ... directive details if applicable ...
-    let directive, nluContext, message, assignVariables
+    let directive, nluContext: NLUContext | undefined, message, assignVariables
     if (ctx.Directive) {
       directive = ctx.Directive[0].payload
     } else if (ctx.Assignment) {
@@ -284,13 +284,12 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
       }
 
       // ... NLU context details if applicable ...
-      let nluContext: NLUContext | undefined
       if (ctx.LCurly && ctx.sequence) {
         const ch = ctx.sequence[0].children
         const subNodes = ch.stateNode
         if (subNodes) {
           const firstSubNodeNameDef = this.getStateNodeNameDefinition(subNodes[0].children)
-          if (firstSubNodeNameDef?.image === '?') {
+          if (firstSubNodeNameDef && promptStateRegExp.test(firstSubNodeNameDef.image)) {
             const subNodeNameStrings = subNodes.slice(1)
               .map(s => this.getStateNodeNameDefinition(s.children)?.image)
 
@@ -306,6 +305,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
 
             nluContext = {
               intents,
+              keepIntentsEnabled: firstSubNodeNameDef.image === '??',
               regExps,
               includes: []
             }

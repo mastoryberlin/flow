@@ -13,3 +13,4 @@ export declare const unescapeDots: (text: string) => string;
  * @returns The same return value of `JSON.stringify`, except for the replacements mentioned above.
  */
 export declare function unquotedJSONstringify(object: any, space?: string | number): string;
+export declare const promptStateRegExp: RegExp;

@@ -27,6 +27,7 @@ var constants_1 = require("../constants");
 var directives_1 = require("./directives");
 var unit_context_1 = require("./unit-context");
 var getJump_1 = require("./getJump");
+var util_1 = require("../util");
 var rootName;
 var parser = (0, chevrotain_1.useParser)();
 var visitor = (0, chevrotain_1.useVisitor)();
@@ -41,19 +42,12 @@ function useFlowToStatechart(flow, rootNodeId, variant) {
 exports.useFlowToStatechart = useFlowToStatechart;
 function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
     // console.log(`stateNodeToJsonRecursive called - fqPath=${fqPath}`)
-    var _a, _b;
+    var _a, _b, _c, _d;
     var children;
     var availableIntents;
     if (node) {
         children = node.childNodes;
-        if (children.length && children[0].name === '?') {
-            availableIntents = children
-                .filter(function (_a) {
-                var name = _a.name;
-                return !['?', '*'].includes(name);
-            }) // exclude special child nodes ? and *
-                .map(function (i) { return i.name.replace(/^"((?:[^"]|\")*)"$/, '$1'); });
-        }
+        availableIntents = (_b = (_a = node.nluContext) === null || _a === void 0 ? void 0 : _a.intents) !== null && _b !== void 0 ? _b : [];
     }
     else {
         // Root Node --> take top-level nodes as "children of root"
@@ -65,7 +59,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
     }
     // console.log('parentInfo-1:', fqPath)
     var childStates = Object.fromEntries(children.map(function (childNode) {
-        var sub = stateNodeToJsonRecursive("".concat(fqPath, ".").concat(childNode.name), variant, childNode, childNode.name === '?' ? { availableIntents: availableIntents } : undefined);
+        var sub = stateNodeToJsonRecursive("".concat(fqPath, ".").concat(childNode.name), variant, childNode, util_1.promptStateRegExp.test(childNode.name) ? { availableIntents: availableIntents } : undefined);
         return [childNode.name, sub];
     }));
     // console.log('parentInfo0:', fqPath)
@@ -84,8 +78,8 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                         path: fqPath
                     }
                 };
-                for (var _i = 0, _c = children.filter(function (c) { return c.name !== '*'; }); _i < _c.length; _i++) {
-                    var k = _c[_i];
+                for (var _i = 0, _e = children.filter(function (c) { return c.name !== '*'; }); _i < _e.length; _i++) {
+                    var k = _e[_i];
                     var n = Number.parseInt(k.name);
                     childStates['0'].always.push({
                         target: k.name,
@@ -107,7 +101,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             json.id = node.label;
         }
         // console.log('parentInfo1:', fqPath)
-        if (node.name === '?') {
+        if (util_1.promptStateRegExp.test(node.name)) {
             var intents = parentInfo.availableIntents;
             // ================================================================
             // TODO: Setting the contextId in a reasonable (non-hardcoded) way
@@ -129,7 +123,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 }); }), true)
             };
         }
-        var _d = interpretTransitions(fqPath, node), on = _d.on, after = _d.after, always = _d.always;
+        var _f = interpretTransitions(fqPath, node), on = _f.on, after = _f.after, always = _f.always;
         var assignments = node.assignVariables;
         if (assignments) {
             json.entry = [
@@ -156,7 +150,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         }
         var directive = node.directive;
         if (directive) {
-            directive.arg = (_a = directive.arg) === null || _a === void 0 ? void 0 : _a.replace(/\\r/g, '');
+            directive.arg = (_c = directive.arg) === null || _c === void 0 ? void 0 : _c.replace(/\\r/g, '');
             var sepHelper = '&.&';
             var argSplitter = new RegExp('\\s+|(?<!^)\\b(?!$)');
             var invoke = {
@@ -206,21 +200,21 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                     break;
                 default:
                     var valid = true;
-                    for (var _e = 0, _f = Object.entries(directives_1.supportedDirectives); _e < _f.length; _e++) {
-                        var _g = _f[_e], dname = _g[0], d = _g[1];
+                    for (var _g = 0, _h = Object.entries(directives_1.supportedDirectives); _g < _h.length; _g++) {
+                        var _j = _h[_g], dname = _j[0], d = _j[1];
                         if (directive.name === dname) {
                             var args_3 = d.args(directive.arg);
-                            for (var _h = 0, _j = ['entry', 'exit', 'invoke']; _h < _j.length; _h++) {
-                                var key = _j[_h];
+                            for (var _k = 0, _l = ['entry', 'exit', 'invoke']; _k < _l.length; _k++) {
+                                var key = _l[_k];
                                 if (key in d) {
                                     var impl = d[key];
                                     if (Array.isArray(impl)) {
                                         json[key] = [];
-                                        for (var _k = 0, impl_1 = impl; _k < impl_1.length; _k++) {
-                                            var i = impl_1[_k];
+                                        for (var _m = 0, impl_1 = impl; _m < impl_1.length; _m++) {
+                                            var i = impl_1[_m];
                                             var out = {};
-                                            for (var _l = 0, _m = Object.entries(i); _l < _m.length; _l++) {
-                                                var _o = _m[_l], k = _o[0], v = _o[1];
+                                            for (var _o = 0, _p = Object.entries(i); _o < _p.length; _o++) {
+                                                var _q = _p[_o], k = _q[0], v = _q[1];
                                                 out[k] = typeof v === 'function' ? v(args_3) : v;
                                             }
                                             json[key].push(out);
@@ -228,8 +222,8 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                                     }
                                     else {
                                         var out = {};
-                                        for (var _p = 0, _q = Object.entries(impl); _p < _q.length; _p++) {
-                                            var _r = _q[_p], k = _r[0], v = _r[1];
+                                        for (var _r = 0, _s = Object.entries(impl); _r < _s.length; _r++) {
+                                            var _t = _s[_r], k = _t[0], v = _t[1];
                                             out[k] = typeof v === 'function' ? v(args_3) : v;
                                         }
                                         if (key === 'invoke') {
@@ -253,8 +247,8 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                                 }
                                 else {
                                     var cond = {};
-                                    for (var _s = 0, _t = Object.entries(def.cond); _s < _t.length; _s++) {
-                                        var _u = _t[_s], k = _u[0], v = _u[1];
+                                    for (var _u = 0, _v = Object.entries(def.cond); _u < _v.length; _u++) {
+                                        var _w = _v[_u], k = _w[0], v = _w[1];
                                         cond[k] = typeof v === 'function' ? v(args_3) : v;
                                     }
                                     always = {
@@ -290,12 +284,12 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             json.always = always;
         }
         if (node.message) {
-            var _v = node.message, kind = _v.type, sender = _v.sender;
+            var _x = node.message, kind = _x.type, sender = _x.sender;
             json.entry = {
                 type: 'SEND_MESSAGE',
                 kind: kind,
                 sender: sender,
-                message: kind === 'text' ? node.path.join('.') : ((_b = node.message.source) === null || _b === void 0 ? void 0 : _b.toString()) || ''
+                message: kind === 'text' ? node.path.join('.') : ((_d = node.message.source) === null || _d === void 0 ? void 0 : _d.toString()) || ''
             };
             if (node.message.type !== 'text' && node.message.showcase) {
                 json.entry.showcase = node.message.showcase;
@@ -316,7 +310,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         // Root Node
         childStates.__FLOW_DONE__ = { type: 'final' };
         childStates.__ASSERTION_FAILED__ = { type: 'final' };
-        var _w = interpretTransitions(rootName), on = _w.on, after = _w.after, always = _w.always;
+        var _y = interpretTransitions(rootName), on = _y.on, after = _y.after, always = _y.always;
         Object.assign(on, (0, getJump_1.getJumpEvents)(visitor));
         on.CHANGED_CONTEXT_IN_STATE_STORE = {
             actions: [

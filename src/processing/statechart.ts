@@ -6,6 +6,7 @@ import { supportedDirectives } from './directives'
 import { evaluateInContext } from "./unit-context";
 import { getJumpEvents } from "./getJump";
 import type { StatechartVariant } from "../types";
+import { promptStateRegExp } from "../util";
 
 let rootName: string
 const parser = useParser()
@@ -25,11 +26,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
   let availableIntents: string[]
   if (node) {
     children = node.childNodes
-    if (children.length && children[0].name === '?') {
-      availableIntents = children
-        .filter(({ name }) => !['?', '*'].includes(name))       // exclude special child nodes ? and *
-        .map(i => i.name.replace(/^"((?:[^"]|\")*)"$/, '$1'))
-    }
+    availableIntents = node.nluContext?.intents ?? []
   } else {
     // Root Node --> take top-level nodes as "children of root"
     children = visitor.allStateNodes().filter(n => n.path.length === 2)
@@ -41,7 +38,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
 
   // console.log('parentInfo-1:', fqPath)
   const childStates = Object.fromEntries(children.map(childNode => {
-    const sub = stateNodeToJsonRecursive(`${fqPath}.${childNode.name}`, variant, childNode, childNode.name === '?' ? { availableIntents } : undefined)
+    const sub = stateNodeToJsonRecursive(`${fqPath}.${childNode.name}`, variant, childNode, promptStateRegExp.test(childNode.name) ? { availableIntents } : undefined)
     return [childNode.name, sub]
   }))
 
@@ -83,7 +80,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     }
     // console.log('parentInfo1:', fqPath)
 
-    if (node.name === '?') {
+    if (promptStateRegExp.test(node.name)) {
       const intents = parentInfo.availableIntents as string[]
       // ================================================================
       // TODO: Setting the contextId in a reasonable (non-hardcoded) way

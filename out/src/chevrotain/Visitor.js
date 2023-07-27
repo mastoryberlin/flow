@@ -324,13 +324,12 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                 }
             }
             // ... NLU context details if applicable ...
-            var nluContext_1;
             if (ctx.LCurly && ctx.sequence) {
                 var ch = ctx.sequence[0].children;
                 var subNodes = ch.stateNode;
                 if (subNodes) {
                     var firstSubNodeNameDef = this.getStateNodeNameDefinition(subNodes[0].children);
-                    if ((firstSubNodeNameDef === null || firstSubNodeNameDef === void 0 ? void 0 : firstSubNodeNameDef.image) === '?') {
+                    if (firstSubNodeNameDef && util_1.promptStateRegExp.test(firstSubNodeNameDef.image)) {
                         var subNodeNameStrings = subNodes.slice(1)
                             .map(function (s) { var _a; return (_a = _this.getStateNodeNameDefinition(s.children)) === null || _a === void 0 ? void 0 : _a.image; });
                         var intentPattern_1 = /^"([^"]+)"$/;
@@ -341,8 +340,9 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                         var regExps = subNodeNameStrings
                             .filter(function (s) { return s && regExpPattern_1.test(s); })
                             .map(function (s) { return new RegExp(s.match(regExpPattern_1)[1]); });
-                        nluContext_1 = {
+                        nluContext = {
                             intents: intents,
+                            keepIntentsEnabled: firstSubNodeNameDef.image === '??',
                             regExps: regExps,
                             includes: []
                         };

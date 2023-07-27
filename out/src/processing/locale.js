@@ -22,16 +22,16 @@ function useFlowToLocale(flow, rootNodeId) {
 }
 exports.useFlowToLocale = useFlowToLocale;
 function recursionButtonIntents(node, intentsArray) {
-    if (node.childNodes && Object.values(node.childNodes)[0] && Object.entries(Object.values(node.childNodes)[0])[0][1] === '?') {
+    if (node.childNodes && Object.values(node.childNodes)[0] && util_1.promptStateRegExp.test(Object.entries(Object.values(node.childNodes)[0])[0][1])) {
         // console.log('NODE NAME', node.name)
         for (var _i = 0, _a = node.childNodes; _i < _a.length; _i++) {
             var i = _a[_i];
-            if (i.name === '*' || i.name === '?') {
+            if (i.name === '*' || util_1.promptStateRegExp.test(i.name)) {
                 continue;
             }
             // console.log('---------------name---------------', i.name)
             // for (const interval of i.childNodes) {
-            //     if (interval.childNodes && Object.values(interval.childNodes)[0] && Object.entries(Object.values(interval.childNodes)[0])[0][1] === '?') {
+            //     if (interval.childNodes && Object.values(interval.childNodes)[0] && promptStateRegExp.test(Object.entries(Object.values(interval.childNodes)[0])[0][1])) {
             //         recursionButtonIntents(interval)
             //     }
             // }

@@ -43,3 +43,5 @@ export function unquotedJSONstringify(object: any, space?: string | number) {
     return lines.map(l => indentation + l).join('\n')
   });
 }
+
+export const promptStateRegExp = /^\?\??$/

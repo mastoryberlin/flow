@@ -1,7 +1,7 @@
 import { useParser, useVisitor } from '../chevrotain'
 import { useIssueTracker } from "./issue-tracker";
 import type * as dsl from '../dsl/types'
-import { unescapeDots } from '../util'
+import { promptStateRegExp, unescapeDots } from '../util'
 
 let rootName: string
 const parser = useParser()
@@ -23,16 +23,16 @@ export function useFlowToLocale(flow: string, rootNodeId = '<ROOT>') {
 
 
 function recursionButtonIntents(node: dsl.StateNode, intentsArray: Record<string, string>) {
-  if (node.childNodes && Object.values(node.childNodes)[0] && Object.entries(Object.values(node.childNodes)[0])[0][1] === '?') {
+  if (node.childNodes && Object.values(node.childNodes)[0] && promptStateRegExp.test(Object.entries(Object.values(node.childNodes)[0])[0][1])) {
     // console.log('NODE NAME', node.name)
     for (const i of node.childNodes) {
-      if (i.name === '*' || i.name === '?') {
+      if (i.name === '*' || promptStateRegExp.test(i.name)) {
         continue
       }
       // console.log('---------------name---------------', i.name)
 
       // for (const interval of i.childNodes) {
-      //     if (interval.childNodes && Object.values(interval.childNodes)[0] && Object.entries(Object.values(interval.childNodes)[0])[0][1] === '?') {
+      //     if (interval.childNodes && Object.values(interval.childNodes)[0] && promptStateRegExp.test(Object.entries(Object.values(interval.childNodes)[0])[0][1])) {
       //         recursionButtonIntents(interval)
       //     }
       // }

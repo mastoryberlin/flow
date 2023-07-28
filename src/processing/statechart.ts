@@ -19,14 +19,14 @@ export function useFlowToStatechart(flow: string, rootNodeId = '<ROOT>', variant
   return { json, visitor }
 }
 
-function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, node?: dsl.StateNode, parentInfo?: any): any {
+function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, node?: dsl.StateNode, parentInfo?: { nluContext: dsl.NLUContext | undefined }): any {
   // console.log(`stateNodeToJsonRecursive called - fqPath=${fqPath}`)
 
   let children
-  let availableIntents: string[]
+  let nluContext: dsl.NLUContext | undefined
   if (node) {
     children = node.childNodes
-    availableIntents = node.nluContext?.intents ?? []
+    nluContext = node.nluContext
   } else {
     // Root Node --> take top-level nodes as "children of root"
     children = visitor.allStateNodes().filter(n => n.path.length === 2)
@@ -38,7 +38,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
 
   // console.log('parentInfo-1:', fqPath)
   const childStates = Object.fromEntries(children.map(childNode => {
-    const sub = stateNodeToJsonRecursive(`${fqPath}.${childNode.name}`, variant, childNode, promptStateRegExp.test(childNode.name) ? { availableIntents } : undefined)
+    const sub = stateNodeToJsonRecursive(`${fqPath}.${childNode.name}`, variant, childNode, promptStateRegExp.test(childNode.name) ? { nluContext } : undefined)
     return [childNode.name, sub]
   }))
 
@@ -81,29 +81,33 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     // console.log('parentInfo1:', fqPath)
 
     if (promptStateRegExp.test(node.name)) {
-      const intents = parentInfo.availableIntents as string[]
-      // ================================================================
-      // TODO: Setting the contextId in a reasonable (non-hardcoded) way
-      //       should become a content post-production step - here it
-      //       is only done for development purposes
-      json.entry = {
-        type: 'ENTER_NLU_CONTEXT',
-        pathInFlow: fqPath.split('.').slice(0, -1),
-        contextId: '907415bb-cea1-4908-aa7c-548a27da14f2',
-        ...node.nluContext,
-      }
-      json.exit = 'LEAVE_NLU_CONTEXT'
-      // ================================================================
+      const nluContext = parentInfo?.nluContext
+      if (!nluContext) {
+        console.error(`Cannot obtain data for ENTER_NLU_CONTEXT and LEAVE_NLU_CONTEXT invocations: parentInfo.nluContext is undefined (path: ${fqPath})`)
+      } else {
+        // ================================================================
+        // TODO: Set the contextId in a reasonable (non-hardcoded) way
+        //       in a content post-production step - here it
+        //       is only done for development purposes
+        json.entry = {
+          type: 'ENTER_NLU_CONTEXT',
+          pathInFlow: fqPath.split('.').slice(0, -1),
+          contextId: '907415bb-cea1-4908-aa7c-548a27da14f2',
+          ...nluContext,
+        }
+        json.exit = 'LEAVE_NLU_CONTEXT'
+        // ================================================================
 
-      json.on = {
-        INTENT: [
-          ...intents.map(intentName => ({
-            target: escapeDots(`"${intentName}"`),
-            internal: true,
-            cond: { type: 'isIntentName', intentName },
-          })),
-          // { target: '*' } // fallback intent
-        ]
+        json.on = {
+          INTENT: [
+            ...nluContext.intents.map(intentName => ({
+              target: escapeDots(`"${intentName}"`),
+              internal: true,
+              cond: { type: 'isIntentName', intentName },
+            })),
+            // { target: '*' } // fallback intent
+          ]
+        }
       }
     }
 

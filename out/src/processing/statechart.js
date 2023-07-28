@@ -112,7 +112,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             // ================================================================
             json.on = {
                 INTENT: __spreadArray([], intents.map(function (intentName) { return ({
-                    target: "\"".concat(intentName, "\""),
+                    target: (0, util_1.escapeDots)("\"".concat(intentName, "\"")),
                     internal: true,
                     cond: { type: 'isIntentName', intentName: intentName }
                 }); }), true)

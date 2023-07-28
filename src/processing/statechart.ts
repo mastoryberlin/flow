@@ -6,7 +6,7 @@ import { supportedDirectives } from './directives'
 import { evaluateInContext } from "./unit-context";
 import { getJumpEvents } from "./getJump";
 import type { StatechartVariant } from "../types";
-import { promptStateRegExp } from "../util";
+import { escapeDots, promptStateRegExp } from "../util";
 
 let rootName: string
 const parser = useParser()
@@ -98,7 +98,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       json.on = {
         INTENT: [
           ...intents.map(intentName => ({
-            target: `"${intentName}"`,
+            target: escapeDots(`"${intentName}"`),
             internal: true,
             cond: { type: 'isIntentName', intentName },
           })),

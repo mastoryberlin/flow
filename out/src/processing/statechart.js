@@ -124,21 +124,22 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             }
         }
         var _d = interpretTransitions(fqPath, node), on = _d.on, after = _d.after, always = _d.always;
-        var assignments = node.assignVariables;
-        if (assignments) {
-            json.entry = [
-                {
+        var assignments_1 = node.assignVariables;
+        if (assignments_1) {
+            json.entry = assignments_1.map(function (_a) {
+                var varName = _a.varName, value = _a.value;
+                return ({
                     unquoted: true,
-                    raw: "assign({\n  ".concat(assignments.map(function (_a) {
+                    raw: "choose([\n  {\n    cond: (context) => Array.isArray(context.".concat(varName, ") && Array.isArray((").concat((0, unit_context_1.evaluateInContext)(value), ")(context)),\n    actions: [\n      (context) => {\n        const newArray = (").concat((0, unit_context_1.evaluateInContext)(value), ")(context)\n        context.").concat(varName, ".splice(0, Infinity, ...newArray)\n      },\n    ],\n  },\n  {\n    actions: [\n      assign({\n        ").concat(assignments_1.map(function (_a) {
                         var varName = _a.varName, value = _a.value;
                         return "    ".concat(varName, ": ").concat((0, unit_context_1.evaluateInContext)(value));
-                    }).join(',\n'), "\n})")
-                },
-            ];
+                    }).join(',\n'), "\n      })\n    ],\n  },\n])")
+                });
+            });
             if (variant === 'mainflow') {
                 json.entry.push({
                     unquoted: true,
-                    raw: "raise({\n  type: 'HAVE_CONTEXT_VARIABLES_CHANGED',\n  namesOfChangedVariables: [".concat(assignments.map(function (_a) {
+                    raw: "raise({\n  type: 'HAVE_CONTEXT_VARIABLES_CHANGED',\n  namesOfChangedVariables: [".concat(assignments_1.map(function (_a) {
                         var varName = _a.varName;
                         return "'".concat(varName, "'");
                     }).join(', '), "]\n})")

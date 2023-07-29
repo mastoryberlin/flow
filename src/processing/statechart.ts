@@ -115,15 +115,28 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
 
     const assignments = node.assignVariables
     if (assignments) {
-      json.entry = [
-        {
-          unquoted: true,
-          raw:
-`assign({
-  ${assignments.map(({ varName, value }) => `    ${varName}: ${evaluateInContext(value)}`).join(',\n')}
-})`,
-        },
-      ]
+      json.entry = assignments.map(({ varName, value }) => ({
+        unquoted: true,
+        raw:
+          `choose([
+  {
+    cond: (context) => Array.isArray(context.${varName}) && Array.isArray((${evaluateInContext(value)})(context)),
+    actions: [
+      (context) => {
+        const newArray = (${evaluateInContext(value)})(context)
+        context.${varName}.splice(0, Infinity, ...newArray)
+      },
+    ],
+  },
+  {
+    actions: [
+      assign({
+        ${assignments.map(({ varName, value }) => `    ${varName}: ${evaluateInContext(value)}`).join(',\n')}
+      })
+    ],
+  },
+])`,
+      }))
       if (variant === 'mainflow') {
         json.entry.push({
           unquoted: true,

@@ -10,13 +10,7 @@ import { useVisitor } from './chevrotain/Visitor';
 import type { IToken } from 'chevrotain';
 
 const code = ref(`A {
-    ? {}
-    "some" {
-        ->end
-    }
-    "another" {
-        ->end
-    }
+    a := [1, 2, 3]
 }
 end`)
 

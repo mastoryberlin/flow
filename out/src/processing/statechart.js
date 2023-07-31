@@ -286,15 +286,26 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         }
         if (node.message) {
             var _v = node.message, kind = _v.type, sender = _v.sender;
-            json.entry = {
-                type: 'SEND_MESSAGE',
+            var invoke = {
+                onDone: '__SEND_MESSAGE_DONE__'
+            };
+            invoke.src = {
+                type: '_sendMessage',
                 kind: kind,
                 sender: sender,
-                message: kind === 'text' ? node.path.join('.') : ((_b = node.message.source) === null || _b === void 0 ? void 0 : _b.toString()) || ''
+                message: kind === 'text' ? {
+                    unquoted: true,
+                    raw: "(".concat((0, unit_context_1.evaluateInContext)('`' + node.message.text.replace(/`/g, '\\`') + '`'), ")(context)")
+                } : ((_b = node.message.source) === null || _b === void 0 ? void 0 : _b.toString()) || ''
             };
             if (node.message.type !== 'text' && node.message.showcase) {
-                json.entry.showcase = node.message.showcase;
+                invoke.src.showcase = node.message.showcase;
             }
+            json.initial = '__SEND_MESSAGE_ACTIVE__';
+            json.states = {
+                __SEND_MESSAGE_ACTIVE__: { invoke: invoke },
+                __SEND_MESSAGE_DONE__: { on: on, after: after, always: always }
+            };
         }
         if (variant !== 'mainflow') {
             var shareAction = { type: '_shareStateWithParent', path: node.path.join('.') };

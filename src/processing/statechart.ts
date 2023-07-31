@@ -141,7 +141,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         json.entry.push({
           unquoted: true,
           raw:
-`raise({
+            `raise({
   type: 'HAVE_CONTEXT_VARIABLES_CHANGED',
   namesOfChangedVariables: [${assignments.map(({ varName }) => `'${varName}'`).join(', ')}]
 })`
@@ -275,13 +275,24 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
 
     if (node.message) {
       const { type: kind, sender } = node.message
-      json.entry = {
-        type: 'SEND_MESSAGE', kind, sender,
-        message: kind === 'text' ? node.path.join('.') : (node.message as dsl.MediaMessage).source?.toString() || ''
+      const invoke = {
+        onDone: '__SEND_MESSAGE_DONE__'
+      } as any
+      invoke.src = {
+        type: '_sendMessage', kind, sender,
+        message: kind === 'text' ? {
+          unquoted: true,
+          raw: `(${evaluateInContext('`' + (node.message as dsl.TextMessage).text.replace(/`/g, '\\`') + '`')})(context)`,
+        } : (node.message as dsl.MediaMessage).source?.toString() || ''
       }
       if (node.message.type !== 'text' && (node.message as dsl.MediaMessage).showcase) {
-        json.entry.showcase = (node.message as dsl.MediaMessage).showcase
+        invoke.src.showcase = (node.message as dsl.MediaMessage).showcase
       }
+      json.initial = '__SEND_MESSAGE_ACTIVE__'
+      json.states = {
+        __SEND_MESSAGE_ACTIVE__: { invoke },
+        __SEND_MESSAGE_DONE__: { on, after, always },
+      } as any
     }
 
     if (variant !== 'mainflow') {

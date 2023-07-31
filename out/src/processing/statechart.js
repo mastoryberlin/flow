@@ -295,7 +295,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 sender: sender,
                 message: kind === 'text' ? {
                     unquoted: true,
-                    raw: "\"".concat((0, unit_context_1.evaluateInContext)('`' + node.message.text.replace(/`/g, '\\`') + '`'), "\"")
+                    raw: "".concat(JSON.stringify((0, unit_context_1.evaluateInContext)('`' + node.message.text.replace(/`/g, '\\`') + '`')))
                 } : ((_b = node.message.source) === null || _b === void 0 ? void 0 : _b.toString()) || ''
             };
             if (node.message.type !== 'text' && node.message.showcase) {

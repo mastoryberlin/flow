@@ -282,7 +282,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         type: '_sendMessage', kind, sender,
         message: kind === 'text' ? {
           unquoted: true,
-          raw: `"${evaluateInContext('`' + (node.message as dsl.TextMessage).text.replace(/`/g, '\\`') + '`')}"`,
+          raw: `${JSON.stringify(evaluateInContext('`' + (node.message as dsl.TextMessage).text.replace(/`/g, '\\`') + '`'))}`,
         } : (node.message as dsl.MediaMessage).source?.toString() || ''
       }
       if (node.message.type !== 'text' && (node.message as dsl.MediaMessage).showcase) {

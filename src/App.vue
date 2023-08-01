@@ -8,11 +8,9 @@ import type { TopLevelSequenceCstNode } from './chevrotain/types';
 import ResultsPane from './components/ResultsPane.vue';
 import { useVisitor } from './chevrotain/Visitor';
 import type { IToken } from 'chevrotain';
+import packageJson from "../package.json";
 
-const code = ref(`A {
-    a := [1, 2, 3]
-}
-end`)
+const code = ref(`Nick "Hey yo \${userName}"`)
 
 const lexer = useLexer()
 const parser = useParser()
@@ -25,11 +23,13 @@ const parse = (flowCode: string) => {
 }
 
 const cst = ref<TopLevelSequenceCstNode | null>(null)
+const { version } = packageJson
 
 onMounted(() => { parse(code.value) })
 </script>
 
 <template>
+  <span :style="{ position: 'fixed', top: '0', left: '0' }">v{{ version ?? '?' }}</span>
   <FlowCodeInput v-model="code" @update="parse" />
   <ResultsPane v-if="cst" :cst="cst" :visitor="visitor" :flow="code" />
 </template>

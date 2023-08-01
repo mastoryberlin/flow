@@ -315,13 +315,16 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
           unquoted: true,
           raw: `assign({ 
               __interpolatedMessage: ${kind === 'text' ?
-              evaluateInContext('`' + (node.message as dsl.TextMessage).text.replace(/`/g, '\\`') + '`') :
+              `${evaluateInContext('`' + (node.message as dsl.TextMessage).text.replace(/`/g, '\\`') + '`')}` :
               (node.message as dsl.MediaMessage).source?.toString() || ''
-            }})`,
+            }
+          })`,
         }
       }
     }
     // }
+
+
 
     if (variant !== 'mainflow') {
       const shareAction = { type: '_shareStateWithParent', path: node.path.join('.') }

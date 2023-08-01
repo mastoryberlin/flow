@@ -311,7 +311,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             if (node.message.type !== 'text' && node.message.showcase) {
                 invoke.src.showcase = node.message.showcase;
             }
-            json.initial = '__SEND_MESSAGE_ACTIVE__';
+            json.initial = children[0].name;
             json.states = {
                 __SEND_MESSAGE_ACTIVE__: {
                     entry: {

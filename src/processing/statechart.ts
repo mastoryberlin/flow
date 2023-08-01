@@ -300,6 +300,10 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         invoke.src.showcase = (node.message as dsl.MediaMessage).showcase
       }
       json.initial = '__SEND_MESSAGE_ACTIVE__'
+      let nestedInitialValue
+      if (children[0] && children[0].name) {
+        nestedInitialValue = children[0].name
+      }
       json.states = {
         __SEND_MESSAGE_ACTIVE__: {
           entry: {
@@ -308,7 +312,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
           },
           invoke,
         },
-        __SEND_MESSAGE_DONE__: { on, after, always, states: json.states },
+        __SEND_MESSAGE_DONE__: { on, after, always, initial: nestedInitialValue, states: json.states },
       } as any
       json.on.REQUEST_MESSAGE_INTERPOLATION = {
         actions: {

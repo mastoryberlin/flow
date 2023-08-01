@@ -275,53 +275,53 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
 
     if (node.message) {
       const { type: kind, sender } = node.message
-      if (!sender) {
-        json.entry = {
-          type: 'SEND_MESSAGE', kind, sender,
-          message: kind === 'text' ? node.path.join('.') : (node.message as dsl.MediaMessage).source?.toString() || ''
-        }
-        if (node.message.type !== 'text' && (node.message as dsl.MediaMessage).showcase) {
-          json.entry.showcase = (node.message as dsl.MediaMessage).showcase
-        }
-      } else {
-        const nodeStuff = node.message
-        console.log("🚀 ~ file: statechart.ts:279 ~ stateNodeToJsonRecursive ~ nodeStuff:", nodeStuff)
-        const invoke = {
-          onDone: '__SEND_MESSAGE_DONE__'
-        } as any
-        invoke.src = {
-          type: '_sendMessage', kind, sender/* ,
+      // if (!sender) {
+      //   json.entry = {
+      //     type: 'SEND_MESSAGE', kind, sender,
+      //     message: kind === 'text' ? node.path.join('.') : (node.message as dsl.MediaMessage).source?.toString() || ''
+      //   }
+      //   if (node.message.type !== 'text' && (node.message as dsl.MediaMessage).showcase) {
+      //     json.entry.showcase = (node.message as dsl.MediaMessage).showcase
+      //   }
+      // } else {
+      const nodeStuff = node.message
+      console.log("🚀 ~ file: statechart.ts:279 ~ stateNodeToJsonRecursive ~ nodeStuff:", nodeStuff)
+      const invoke = {
+        onDone: '__SEND_MESSAGE_DONE__'
+      } as any
+      invoke.src = {
+        type: '_sendMessage', kind, sender/* ,
           message: kind === 'text' ? {
             unquoted: true,
             raw: `${JSON.stringify(evaluateInContext('`' + (node.message as dsl.TextMessage).text.replace(/`/g, '\\`') + '`'))}`,
           } : (node.message as dsl.MediaMessage).source?.toString() || '' */
-        }
-        if (node.message.type !== 'text' && (node.message as dsl.MediaMessage).showcase) {
-          invoke.src.showcase = (node.message as dsl.MediaMessage).showcase
-        }
-        json.initial = '__SEND_MESSAGE_ACTIVE__'
-        json.states = {
-          __SEND_MESSAGE_ACTIVE__: {
-            entry: {
-              unquoted: true,
-              raw: `raise({ type: 'REQUEST_MESSAGE_INTERPOLATION' })`
-            },
-            invoke,
-          },
-          __SEND_MESSAGE_DONE__: { on, after, always, states: json.states },
-        } as any
-        on.REQUEST_MESSAGE_INTERPOLATION = {
-          actions: {
+      }
+      if (node.message.type !== 'text' && (node.message as dsl.MediaMessage).showcase) {
+        invoke.src.showcase = (node.message as dsl.MediaMessage).showcase
+      }
+      json.initial = '__SEND_MESSAGE_ACTIVE__'
+      json.states = {
+        __SEND_MESSAGE_ACTIVE__: {
+          entry: {
             unquoted: true,
-            raw: `assign({ 
+            raw: `raise({ type: 'REQUEST_MESSAGE_INTERPOLATION' })`
+          },
+          invoke,
+        },
+        __SEND_MESSAGE_DONE__: { on, after, always, states: json.states },
+      } as any
+      on.REQUEST_MESSAGE_INTERPOLATION = {
+        actions: {
+          unquoted: true,
+          raw: `assign({ 
               __interpolatedMessage: ${kind === 'text' ?
-                evaluateInContext('`' + (node.message as dsl.TextMessage).text.replace(/`/g, '\\`') + '`') :
-                (node.message as dsl.MediaMessage).source?.toString() || ''
-              }})`,
-          }
+              evaluateInContext('`' + (node.message as dsl.TextMessage).text.replace(/`/g, '\\`') + '`') :
+              (node.message as dsl.MediaMessage).source?.toString() || ''
+            }})`,
         }
       }
     }
+    // }
 
     if (variant !== 'mainflow') {
       const shareAction = { type: '_shareStateWithParent', path: node.path.join('.') }

@@ -42,7 +42,7 @@ function useFlowToStatechart(flow, rootNodeId, variant) {
 exports.useFlowToStatechart = useFlowToStatechart;
 function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
     // console.log(`stateNodeToJsonRecursive called - fqPath=${fqPath}`)
-    var _a, _b, _c;
+    var _a, _b;
     var children;
     var nluContext;
     if (node) {
@@ -78,8 +78,8 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                         path: fqPath
                     }
                 };
-                for (var _i = 0, _d = children.filter(function (c) { return c.name !== '*'; }); _i < _d.length; _i++) {
-                    var k = _d[_i];
+                for (var _i = 0, _c = children.filter(function (c) { return c.name !== '*'; }); _i < _c.length; _i++) {
+                    var k = _c[_i];
                     var n = Number.parseInt(k.name);
                     childStates['0'].always.push({
                         target: k.name,
@@ -123,7 +123,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 };
             }
         }
-        var _e = interpretTransitions(fqPath, node), on = _e.on, after = _e.after, always = _e.always;
+        var _d = interpretTransitions(fqPath, node), on = _d.on, after = _d.after, always = _d.always;
         var assignments_1 = node.assignVariables;
         if (assignments_1) {
             json.entry = assignments_1.map(function (_a) {
@@ -201,21 +201,21 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                     break;
                 default:
                     var valid = true;
-                    for (var _f = 0, _g = Object.entries(directives_1.supportedDirectives); _f < _g.length; _f++) {
-                        var _h = _g[_f], dname = _h[0], d = _h[1];
+                    for (var _e = 0, _f = Object.entries(directives_1.supportedDirectives); _e < _f.length; _e++) {
+                        var _g = _f[_e], dname = _g[0], d = _g[1];
                         if (directive.name === dname) {
                             var args_3 = d.args(directive.arg);
-                            for (var _j = 0, _k = ['entry', 'exit', 'invoke']; _j < _k.length; _j++) {
-                                var key = _k[_j];
+                            for (var _h = 0, _j = ['entry', 'exit', 'invoke']; _h < _j.length; _h++) {
+                                var key = _j[_h];
                                 if (key in d) {
                                     var impl = d[key];
                                     if (Array.isArray(impl)) {
                                         json[key] = [];
-                                        for (var _l = 0, impl_1 = impl; _l < impl_1.length; _l++) {
-                                            var i = impl_1[_l];
+                                        for (var _k = 0, impl_1 = impl; _k < impl_1.length; _k++) {
+                                            var i = impl_1[_k];
                                             var out = {};
-                                            for (var _m = 0, _o = Object.entries(i); _m < _o.length; _m++) {
-                                                var _p = _o[_m], k = _p[0], v = _p[1];
+                                            for (var _l = 0, _m = Object.entries(i); _l < _m.length; _l++) {
+                                                var _o = _m[_l], k = _o[0], v = _o[1];
                                                 out[k] = typeof v === 'function' ? v(args_3) : v;
                                             }
                                             json[key].push(out);
@@ -223,8 +223,8 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                                     }
                                     else {
                                         var out = {};
-                                        for (var _q = 0, _r = Object.entries(impl); _q < _r.length; _q++) {
-                                            var _s = _r[_q], k = _s[0], v = _s[1];
+                                        for (var _p = 0, _q = Object.entries(impl); _p < _q.length; _p++) {
+                                            var _r = _q[_p], k = _r[0], v = _r[1];
                                             out[k] = typeof v === 'function' ? v(args_3) : v;
                                         }
                                         if (key === 'invoke') {
@@ -248,8 +248,8 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                                 }
                                 else {
                                     var cond = {};
-                                    for (var _t = 0, _u = Object.entries(def.cond); _t < _u.length; _t++) {
-                                        var _v = _u[_t], k = _v[0], v = _v[1];
+                                    for (var _s = 0, _t = Object.entries(def.cond); _s < _t.length; _s++) {
+                                        var _u = _t[_s], k = _u[0], v = _u[1];
                                         cond[k] = typeof v === 'function' ? v(args_3) : v;
                                     }
                                     always = {
@@ -285,43 +285,54 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             json.always = always;
         }
         if (node.message) {
-            var _w = node.message, kind = _w.type, sender = _w.sender;
-            if (!sender) {
-                json.entry = {
-                    type: 'SEND_MESSAGE',
-                    kind: kind,
-                    sender: sender,
-                    message: kind === 'text' ? node.path.join('.') : ((_b = node.message.source) === null || _b === void 0 ? void 0 : _b.toString()) || ''
-                };
-                if (node.message.type !== 'text' && node.message.showcase) {
-                    json.entry.showcase = node.message.showcase;
-                }
+            var _v = node.message, kind = _v.type, sender = _v.sender;
+            // if (!sender) {
+            //   json.entry = {
+            //     type: 'SEND_MESSAGE', kind, sender,
+            //     message: kind === 'text' ? node.path.join('.') : (node.message as dsl.MediaMessage).source?.toString() || ''
+            //   }
+            //   if (node.message.type !== 'text' && (node.message as dsl.MediaMessage).showcase) {
+            //     json.entry.showcase = (node.message as dsl.MediaMessage).showcase
+            //   }
+            // } else {
+            var nodeStuff = node.message;
+            console.log("🚀 ~ file: statechart.ts:279 ~ stateNodeToJsonRecursive ~ nodeStuff:", nodeStuff);
+            var invoke = {
+                onDone: '__SEND_MESSAGE_DONE__'
+            };
+            invoke.src = {
+                type: '_sendMessage',
+                kind: kind,
+                sender: sender /* ,
+                  message: kind === 'text' ? {
+                    unquoted: true,
+                    raw: `${JSON.stringify(evaluateInContext('`' + (node.message as dsl.TextMessage).text.replace(/`/g, '\\`') + '`'))}`,
+                  } : (node.message as dsl.MediaMessage).source?.toString() || '' */
+            };
+            if (node.message.type !== 'text' && node.message.showcase) {
+                invoke.src.showcase = node.message.showcase;
             }
-            else {
-                var nodeStuff = node.message;
-                console.log("🚀 ~ file: statechart.ts:279 ~ stateNodeToJsonRecursive ~ nodeStuff:", nodeStuff);
-                var invoke = {
-                    onDone: '__SEND_MESSAGE_DONE__'
-                };
-                invoke.src = {
-                    type: '_sendMessage',
-                    kind: kind,
-                    sender: sender,
-                    message: kind === 'text' ? {
+            json.initial = '__SEND_MESSAGE_ACTIVE__';
+            json.states = {
+                __SEND_MESSAGE_ACTIVE__: {
+                    entry: {
                         unquoted: true,
-                        raw: "".concat(JSON.stringify((0, unit_context_1.evaluateInContext)('`' + node.message.text.replace(/`/g, '\\`') + '`')))
-                    } : ((_c = node.message.source) === null || _c === void 0 ? void 0 : _c.toString()) || ''
-                };
-                if (node.message.type !== 'text' && node.message.showcase) {
-                    invoke.src.showcase = node.message.showcase;
+                        raw: "raise({ type: 'REQUEST_MESSAGE_INTERPOLATION' })"
+                    },
+                    invoke: invoke
+                },
+                __SEND_MESSAGE_DONE__: { on: on, after: after, always: always, states: json.states }
+            };
+            on.REQUEST_MESSAGE_INTERPOLATION = {
+                actions: {
+                    unquoted: true,
+                    raw: "assign({ \n              __interpolatedMessage: ".concat(kind === 'text' ?
+                        (0, unit_context_1.evaluateInContext)('`' + node.message.text.replace(/`/g, '\\`') + '`') :
+                        ((_b = node.message.source) === null || _b === void 0 ? void 0 : _b.toString()) || '', "})")
                 }
-                json.initial = '__SEND_MESSAGE_ACTIVE__';
-                json.states = {
-                    __SEND_MESSAGE_ACTIVE__: { invoke: invoke },
-                    __SEND_MESSAGE_DONE__: { on: on, after: after, always: always }
-                };
-            }
+            };
         }
+        // }
         if (variant !== 'mainflow') {
             var shareAction = { type: '_shareStateWithParent', path: node.path.join('.') };
             json.entry = json.entry ? (Array.isArray(json.entry) ? __spreadArray([
@@ -337,7 +348,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         // Root Node
         childStates.__FLOW_DONE__ = { type: 'final' };
         childStates.__ASSERTION_FAILED__ = { type: 'final' };
-        var _x = interpretTransitions(rootName), on = _x.on, after = _x.after, always = _x.always;
+        var _w = interpretTransitions(rootName), on = _w.on, after = _w.after, always = _w.always;
         Object.assign(on, (0, getJump_1.getJumpEvents)(visitor));
         on.CHANGED_CONTEXT_IN_STATE_STORE = {
             actions: [

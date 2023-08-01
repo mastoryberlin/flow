@@ -286,6 +286,8 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         }
         if (node.message) {
             var _v = node.message, kind = _v.type, sender = _v.sender;
+            var nodeStuff = node.message;
+            console.log("🚀 ~ file: statechart.ts:279 ~ stateNodeToJsonRecursive ~ nodeStuff:", nodeStuff);
             var invoke = {
                 onDone: '__SEND_MESSAGE_DONE__'
             };

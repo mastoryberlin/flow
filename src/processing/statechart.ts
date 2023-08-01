@@ -316,7 +316,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
           raw: `assign({ 
               __interpolatedMessage: ${kind === 'text' ?
               `${evaluateInContext('`' + (node.message as dsl.TextMessage).text.replace(/`/g, '\\`') + '`')}` :
-              `${(node.message as dsl.MediaMessage).source?.toString()}` || ''
+              `'${(node.message as dsl.MediaMessage).source?.toString()}'` || ''
             }
           })`,
         }

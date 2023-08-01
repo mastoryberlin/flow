@@ -26,7 +26,6 @@ var issue_tracker_1 = require("./issue-tracker");
 var constants_1 = require("../constants");
 var directives_1 = require("./directives");
 var unit_context_1 = require("./unit-context");
-var getJump_1 = require("./getJump");
 var util_1 = require("../util");
 var rootName;
 var parser = (0, chevrotain_1.useParser)();
@@ -323,11 +322,11 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 },
                 __SEND_MESSAGE_DONE__: { on: on, after: after, always: always, states: json.states }
             };
-            on.REQUEST_MESSAGE_INTERPOLATION = {
+            json.on.REQUEST_MESSAGE_INTERPOLATION = {
                 actions: {
                     unquoted: true,
                     raw: "assign({ \n              __interpolatedMessage: ".concat(kind === 'text' ?
-                        "".concat((0, unit_context_1.evaluateInContext)('`' + node.message.text.replace(/`/g, '\\`') + '`')) :
+                        "".concat((0, unit_context_1.evaluateInContext)('`' + node.message.text.replace(/`/g, '\\`').replace(/\$(\w+)/g, '$${$1}') + '`')) :
                         "'".concat((_b = node.message.source) === null || _b === void 0 ? void 0 : _b.toString(), "'") || '', "\n          })")
                 }
             };
@@ -349,7 +348,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         childStates.__FLOW_DONE__ = { type: 'final' };
         childStates.__ASSERTION_FAILED__ = { type: 'final' };
         var _w = interpretTransitions(rootName), on = _w.on, after = _w.after, always = _w.always;
-        Object.assign(on, (0, getJump_1.getJumpEvents)(visitor));
+        // Object.assign(on, getJumpEvents(visitor) as any)
         on.CHANGED_CONTEXT_IN_STATE_STORE = {
             actions: [
                 '_copyContext',

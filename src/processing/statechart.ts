@@ -4,7 +4,7 @@ import type * as dsl from "../dsl/types"
 import { allNpcs } from "../constants";
 import { supportedDirectives } from './directives'
 import { evaluateInContext } from "./unit-context";
-import { getJumpEvents } from "./getJump";
+// import { getJumpEvents } from "./getJump";
 import type { StatechartVariant } from "../types";
 import { escapeDots, promptStateRegExp } from "../util";
 
@@ -310,12 +310,12 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         },
         __SEND_MESSAGE_DONE__: { on, after, always, states: json.states },
       } as any
-      on.REQUEST_MESSAGE_INTERPOLATION = {
+      json.on.REQUEST_MESSAGE_INTERPOLATION = {
         actions: {
           unquoted: true,
           raw: `assign({ 
               __interpolatedMessage: ${kind === 'text' ?
-              `${evaluateInContext('`' + (node.message as dsl.TextMessage).text.replace(/`/g, '\\`') + '`')}` :
+              `${evaluateInContext('`' + (node.message as dsl.TextMessage).text.replace(/`/g, '\\`').replace(/\$(\w+)/g, '$${$1}') + '`')}` :
               `'${(node.message as dsl.MediaMessage).source?.toString()}'` || ''
             }
           })`,
@@ -344,7 +344,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     childStates.__ASSERTION_FAILED__ = { type: 'final' }
 
     let { on, after, always } = interpretTransitions(rootName);
-    Object.assign(on, getJumpEvents(visitor) as any)
+    // Object.assign(on, getJumpEvents(visitor) as any)
 
     on.CHANGED_CONTEXT_IN_STATE_STORE = {
       actions: [

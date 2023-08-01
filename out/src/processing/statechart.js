@@ -311,7 +311,11 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             if (node.message.type !== 'text' && node.message.showcase) {
                 invoke.src.showcase = node.message.showcase;
             }
-            json.initial = children[0].name;
+            json.initial = '__SEND_MESSAGE_ACTIVE__';
+            var nestedInitialValue = void 0;
+            if (children && children[0] && children[0].name) {
+                nestedInitialValue = children[0].name;
+            }
             json.states = {
                 __SEND_MESSAGE_ACTIVE__: {
                     entry: {
@@ -320,7 +324,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                     },
                     invoke: invoke
                 },
-                __SEND_MESSAGE_DONE__: { on: on, after: after, always: always, states: json.states }
+                __SEND_MESSAGE_DONE__: { on: on, after: after, always: always, initial: nestedInitialValue, states: json.states }
             };
             json.on.REQUEST_MESSAGE_INTERPOLATION = {
                 actions: {

@@ -327,8 +327,8 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 actions: {
                     unquoted: true,
                     raw: "assign({ \n              __interpolatedMessage: ".concat(kind === 'text' ?
-                        (0, unit_context_1.evaluateInContext)('`' + node.message.text.replace(/`/g, '\\`') + '`') :
-                        ((_b = node.message.source) === null || _b === void 0 ? void 0 : _b.toString()) || '', "})")
+                        "".concat((0, unit_context_1.evaluateInContext)('`' + node.message.text.replace(/`/g, '\\`') + '`')) :
+                        "".concat((_b = node.message.source) === null || _b === void 0 ? void 0 : _b.toString()) || '', "\n          })")
                 }
             };
         }

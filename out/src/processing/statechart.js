@@ -314,7 +314,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             json.initial = '__SEND_MESSAGE_ACTIVE__';
             var nestedInitialValue = void 0;
             if (children && children[0] && children[0].name) {
-                nestedInitialValue = children[0].name;
+                nestedInitialValue = { "4000": [{ "target": children[0].name, "internal": true }] };
             }
             json.states = __assign({ __SEND_MESSAGE_ACTIVE__: {
                     entry: {

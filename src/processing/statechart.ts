@@ -302,7 +302,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       json.initial = '__SEND_MESSAGE_ACTIVE__'
       let nestedInitialValue
       if (children && children[0] && children[0].name) {
-        nestedInitialValue = children[0].name
+        nestedInitialValue = { "4000": [{ "target": children[0].name, "internal": true }] }
       }
       json.states = {
         __SEND_MESSAGE_ACTIVE__: {

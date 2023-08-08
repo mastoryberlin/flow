@@ -312,7 +312,8 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
           },
           invoke,
         },
-        __SEND_MESSAGE_DONE__: { on, after, always, initial: nestedInitialValue, states: json.states },
+        __SEND_MESSAGE_DONE__: { on, after: nestedInitialValue ? nestedInitialValue : after, always },
+        ...json.states
       } as any
       json.on.REQUEST_MESSAGE_INTERPOLATION = {
         actions: {

@@ -316,16 +316,13 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             if (children && children[0] && children[0].name) {
                 nestedInitialValue = children[0].name;
             }
-            json.states = {
-                __SEND_MESSAGE_ACTIVE__: {
+            json.states = __assign({ __SEND_MESSAGE_ACTIVE__: {
                     entry: {
                         unquoted: true,
                         raw: "raise({ type: 'REQUEST_MESSAGE_INTERPOLATION' })"
                     },
                     invoke: invoke
-                },
-                __SEND_MESSAGE_DONE__: { on: on, after: after, always: always, initial: nestedInitialValue, states: json.states }
-            };
+                }, __SEND_MESSAGE_DONE__: { on: on, after: nestedInitialValue ? nestedInitialValue : after, always: always } }, json.states);
             json.on.REQUEST_MESSAGE_INTERPOLATION = {
                 actions: {
                     unquoted: true,

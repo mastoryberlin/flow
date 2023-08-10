@@ -275,44 +275,42 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
 
     if (node.message) {
       const { type: kind, sender } = node.message
-      // if (!sender) {
-      //   json.entry = {
-      //     type: 'SEND_MESSAGE', kind, sender,
-      //     message: kind === 'text' ? node.path.join('.') : (node.message as dsl.MediaMessage).source?.toString() || ''
-      //   }
-      //   if (node.message.type !== 'text' && (node.message as dsl.MediaMessage).showcase) {
-      //     json.entry.showcase = (node.message as dsl.MediaMessage).showcase
-      //   }
-      // } else {
-      const nodeStuff = node.message
-      console.log("🚀 ~ file: statechart.ts:279 ~ stateNodeToJsonRecursive ~ nodeStuff:", nodeStuff)
+
+
+      let nestedInitialValue
+      if (children && children[0] && children[0].name) {
+        nestedInitialValue = children[0].name
+      } else if (Object.keys(after).length) {
+        nestedInitialValue = Object.values(after)[0][0].target
+      }
+
       const invoke = {
-        onDone: '__SEND_MESSAGE_DONE__'
+        onDone: node.final ? always : nestedInitialValue
       } as any
       invoke.src = {
-        type: '_sendMessage', kind, sender/* ,
-          message: kind === 'text' ? {
-            unquoted: true,
-            raw: `${JSON.stringify(evaluateInContext('`' + (node.message as dsl.TextMessage).text.replace(/`/g, '\\`') + '`'))}`,
-          } : (node.message as dsl.MediaMessage).source?.toString() || '' */
+        type: '_sendMessage', kind, sender,
       }
       if (node.message.type !== 'text' && (node.message as dsl.MediaMessage).showcase) {
         invoke.src.showcase = (node.message as dsl.MediaMessage).showcase
       }
       json.initial = '__SEND_MESSAGE_ACTIVE__'
-      let nestedInitialValue
-      if (children && children[0] && children[0].name) {
-        nestedInitialValue = { "4000": [{ "target": children[0].name, "internal": true }] }
-      }
+      json.after = {}
+      json.always = []
       json.states = {
         __SEND_MESSAGE_ACTIVE__: {
           entry: {
             unquoted: true,
             raw: `raise({ type: 'REQUEST_MESSAGE_INTERPOLATION' })`
           },
-          invoke,
+          after: {
+            "2000": {
+              "target": "__SEND_MESSAGE_DONE__",
+              "internal": true
+
+            }
+          },
         },
-        __SEND_MESSAGE_DONE__: { on, after: nestedInitialValue ? nestedInitialValue : after, always },
+        __SEND_MESSAGE_DONE__: { on, invoke },
         ...json.states
       } as any
       json.on.REQUEST_MESSAGE_INTERPOLATION = {

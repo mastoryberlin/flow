@@ -285,44 +285,39 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         }
         if (node.message) {
             var _v = node.message, kind = _v.type, sender = _v.sender;
-            // if (!sender) {
-            //   json.entry = {
-            //     type: 'SEND_MESSAGE', kind, sender,
-            //     message: kind === 'text' ? node.path.join('.') : (node.message as dsl.MediaMessage).source?.toString() || ''
-            //   }
-            //   if (node.message.type !== 'text' && (node.message as dsl.MediaMessage).showcase) {
-            //     json.entry.showcase = (node.message as dsl.MediaMessage).showcase
-            //   }
-            // } else {
-            var nodeStuff = node.message;
-            console.log("🚀 ~ file: statechart.ts:279 ~ stateNodeToJsonRecursive ~ nodeStuff:", nodeStuff);
+            var nestedInitialValue = void 0;
+            if (children && children[0] && children[0].name) {
+                nestedInitialValue = children[0].name;
+            }
+            else if (Object.keys(after).length) {
+                nestedInitialValue = Object.values(after)[0][0].target;
+            }
             var invoke = {
-                onDone: '__SEND_MESSAGE_DONE__'
+                onDone: node.final ? always : nestedInitialValue
             };
             invoke.src = {
                 type: '_sendMessage',
                 kind: kind,
-                sender: sender /* ,
-                  message: kind === 'text' ? {
-                    unquoted: true,
-                    raw: `${JSON.stringify(evaluateInContext('`' + (node.message as dsl.TextMessage).text.replace(/`/g, '\\`') + '`'))}`,
-                  } : (node.message as dsl.MediaMessage).source?.toString() || '' */
+                sender: sender
             };
             if (node.message.type !== 'text' && node.message.showcase) {
                 invoke.src.showcase = node.message.showcase;
             }
             json.initial = '__SEND_MESSAGE_ACTIVE__';
-            var nestedInitialValue = void 0;
-            if (children && children[0] && children[0].name) {
-                nestedInitialValue = { "4000": [{ "target": children[0].name, "internal": true }] };
-            }
+            json.after = {};
+            json.always = [];
             json.states = __assign({ __SEND_MESSAGE_ACTIVE__: {
                     entry: {
                         unquoted: true,
                         raw: "raise({ type: 'REQUEST_MESSAGE_INTERPOLATION' })"
                     },
-                    invoke: invoke
-                }, __SEND_MESSAGE_DONE__: { on: on, after: nestedInitialValue ? nestedInitialValue : after, always: always } }, json.states);
+                    after: {
+                        "2000": {
+                            "target": "__SEND_MESSAGE_DONE__",
+                            "internal": true
+                        }
+                    }
+                }, __SEND_MESSAGE_DONE__: { on: on, invoke: invoke } }, json.states);
             json.on.REQUEST_MESSAGE_INTERPOLATION = {
                 actions: {
                     unquoted: true,

@@ -167,7 +167,7 @@ exports.supportedDirectives = {
         entry: {
             unquoted: function () { return true; },
             raw: function (a) {
-                var event = a.eventData === '{}' ? "'".concat(a.eventName, "'") : "(context: Context) => ({\n      type: '".concat(a.eventName, "',\n      ...(").concat((0, unit_context_1.evaluateInContext)(a.eventData), ")(context)\n    })");
+                var event = a.eventData === '{}' ? "'".concat(a.eventName, "'") : "(context: Context) => ({\n      type: '".concat(a.eventName, "',\n      ...(").concat((0, unit_context_1.evaluateInContext)(a.eventData), ")(context),\n    })");
                 return "sendParent(".concat(event, ")");
             }
         }
@@ -185,6 +185,23 @@ exports.supportedDirectives = {
     unloadChallenge: defineDirective({
         args: function (s) { return ({}); },
         entry: { type: '_unloadChallenge' }
+    }),
+    /**
+     * Offers help according to the dynamic "help map" passed as an argument.
+     *
+     * The help map is a simple key-value map of strings, where the key defines the text shown on
+     * the intent button, and the value must be the name of the subflow that should be loaded when
+     * the user clicks that button.
+     */
+    offer: defineDirective({
+        args: function (s) { return ({ helpMap: s }); },
+        entry: {
+            unquoted: function (a) { return true; },
+            raw: function (a) { return "assign({ $helpMap: context => (".concat((0, unit_context_1.evaluateInContext)(a.helpMap), ")(context) })"); }
+        },
+        invoke: {
+            src: function (a) { return 'sub'; }
+        }
     }),
     /**
      * Shows a UI element if it was previously hidden.

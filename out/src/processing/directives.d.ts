@@ -88,6 +88,16 @@ export declare const supportedDirectives: {
      */
     unloadChallenge: DirectiveInfo<object>;
     /**
+     * Offers help according to the dynamic "help map" passed as an argument.
+     *
+     * The help map is a simple key-value map of strings, where the key defines the text shown on
+     * the intent button, and the value must be the name of the subflow that should be loaded when
+     * the user clicks that button.
+     */
+    offer: DirectiveInfo<{
+        helpMap: string;
+    }>;
+    /**
      * Shows a UI element if it was previously hidden.
      */
     show: DirectiveInfo<{

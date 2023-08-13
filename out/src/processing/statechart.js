@@ -40,10 +40,9 @@ function useFlowToStatechart(flow, rootNodeId, variant) {
 }
 exports.useFlowToStatechart = useFlowToStatechart;
 function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
-    // console.log(`stateNodeToJsonRecursive called - fqPath=${fqPath}`)
     var _a, _b;
     var children;
-    var nluContext;
+    var nluContext; // used as parentInfo param for recursion
     if (node) {
         children = node.childNodes;
         nluContext = node.nluContext;
@@ -99,7 +98,9 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         if (node.label) {
             json.id = node.label;
         }
-        // console.log('parentInfo1:', fqPath)
+        // ========================================================================================================================
+        // Interactive Conversations
+        // ========================================================================================================================
         if (util_1.promptStateRegExp.test(node.name)) {
             var nluContext_1 = parentInfo === null || parentInfo === void 0 ? void 0 : parentInfo.nluContext;
             if (!nluContext_1) {
@@ -123,6 +124,9 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             }
         }
         var _d = interpretTransitions(fqPath, node), on = _d.on, after = _d.after, always = _d.always;
+        // ========================================================================================================================
+        // Variable Assignments
+        // ========================================================================================================================
         var assignments_1 = node.assignVariables;
         if (assignments_1) {
             json.entry = assignments_1.map(function (_a) {
@@ -148,6 +152,9 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 json.entry.push('_shareContextWithParent');
             }
         }
+        // ========================================================================================================================
+        // Directives
+        // ========================================================================================================================
         var directive = node.directive;
         if (directive) {
             directive.arg = (_a = directive.arg) === null || _a === void 0 ? void 0 : _a.replace(/\\r/g, '');
@@ -271,6 +278,15 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                     __DIRECTIVE_ACTIVE__: { invoke: invoke },
                     __DIRECTIVE_DONE__: { on: on, after: after, always: always }
                 };
+                if (directive.name === 'offer') {
+                    json.states.__OFFER_ACTIVE__ = {
+                        on: {
+                            SELECT_SUBFLOW: '__DIRECTIVE_ACTIVE__',
+                            ABORT_SUBFLOW_SELECTION: '__DIRECTIVE_DONE__'
+                        }
+                    };
+                    json.initial = '__OFFER_ACTIVE__';
+                }
             }
             else {
                 json.on = __assign(__assign({}, json.on), on);
@@ -283,6 +299,9 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             json.after = after;
             json.always = always;
         }
+        // ========================================================================================================================
+        // Messages
+        // ========================================================================================================================
         if (node.message) {
             var _v = node.message, kind = _v.type, sender = _v.sender;
             var nestedInitialValue = void 0;

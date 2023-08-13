@@ -1,6 +1,6 @@
 {
   "name": "@mastoryberlin/flow",
-  "version": "0.9.44",
+  "version": "0.9.47",
   "type": "commonjs",
   "description": "",
   "main": "./out/index.js",

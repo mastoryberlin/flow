@@ -10,7 +10,13 @@ import { useVisitor } from './chevrotain/Visitor';
 import type { IToken } from 'chevrotain';
 import packageJson from "../package.json";
 
-const code = ref(`Nick "Hey yo \${userName}"`)
+const code = ref(`.offer {"I'm lost": "lost", "I need help": "help"}
+Alicia "Hi!"
+.. Nick "Hey yo \${userName}" {
+  ?
+  "yes"
+  "no"
+}`)
 
 const lexer = useLexer()
 const parser = useParser()

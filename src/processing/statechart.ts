@@ -20,10 +20,8 @@ export function useFlowToStatechart(flow: string, rootNodeId = '<ROOT>', variant
 }
 
 function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, node?: dsl.StateNode, parentInfo?: { nluContext: dsl.NLUContext | undefined }): any {
-  // console.log(`stateNodeToJsonRecursive called - fqPath=${fqPath}`)
-
   let children
-  let nluContext: dsl.NLUContext | undefined
+  let nluContext: dsl.NLUContext | undefined // used as parentInfo param for recursion
   if (node) {
     children = node.childNodes
     nluContext = node.nluContext
@@ -78,7 +76,10 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     if (node.label) {
       json.id = node.label
     }
-    // console.log('parentInfo1:', fqPath)
+
+    // ========================================================================================================================
+    // Interactive Conversations
+    // ========================================================================================================================
 
     if (promptStateRegExp.test(node.name)) {
       const nluContext = parentInfo?.nluContext
@@ -112,6 +113,10 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     }
 
     let { on, after, always } = interpretTransitions(fqPath, node);
+
+    // ========================================================================================================================
+    // Variable Assignments
+    // ========================================================================================================================
 
     const assignments = node.assignVariables
     if (assignments) {
@@ -150,6 +155,10 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         json.entry.push('_shareContextWithParent')
       }
     }
+
+    // ========================================================================================================================
+    // Directives
+    // ========================================================================================================================
 
     const directive = node.directive
     if (directive) {
@@ -262,6 +271,15 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
           __DIRECTIVE_ACTIVE__: { invoke },
           __DIRECTIVE_DONE__: { on, after, always },
         } as any
+        if (directive.name === 'offer') {
+          json.states.__OFFER_ACTIVE__ = {
+            on: {
+              SELECT_SUBFLOW: '__DIRECTIVE_ACTIVE__',
+              ABORT_SUBFLOW_SELECTION: '__DIRECTIVE_DONE__',
+            },
+          }
+          json.initial = '__OFFER_ACTIVE__'
+        }
       } else {
         json.on = { ...json.on, ...on }
         json.after = after
@@ -272,6 +290,10 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       json.after = after
       json.always = always
     }
+
+    // ========================================================================================================================
+    // Messages
+    // ========================================================================================================================
 
     if (node.message) {
       const { type: kind, sender } = node.message
@@ -284,8 +306,8 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       //     json.entry.showcase = (node.message as dsl.MediaMessage).showcase
       //   }
       // } else {
-      const nodeStuff = node.message
-      console.log("🚀 ~ file: statechart.ts:279 ~ stateNodeToJsonRecursive ~ nodeStuff:", nodeStuff)
+      // const nodeStuff = node.message
+      // console.log("🚀 ~ file: statechart.ts:279 ~ stateNodeToJsonRecursive ~ nodeStuff:", nodeStuff)
       const invoke = {
         onDone: '__SEND_MESSAGE_DONE__'
       } as any
@@ -415,7 +437,6 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       on, after, always
     }
   }
-
 }
 
 function interpretTransitions(fqPath: string, node?: dsl.StateNode) {

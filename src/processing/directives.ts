@@ -8,6 +8,7 @@ type TransitionDef<A extends DirectiveArgumentsTypes> = TransitionTargetFunction
 }
 
 type SingleOrArray<V> = V | V[]
+type FixedTypeOrReturnValueFromDirectiveArgumentFunction<V, A extends DirectiveArgumentsTypes> = V | ((args: A) => V)
 
 type ImplementationRef<A extends DirectiveArgumentsTypes> = SingleOrArray<{
   type: string
@@ -19,7 +20,7 @@ type ImplementationRef<A extends DirectiveArgumentsTypes> = SingleOrArray<{
 } | {
   [other: string]: any
   [notAnArrayLike: number]: never;
-  })>
+})>
 
 type DirectiveArgumentInfo<T> = T | {
   value: T
@@ -219,7 +220,7 @@ export const supportedDirectives = {
       raw: (a) => {
         const event = a.eventData === '{}' ? `'${a.eventName}'` : `(context: Context) => ({
       type: '${a.eventName}',
-      ...(${evaluateInContext(a.eventData)})(context)
+      ...(${evaluateInContext(a.eventData)})(context),
     })`
         return `sendParent(${event})`
       }
@@ -239,6 +240,24 @@ export const supportedDirectives = {
   unloadChallenge: defineDirective({
     args: s => ({}),
     entry: { type: '_unloadChallenge' }
+  }),
+
+  /**
+   * Offers help according to the dynamic "help map" passed as an argument.
+   * 
+   * The help map is a simple key-value map of strings, where the key defines the text shown on
+   * the intent button, and the value must be the name of the subflow that should be loaded when
+   * the user clicks that button.
+   */
+  offer: defineDirective({
+    args: s => ({ helpMap: s }),
+    entry: {
+      unquoted: a => true,
+      raw: a => `assign({ $helpMap: context => (${evaluateInContext(a.helpMap)})(context) })`
+    },
+    invoke: {
+      src: a => 'sub',
+    },
   }),
 
   /**

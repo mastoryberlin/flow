@@ -274,7 +274,13 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         if (directive.name === 'offer') {
           json.states.__OFFER_ACTIVE__ = {
             on: {
-              SELECT_SUBFLOW: '__DIRECTIVE_ACTIVE__',
+              SELECT_SUBFLOW: {
+                actions: {
+                  unquoted: true,
+                  raw: `assign({$scheduledSubflows: (_, event) => [event.slug]})`
+                },
+                target: '__DIRECTIVE_ACTIVE__',
+              },
               ABORT_SUBFLOW_SELECTION: '__DIRECTIVE_DONE__',
             },
           }

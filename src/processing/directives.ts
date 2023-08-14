@@ -249,7 +249,7 @@ export const supportedDirectives = {
    * the intent button, and the value must be the name of the subflow that should be loaded when
    * the user clicks that button.
    */
-  offer: defineDirective({
+  offerHelp: defineDirective({
     args: s => ({ helpMap: s }),
     entry: {
       unquoted: a => true,

@@ -277,7 +277,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
               SELECT_SUBFLOW: {
                 actions: {
                   unquoted: true,
-                  raw: `assign({$scheduledSubflows: (_, event) => [event.slug]})`
+                  raw: `assign({$scheduledSubflows: (_, { slug }) => Array.isArray(slug) ? [...slug] : [slug]})`
                 },
                 target: '__DIRECTIVE_ACTIVE__',
               },

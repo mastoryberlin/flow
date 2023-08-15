@@ -257,6 +257,10 @@ export const supportedDirectives = {
     },
     invoke: {
       src: a => 'sub',
+      data: a => ({
+        unquoted: true,
+        raw: `context => context`,
+      })
     },
   }),
 

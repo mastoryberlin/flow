@@ -200,7 +200,11 @@ exports.supportedDirectives = {
             raw: function (a) { return "assign({ $helpMap: context => (".concat((0, unit_context_1.evaluateInContext)(a.helpMap), ")(context) })"); }
         },
         invoke: {
-            src: function (a) { return 'sub'; }
+            src: function (a) { return 'sub'; },
+            data: function (a) { return ({
+                unquoted: true,
+                raw: "context => context"
+            }); }
         }
     }),
     /**

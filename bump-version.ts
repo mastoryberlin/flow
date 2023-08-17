@@ -13,4 +13,5 @@ if (m) {
   rev++
   config.version = `${major}.${minor}.${rev}`
   writeFileSync(packageJsonPath, JSON.stringify(config, null, 2))
+  console.log(`Bumped package version to ${config.version}`)
 }

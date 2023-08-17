@@ -11,6 +11,9 @@ export const evaluateInContext = (value: string) => `(context: Context) => {
       })
     }
   }
+  const __userStore__ = usePersistedAccountStore()
+  const userName = __userStore__.personalInfo.given_name ?? __userStore__.defaultName ?? '???'
+  const username = userName
   //@ts-ignore
   const __returnValue__ = ${value}
   for (const [key] of Object.entries(context)) {

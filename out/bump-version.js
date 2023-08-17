@@ -14,4 +14,5 @@ if (m) {
     rev++;
     config.version = "".concat(major, ".").concat(minor, ".").concat(rev);
     (0, fs_1.writeFileSync)(packageJsonPath, JSON.stringify(config, null, 2));
+    console.log("Bumped package version to ".concat(config.version));
 }

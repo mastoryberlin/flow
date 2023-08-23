@@ -54,7 +54,7 @@ function extractDynamicExpressions() {
     }
     return message.trim()
   }).filter(el => el))].sort()
-  console.log('resultedExpressionArray', resultedExpressionsArray)
+  return resultedExpressionsArray
 }
 
 function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, node?: dsl.StateNode, parentInfo?: { nluContext: dsl.NLUContext | undefined }): any {

@@ -77,7 +77,7 @@ function extractDynamicExpressions() {
         }
         return message.trim();
     }).filter(function (el) { return el; })), true).sort();
-    console.log('resultedExpressionArray', resultedExpressionsArray);
+    return resultedExpressionsArray;
 }
 function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
     var _a, _b;

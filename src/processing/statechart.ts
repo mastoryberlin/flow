@@ -7,6 +7,7 @@ import { evaluateInContext } from "./unit-context";
 // import { getJumpEvents } from "./getJump";
 import type { StatechartVariant } from "../types";
 import { escapeDots, promptStateRegExp } from "../util";
+import { interpolationSymbolEnd, interpolationSymbolStart } from "../constants";
 
 let rootName: string
 const parser = useParser()
@@ -16,7 +17,44 @@ export function useFlowToStatechart(flow: string, rootNodeId = '<ROOT>', variant
   rootName = rootNodeId
   useIssueTracker(parser, visitor, flow, rootNodeId, true)
   const json = stateNodeToJsonRecursive(rootNodeId, variant)
-  return { json, visitor }
+  const dynamicExpressions = extractDynamicExpressions()
+  return { json, visitor, dynamicExpressions }
+}
+
+function extractDynamicExpressions() {
+  const messagesWithExpressions = visitor.allStateNodes()
+    .filter(state => state.name.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g) || state.assignVariables?.length || (state.transitions.length && state.transitions[0].guard))
+    .map(state => {
+      if (state.assignVariables?.length) {
+        return state.assignVariables[0].varName
+      }
+      if (state.transitions.length && state.transitions[0].guard) {
+        //@ts-ignore
+        return state.transitions[0].guard.condition
+      }
+      return state.name.replace(/`(.*?)`/g, "$${formula`$1`}")
+
+    })
+  //@ts-ignore
+  const resultedExpressionsArray = [...new Set(messagesWithExpressions.map(message => {
+    const interpolationVariables = message.match(/\$(\w+)|\$\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g)
+    if (interpolationVariables) {
+      for (const variable of interpolationVariables) {
+        if (variable === '$username') { continue }
+        // console.log('formattedVariableBefore:', variable)
+        let formattedVariable = variable.replaceAll('$', '').replace('{', '')
+        // console.log('formattedVariable:', formattedVariable)
+        const closingBracketIndex = formattedVariable.lastIndexOf('}')
+        if (closingBracketIndex > -1) {
+          formattedVariable = formattedVariable.slice(0, closingBracketIndex) + formattedVariable.slice(closingBracketIndex + 1)
+        }
+        formattedVariable = formattedVariable.replaceAll('{', interpolationSymbolStart).replaceAll('}', interpolationSymbolEnd)
+        return formattedVariable.trim()
+      }
+    }
+    return message.trim()
+  }).filter(el => el))].sort()
+  console.log('resultedExpressionArray', resultedExpressionsArray)
 }
 
 function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, node?: dsl.StateNode, parentInfo?: { nluContext: dsl.NLUContext | undefined }): any {

@@ -27,6 +27,7 @@ var constants_1 = require("../constants");
 var directives_1 = require("./directives");
 var unit_context_1 = require("./unit-context");
 var util_1 = require("../util");
+var constants_2 = require("../constants");
 var rootName;
 var parser = (0, chevrotain_1.useParser)();
 var visitor = (0, chevrotain_1.useVisitor)();
@@ -36,9 +37,48 @@ function useFlowToStatechart(flow, rootNodeId, variant) {
     rootName = rootNodeId;
     (0, issue_tracker_1.useIssueTracker)(parser, visitor, flow, rootNodeId, true);
     var json = stateNodeToJsonRecursive(rootNodeId, variant);
-    return { json: json, visitor: visitor };
+    var dynamicExpressions = extractDynamicExpressions();
+    return { json: json, visitor: visitor, dynamicExpressions: dynamicExpressions };
 }
 exports.useFlowToStatechart = useFlowToStatechart;
+function extractDynamicExpressions() {
+    var messagesWithExpressions = visitor.allStateNodes()
+        .filter(function (state) { var _a; return state.name.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g) || ((_a = state.assignVariables) === null || _a === void 0 ? void 0 : _a.length) || (state.transitions.length && state.transitions[0].guard); })
+        .map(function (state) {
+        var _a;
+        if ((_a = state.assignVariables) === null || _a === void 0 ? void 0 : _a.length) {
+            return state.assignVariables[0].varName;
+        }
+        if (state.transitions.length && state.transitions[0].guard) {
+            //@ts-ignore
+            return state.transitions[0].guard.condition;
+        }
+        return state.name.replace(/`(.*?)`/g, "$${formula`$1`}");
+    });
+    //@ts-ignore
+    var resultedExpressionsArray = __spreadArray([], new Set(messagesWithExpressions.map(function (message) {
+        var interpolationVariables = message.match(/\$(\w+)|\$\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g);
+        if (interpolationVariables) {
+            for (var _i = 0, interpolationVariables_1 = interpolationVariables; _i < interpolationVariables_1.length; _i++) {
+                var variable = interpolationVariables_1[_i];
+                if (variable === '$username') {
+                    continue;
+                }
+                // console.log('formattedVariableBefore:', variable)
+                var formattedVariable = variable.replaceAll('$', '').replace('{', '');
+                // console.log('formattedVariable:', formattedVariable)
+                var closingBracketIndex = formattedVariable.lastIndexOf('}');
+                if (closingBracketIndex > -1) {
+                    formattedVariable = formattedVariable.slice(0, closingBracketIndex) + formattedVariable.slice(closingBracketIndex + 1);
+                }
+                formattedVariable = formattedVariable.replaceAll('{', constants_2.interpolationSymbolStart).replaceAll('}', constants_2.interpolationSymbolEnd);
+                return formattedVariable.trim();
+            }
+        }
+        return message.trim();
+    }).filter(function (el) { return el; })), true).sort();
+    console.log('resultedExpressionArray', resultedExpressionsArray);
+}
 function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
     var _a, _b;
     var children;

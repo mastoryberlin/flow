@@ -9,7 +9,7 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
     return to.concat(ar || Array.prototype.slice.call(from));
 };
 exports.__esModule = true;
-exports.allStatechartVariants = exports.allIssueKinds = exports.allWarnings = exports.allErrors = exports.allNpcs = exports.allPanelIds = void 0;
+exports.allStatechartVariants = exports.allIssueKinds = exports.interpolationSymbolEnd = exports.interpolationSymbolStart = exports.allWarnings = exports.allErrors = exports.allNpcs = exports.allPanelIds = void 0;
 exports.allPanelIds = [
     'parser',
     'visitor',
@@ -36,5 +36,7 @@ exports.allWarnings = [
     'unresolved TODO',
     'transition will jump nowhere because the target state includes the transition definition',
 ];
+exports.interpolationSymbolStart = '«';
+exports.interpolationSymbolEnd = '»';
 exports.allIssueKinds = __spreadArray(__spreadArray([], exports.allErrors, true), exports.allWarnings, true);
 exports.allStatechartVariants = ['mainflow', 'subflow', 'ui'];

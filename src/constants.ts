@@ -30,6 +30,9 @@ export const allWarnings = [
   'transition will jump nowhere because the target state includes the transition definition',
 ] as const
 
+export const interpolationSymbolStart = '«'
+export const interpolationSymbolEnd = '»'
+
 export const allIssueKinds = [
   ...allErrors,
   ...allWarnings,

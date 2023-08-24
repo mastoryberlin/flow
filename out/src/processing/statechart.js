@@ -59,7 +59,7 @@ function extractDynamicExpressions() {
         return state.name.replace(/`(.*?)`/g, "$${formula`$1`}");
     });
     //@ts-ignore
-    var resultedExpressionsArray = __spreadArray([], new Set(messagesWithExpressions.map(function (message) {
+    var resultedExpressionsArray = Array.from(new Set(messagesWithExpressions.map(function (message) {
         var interpolationVariables = message.match(/\$(\w+)|\$\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g);
         if (interpolationVariables) {
             for (var _i = 0, interpolationVariables_1 = interpolationVariables; _i < interpolationVariables_1.length; _i++) {
@@ -79,7 +79,7 @@ function extractDynamicExpressions() {
             }
         }
         return message.trim();
-    }).filter(function (el) { return el; })), true).sort();
+    }).filter(function (el) { return el; }))).sort();
     console.log('resultedExpressionArray', resultedExpressionsArray);
     return resultedExpressionsArray;
 }

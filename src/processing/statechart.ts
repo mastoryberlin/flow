@@ -39,7 +39,7 @@ function extractDynamicExpressions() {
 
     })
   //@ts-ignore
-  const resultedExpressionsArray = [...new Set(messagesWithExpressions.map(message => {
+  const resultedExpressionsArray = Array.from(new Set(messagesWithExpressions.map(message => {
     const interpolationVariables = message.match(/\$(\w+)|\$\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g)
     if (interpolationVariables) {
       for (const variable of interpolationVariables) {
@@ -56,7 +56,7 @@ function extractDynamicExpressions() {
       }
     }
     return message.trim()
-  }).filter(el => el))].sort()
+  }).filter(el => el))).sort()
   console.log('resultedExpressionArray', resultedExpressionsArray)
   return resultedExpressionsArray
 }

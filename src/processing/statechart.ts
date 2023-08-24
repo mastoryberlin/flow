@@ -17,6 +17,7 @@ export function useFlowToStatechart(flow: string, rootNodeId = '<ROOT>', variant
   rootName = rootNodeId
   useIssueTracker(parser, visitor, flow, rootNodeId, true)
   const json = stateNodeToJsonRecursive(rootNodeId, variant)
+  console.log("🚀 ~ file: statechart.ts:20 ~ useFlowToStatechart ~ json:")
   const dynamicExpressions = extractDynamicExpressions()
   console.log("🚀 ~ file: statechart.ts:21 ~ useFlowToStatechart ~ dynamicExpressions:", dynamicExpressions)
   return { json, visitor, dynamicExpressions }
@@ -24,12 +25,13 @@ export function useFlowToStatechart(flow: string, rootNodeId = '<ROOT>', variant
 
 function extractDynamicExpressions() {
   const messagesWithExpressions = visitor.allStateNodes()
-    .filter(state => state.name.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g) || state.assignVariables?.length || (state.transitions.length && state.transitions[0].guard))
+    .filter(state => state.name.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g) || state.assignVariables?.length || (state.transitions?.length && state.transitions[0].guard))
     .map(state => {
+      console.log('STATE:', state)
       if (state.assignVariables?.length) {
         return state.assignVariables[0].value
       }
-      if (state.transitions.length && state.transitions[0].guard) {
+      if (state.transitions?.length && state.transitions[0].guard) {
         //@ts-ignore
         return state.transitions[0].guard.condition
       }
@@ -67,8 +69,8 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     nluContext = node.nluContext
   } else {
     // Root Node --> take top-level nodes as "children of root"
-    children = visitor.allStateNodes().filter(n => n.path.length === 2)
-    if (!children.length) {
+    children = visitor.allStateNodes().filter(n => n.path?.length === 2)
+    if (!children?.length) {
       console.warn('Flow script contains no root state nodes, so I will output an empty JSON object.')
       return { id: rootName }
     }
@@ -83,7 +85,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
   // console.log('parentInfo0:', fqPath)
   if (node) {
     const json: any = {}
-    if (children.length) {
+    if (children?.length) {
       if (node.parallel) {
         json.type = 'parallel'
       } else if (children.every(c => /^(?:[1-9][0-9]*|\*)$/.test(c.name))) {
@@ -369,7 +371,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       json.always = []
       json.states = {
         __SEND_MESSAGE_ACTIVE__: {
-          entry: expressionArray.length ? {
+          entry: (expressionArray && expressionArray.length) ? {
             unquoted: true,
             raw: `raise({ type: 'REQUEST_EVAL',expressions:expressionArray })`
           } :

@@ -37,6 +37,7 @@ function useFlowToStatechart(flow, rootNodeId, variant) {
     rootName = rootNodeId;
     (0, issue_tracker_1.useIssueTracker)(parser, visitor, flow, rootNodeId, true);
     var json = stateNodeToJsonRecursive(rootNodeId, variant);
+    console.log("🚀 ~ file: statechart.ts:20 ~ useFlowToStatechart ~ json:");
     var dynamicExpressions = extractDynamicExpressions();
     console.log("🚀 ~ file: statechart.ts:21 ~ useFlowToStatechart ~ dynamicExpressions:", dynamicExpressions);
     return { json: json, visitor: visitor, dynamicExpressions: dynamicExpressions };
@@ -44,13 +45,14 @@ function useFlowToStatechart(flow, rootNodeId, variant) {
 exports.useFlowToStatechart = useFlowToStatechart;
 function extractDynamicExpressions() {
     var messagesWithExpressions = visitor.allStateNodes()
-        .filter(function (state) { var _a; return state.name.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g) || ((_a = state.assignVariables) === null || _a === void 0 ? void 0 : _a.length) || (state.transitions.length && state.transitions[0].guard); })
+        .filter(function (state) { var _a, _b; return state.name.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g) || ((_a = state.assignVariables) === null || _a === void 0 ? void 0 : _a.length) || (((_b = state.transitions) === null || _b === void 0 ? void 0 : _b.length) && state.transitions[0].guard); })
         .map(function (state) {
-        var _a;
+        var _a, _b;
+        console.log('STATE:', state);
         if ((_a = state.assignVariables) === null || _a === void 0 ? void 0 : _a.length) {
             return state.assignVariables[0].value;
         }
-        if (state.transitions.length && state.transitions[0].guard) {
+        if (((_b = state.transitions) === null || _b === void 0 ? void 0 : _b.length) && state.transitions[0].guard) {
             //@ts-ignore
             return state.transitions[0].guard.condition;
         }
@@ -91,8 +93,8 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
     }
     else {
         // Root Node --> take top-level nodes as "children of root"
-        children = visitor.allStateNodes().filter(function (n) { return n.path.length === 2; });
-        if (!children.length) {
+        children = visitor.allStateNodes().filter(function (n) { var _a; return ((_a = n.path) === null || _a === void 0 ? void 0 : _a.length) === 2; });
+        if (!(children === null || children === void 0 ? void 0 : children.length)) {
             console.warn('Flow script contains no root state nodes, so I will output an empty JSON object.');
             return { id: rootName };
         }
@@ -105,7 +107,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
     // console.log('parentInfo0:', fqPath)
     if (node) {
         var json = {};
-        if (children.length) {
+        if (children === null || children === void 0 ? void 0 : children.length) {
             if (node.parallel) {
                 json.type = 'parallel';
             }
@@ -378,7 +380,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             json.after = {};
             json.always = [];
             json.states = __assign({ __SEND_MESSAGE_ACTIVE__: {
-                    entry: expressionArray.length ? {
+                    entry: (expressionArray && expressionArray.length) ? {
                         unquoted: true,
                         raw: "raise({ type: 'REQUEST_EVAL',expressions:expressionArray })"
                     } :

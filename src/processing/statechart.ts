@@ -366,16 +366,16 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       if (node.message.type !== 'text' && (node.message as dsl.MediaMessage).showcase) {
         invoke.src.showcase = (node.message as dsl.MediaMessage).showcase
       }
-      json.initial = '__SEND_MESSAGE_ACTIVE__'
+      json.entry = (expressionArray && expressionArray.length) ? {
+        unquoted: true,
+        raw: `raise({ type: 'REQUEST_EVAL',expressions:${expressionArray} })`
+      } :
+        {},
+        json.initial = '__SEND_MESSAGE_ACTIVE__'
       json.after = {}
       json.always = []
       json.states = {
         __SEND_MESSAGE_ACTIVE__: {
-          entry: (expressionArray && expressionArray.length) ? {
-            unquoted: true,
-            raw: `raise({ type: 'REQUEST_EVAL',expressions:expressionArray })`
-          } :
-            {},
           after: {
             "2000": {
               "target": "__SEND_MESSAGE_DONE__",
@@ -398,22 +398,25 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       //     })`,
       //   }
       // }
-      json.on.REQUEST_EVAL = {
-        actions: {
-          unquoted: true,
-          raw: `assign({ 
-            $nestedExpressions: (_, event) => event.expressions
-          })`
-        },
-        invoke: {
-          onDone: "__DIRECTIVE_DONE__",
-          src: "eval",
-          data: {
-            unquoted: true,
-            raw: `context=>context`
-          }
-        }
-      }
+      // json.on.REQUEST_EVAL = {
+      //   actions: {
+      //     unquoted: true,
+      //     raw: ` assign({$evaluationResults: []}),
+      //     _evaluateDynamicExpressions: pure((_, event) => event.dynamicExpressions.map(expr =>
+      //       assign({
+      //         $evaluationResults: context => [...context.$evaluationResults, ALL_EVALUATION_ACTIONS[expr](context)]
+      //       })
+      //     ))`
+      //   },
+      //   // invoke: {
+      //   //   onDone: "__DIRECTIVE_DONE__",
+      //   //   src: "eval",
+      //   //   data: {
+      //   //     unquoted: true,
+      //   //     raw: `context=>context`
+      //   //   }
+      //   // }
+      // }
     }
     // }
 

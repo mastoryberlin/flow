@@ -18,6 +18,7 @@ export function useFlowToStatechart(flow: string, rootNodeId = '<ROOT>', variant
   useIssueTracker(parser, visitor, flow, rootNodeId, true)
   const json = stateNodeToJsonRecursive(rootNodeId, variant)
   const dynamicExpressions = extractDynamicExpressions()
+  console.log("🚀 ~ file: statechart.ts:21 ~ useFlowToStatechart ~ dynamicExpressions:", dynamicExpressions)
   return { json, visitor, dynamicExpressions }
 }
 
@@ -26,7 +27,7 @@ function extractDynamicExpressions() {
     .filter(state => state.name.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g) || state.assignVariables?.length || (state.transitions.length && state.transitions[0].guard))
     .map(state => {
       if (state.assignVariables?.length) {
-        return state.assignVariables[0].varName
+        return state.assignVariables[0].value
       }
       if (state.transitions.length && state.transitions[0].guard) {
         //@ts-ignore
@@ -54,6 +55,7 @@ function extractDynamicExpressions() {
     }
     return message.trim()
   }).filter(el => el))].sort()
+  console.log('resultedExpressionArray', resultedExpressionsArray)
   return resultedExpressionsArray
 }
 
@@ -341,6 +343,8 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
 
     if (node.message) {
       const { type: kind, sender } = node.message
+      // @ts-ignore
+      const expressionArray = node.message.text.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g)
 
 
       let nestedInitialValue
@@ -354,7 +358,8 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         onDone: node.final ? always : nestedInitialValue
       } as any
       invoke.src = {
-        type: '_sendMessage', kind, sender,
+        // @ts-ignore
+        type: '_sendMessage', kind, sender, text: node.message.text
       }
       if (node.message.type !== 'text' && (node.message as dsl.MediaMessage).showcase) {
         invoke.src.showcase = (node.message as dsl.MediaMessage).showcase
@@ -364,10 +369,11 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       json.always = []
       json.states = {
         __SEND_MESSAGE_ACTIVE__: {
-          entry: {
+          entry: expressionArray.length ? {
             unquoted: true,
-            raw: `raise({ type: 'REQUEST_MESSAGE_INTERPOLATION' })`
-          },
+            raw: `raise({ type: 'REQUEST_EVAL',expressions:expressionArray })`
+          } :
+            {},
           after: {
             "2000": {
               "target": "__SEND_MESSAGE_DONE__",
@@ -379,15 +385,27 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         __SEND_MESSAGE_DONE__: { on, invoke },
         ...json.states
       } as any
-      json.on.REQUEST_MESSAGE_INTERPOLATION = {
+      // json.on.REQUEST_MESSAGE_INTERPOLATION = {
+      //   actions: {
+      //     unquoted: true,
+      //     raw: `assign({ 
+      //         __interpolatedMessage: ${kind === 'text' ?
+      // `${evaluateInContext('`' + (node.message as dsl.TextMessage).text.replace(/`/g, '\\`').replace(/\$(\w+)/g, '$${$1}') + '`')}` :
+      //         `'${(node.message as dsl.MediaMessage).source?.toString()}'` || ''
+      //       }
+      //     })`,
+      //   }
+      // }
+      json.on.REQUEST_EVAL = {
         actions: {
           unquoted: true,
           raw: `assign({ 
-              __interpolatedMessage: ${kind === 'text' ?
-              `${evaluateInContext('`' + (node.message as dsl.TextMessage).text.replace(/`/g, '\\`').replace(/\$(\w+)/g, '$${$1}') + '`')}` :
-              `'${(node.message as dsl.MediaMessage).source?.toString()}'` || ''
-            }
-          })`,
+            $nestedExpressions: (_, event) => event.expressions
+          })`
+        },
+        invoke: {
+          onDone: "__DIRECTIVE_DONE__",
+          src: "eval",
         }
       }
     }

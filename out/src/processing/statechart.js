@@ -408,7 +408,11 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 },
                 invoke: {
                     onDone: "__DIRECTIVE_DONE__",
-                    src: "eval"
+                    src: "eval",
+                    data: {
+                        unquoted: true,
+                        raw: "context=>context"
+                    }
                 }
             };
         }

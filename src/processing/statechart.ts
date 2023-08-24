@@ -406,6 +406,10 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         invoke: {
           onDone: "__DIRECTIVE_DONE__",
           src: "eval",
+          data: {
+            unquoted: true,
+            raw: `context=>context`
+          }
         }
       }
     }

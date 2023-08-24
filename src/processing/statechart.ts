@@ -368,7 +368,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       }
       json.entry = (expressionArray && expressionArray.length) ? {
         unquoted: true,
-        raw: `raise({ type: 'REQUEST_EVAL',expressions:${expressionArray} })`
+        raw: `raise({ type: 'REQUEST_EVAL',expressions:${[...expressionArray]} })`
       } :
         {},
         json.initial = '__SEND_MESSAGE_ACTIVE__'

@@ -43,7 +43,6 @@ function extractDynamicExpressions() {
     const interpolationVariables = message.match(/\$(\w+)|\$\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g)
     if (interpolationVariables) {
       for (const variable of interpolationVariables) {
-        if (variable === '$username') { continue }
         // console.log('formattedVariableBefore:', variable)
         let formattedVariable = variable.replaceAll('$', '').replace('{', '')
         // console.log('formattedVariable:', formattedVariable)

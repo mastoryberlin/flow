@@ -64,9 +64,6 @@ function extractDynamicExpressions() {
         if (interpolationVariables) {
             for (var _i = 0, interpolationVariables_1 = interpolationVariables; _i < interpolationVariables_1.length; _i++) {
                 var variable = interpolationVariables_1[_i];
-                if (variable === '$username') {
-                    continue;
-                }
                 // console.log('formattedVariableBefore:', variable)
                 var formattedVariable = variable.replaceAll('$', '').replace('{', '');
                 // console.log('formattedVariable:', formattedVariable)

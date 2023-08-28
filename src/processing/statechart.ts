@@ -345,7 +345,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     if (node.message) {
       const { type: kind, sender } = node.message
       // @ts-ignore
-      const expressionArray = node.message.text.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g)
+      const expressionArray = node.message.text ? node.message.text.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g) : []
 
 
       let nestedInitialValue

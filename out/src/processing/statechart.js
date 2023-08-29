@@ -375,7 +375,8 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 invoke.src.showcase = node.message.showcase;
             }
             json.entry = (expressionArray && expressionArray.length) ? {
-                type: 'xstate.raise', event: { type: 'REQUEST_EVAL', expressions: __spreadArray([], expressionArray, true) }
+                //@ts-ignore
+                type: 'xstate.raise', event: { type: 'REQUEST_EVAL', expressions: __spreadArray([], new Set(expressionArray), true) }
             } :
                 {},
                 json.initial = '__SEND_MESSAGE_ACTIVE__';

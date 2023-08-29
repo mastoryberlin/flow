@@ -23,6 +23,29 @@ export function useFlowToStatechart(flow: string, rootNodeId = '<ROOT>', variant
   return { json, visitor, dynamicExpressions }
 }
 
+function removeOutermostCurlyBraces(str) {
+  let count = 0;
+  let startIndex = -1;
+
+  for (let i = 0; i < str.length; i++) {
+    if (str[i] === '{') {
+      if (count === 0) {
+        startIndex = i;
+      }
+      count++;
+    } else if (str[i] === '}') {
+      count--;
+      if (count === 0 && startIndex !== -1) {
+        const beforeBrace = str.slice(0, startIndex);
+        const afterBrace = str.slice(i + 1);
+        return beforeBrace + afterBrace;
+      }
+    }
+  }
+
+  return str;
+}
+
 function extractDynamicExpressions() {
   const messagesWithExpressions = visitor.allStateNodes()
     .filter(state => state.name.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g) || state.assignVariables?.length || (state.transitions?.length && state.transitions[0].guard))
@@ -345,9 +368,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     if (node.message) {
       const { type: kind, sender } = node.message
       // @ts-ignore
-
-      const expressionArray = node.message.text ? extractDynamicExpressions(node.message.text) : []
-      console.log("🚀 ~ file: statechart.ts:350 ~ stateNodeToJsonRecursive ~ expressionArray:", expressionArray)
+      const expressionArray = node.message.text ? node.message.text.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g) : []
 
 
       let nestedInitialValue
@@ -368,8 +389,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         invoke.src.showcase = (node.message as dsl.MediaMessage).showcase
       }
       json.entry = (expressionArray && expressionArray.length) ? {
-        //@ts-ignore
-        type: 'xstate.raise', event: { type: 'REQUEST_EVAL', expressions: [...new Set(expressionArray)] }
+        type: 'xstate.raise', event: { type: 'REQUEST_EVAL', expressions: [...expressionArray.map(e => removeOutermostCurlyBraces(e))] }
       } :
         {},
         json.initial = '__SEND_MESSAGE_ACTIVE__'

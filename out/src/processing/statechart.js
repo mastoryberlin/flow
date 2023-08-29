@@ -43,6 +43,27 @@ function useFlowToStatechart(flow, rootNodeId, variant) {
     return { json: json, visitor: visitor, dynamicExpressions: dynamicExpressions };
 }
 exports.useFlowToStatechart = useFlowToStatechart;
+function removeOutermostCurlyBraces(str) {
+    var count = 0;
+    var startIndex = -1;
+    for (var i = 0; i < str.length; i++) {
+        if (str[i] === '{') {
+            if (count === 0) {
+                startIndex = i;
+            }
+            count++;
+        }
+        else if (str[i] === '}') {
+            count--;
+            if (count === 0 && startIndex !== -1) {
+                var beforeBrace = str.slice(0, startIndex);
+                var afterBrace = str.slice(i + 1);
+                return beforeBrace + afterBrace;
+            }
+        }
+    }
+    return str;
+}
 function extractDynamicExpressions() {
     var messagesWithExpressions = visitor.allStateNodes()
         .filter(function (state) { var _a, _b; return state.name.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g) || ((_a = state.assignVariables) === null || _a === void 0 ? void 0 : _a.length) || (((_b = state.transitions) === null || _b === void 0 ? void 0 : _b.length) && state.transitions[0].guard); })
@@ -352,8 +373,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         if (node.message) {
             var _u = node.message, kind = _u.type, sender = _u.sender;
             // @ts-ignore
-            var expressionArray = node.message.text ? extractDynamicExpressions(node.message.text) : [];
-            console.log("🚀 ~ file: statechart.ts:350 ~ stateNodeToJsonRecursive ~ expressionArray:", expressionArray);
+            var expressionArray = node.message.text ? node.message.text.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g) : [];
             var nestedInitialValue = void 0;
             if (children && children[0] && children[0].name) {
                 nestedInitialValue = children[0].name;
@@ -375,8 +395,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 invoke.src.showcase = node.message.showcase;
             }
             json.entry = (expressionArray && expressionArray.length) ? {
-                //@ts-ignore
-                type: 'xstate.raise', event: { type: 'REQUEST_EVAL', expressions: __spreadArray([], new Set(expressionArray), true) }
+                type: 'xstate.raise', event: { type: 'REQUEST_EVAL', expressions: __spreadArray([], expressionArray.map(function (e) { return removeOutermostCurlyBraces(e); }), true) }
             } :
                 {},
                 json.initial = '__SEND_MESSAGE_ACTIVE__';

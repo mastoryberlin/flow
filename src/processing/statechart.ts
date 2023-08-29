@@ -366,8 +366,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         invoke.src.showcase = (node.message as dsl.MediaMessage).showcase
       }
       json.entry = (expressionArray && expressionArray.length) ? {
-        unquoted: true,
-        raw: `raise({ type: 'REQUEST_EVAL',expressions:${[...expressionArray]} })`
+        type: 'xstate.raise', event: { type: 'REQUEST_EVAL', expressions: [...expressionArray] }
       } :
         {},
         json.initial = '__SEND_MESSAGE_ACTIVE__'

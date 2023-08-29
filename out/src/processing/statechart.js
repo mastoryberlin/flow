@@ -374,8 +374,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 invoke.src.showcase = node.message.showcase;
             }
             json.entry = (expressionArray && expressionArray.length) ? {
-                unquoted: true,
-                raw: "raise({ type: 'REQUEST_EVAL',expressions:".concat(__spreadArray([], expressionArray, true), " })")
+                type: 'xstate.raise', event: { type: 'REQUEST_EVAL', expressions: __spreadArray([], expressionArray, true) }
             } :
                 {},
                 json.initial = '__SEND_MESSAGE_ACTIVE__';

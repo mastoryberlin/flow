@@ -352,7 +352,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         if (node.message) {
             var _u = node.message, kind = _u.type, sender = _u.sender;
             // @ts-ignore
-            var expressionArray = node.message.text ? node.message.text.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g) : [];
+            var expressionArray = node.message.text ? node.message.text.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$\{(\w+)\}|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g) : [];
             var nestedInitialValue = void 0;
             if (children && children[0] && children[0].name) {
                 nestedInitialValue = children[0].name;

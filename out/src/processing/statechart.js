@@ -374,6 +374,11 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             var _u = node.message, kind = _u.type, sender = _u.sender;
             // @ts-ignore
             var expressionArray = node.message.text ? node.message.text.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g) : [];
+            var resultedExpressionArray = void 0;
+            if (expressionArray) {
+                resultedExpressionArray = expressionArray.map(function (e) { return removeOutermostCurlyBraces(e); });
+                console.log("🚀 ~ file: statechart.ts:376 ~ stateNodeToJsonRecursive ~ resultedExpressionArray:", resultedExpressionArray);
+            }
             var nestedInitialValue = void 0;
             if (children && children[0] && children[0].name) {
                 nestedInitialValue = children[0].name;
@@ -395,7 +400,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 invoke.src.showcase = node.message.showcase;
             }
             json.entry = (expressionArray && expressionArray.length) ? {
-                type: 'xstate.raise', event: { type: 'REQUEST_EVAL', expressions: __spreadArray([], expressionArray.map(function (e) { return removeOutermostCurlyBraces(e); }), true) }
+                type: 'xstate.raise', event: { type: 'REQUEST_EVAL', expressions: resultedExpressionArray ? __spreadArray([], resultedExpressionArray, true) : [] }
             } :
                 {},
                 json.initial = '__SEND_MESSAGE_ACTIVE__';

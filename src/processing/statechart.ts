@@ -370,6 +370,11 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       // @ts-ignore
       const expressionArray = node.message.text ? node.message.text.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g) : []
 
+      let resultedExpressionArray
+      if (expressionArray) {
+        resultedExpressionArray = expressionArray.map(e => removeOutermostCurlyBraces(e))
+        console.log("🚀 ~ file: statechart.ts:376 ~ stateNodeToJsonRecursive ~ resultedExpressionArray:", resultedExpressionArray)
+      }
 
       let nestedInitialValue
       if (children && children[0] && children[0].name) {
@@ -389,7 +394,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         invoke.src.showcase = (node.message as dsl.MediaMessage).showcase
       }
       json.entry = (expressionArray && expressionArray.length) ? {
-        type: 'xstate.raise', event: { type: 'REQUEST_EVAL', expressions: [...expressionArray.map(e => removeOutermostCurlyBraces(e))] }
+        type: 'xstate.raise', event: { type: 'REQUEST_EVAL', expressions: resultedExpressionArray ? [...resultedExpressionArray] : [] }
       } :
         {},
         json.initial = '__SEND_MESSAGE_ACTIVE__'

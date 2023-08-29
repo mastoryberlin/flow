@@ -337,7 +337,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             if (invoke.src) {
                 json.initial = '__DIRECTIVE_ACTIVE__';
                 json.states = {
-                    __DIRECTIVE_ACTIVE__: { invoke: invoke },
+                    __DIRECTIVE_ACTIVE__: { on: { SUBFLOW_DONE: '__DIRECTIVE_DONE__' } },
                     __DIRECTIVE_DONE__: { on: on, after: after, always: always }
                 };
                 if (directive.name === 'offerHelp') {

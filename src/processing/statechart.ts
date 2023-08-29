@@ -464,77 +464,88 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
   } else {
     // Root Node
 
-    childStates.__FLOW_DONE__ = { type: 'final' }
-    childStates.__ASSERTION_FAILED__ = { type: 'final' }
-
-    let { on, after, always } = interpretTransitions(rootName);
-    // Object.assign(on, getJumpEvents(visitor) as any)
-
-    on.CHANGED_CONTEXT_IN_STATE_STORE = {
-      actions: [
-        '_copyContext',
-      ]
-    }
-
-    switch (variant) {
-      case 'ui':
-        childStates.__FLOW_DONE__.entry = {
-          unquoted: true,
-          raw: `sendParent('UI_DONE'),`
-        }
-        break
-
-      case 'mainflow':
-        on.CHANGED_CONTEXT_IN_STATE_STORE.actions.push('_persist')
-
-        on.CHANGED_STATE_IN_CHILD_MACHINE = {
-          actions: [
-            '_persist',
-            // '_updateChildMachineState',
-          ]
-        }
-        on.CHANGED_CONTEXT_IN_CHILD_MACHINE = {
-          actions: [
-            '_copyContext',
-            '_persist',
-            {
-              unquoted: true,
-              raw: `raise({type: 'HAVE_CONTEXT_VARIABLES_CHANGED', namesOfChangedVariables: [...Object.keys(context)]}),`
-            },
-          ]
-        }
-        on.HAVE_CONTEXT_VARIABLES_CHANGED = {
-          unquoted: true,
-          raw: `{
-    actions: derivedRecomputeActions,
-  }`
-        }
-        on.REQUEST_UI_START = {
-          actions: [
-            '_loadChallenge',
-          ]
-        }
-        on.REQUEST_UI_STOP = {
-          actions: [
-            '_unloadChallenge',
-          ]
-        }
-        on.UI_DONE = {
-          actions: [
-            '_unloadChallenge',
-          ]
-        }
-        break
-    }
-
-    return {
-      id: rootName,
-      predictableActionArguments: true,
-      initial: children[0].name,
-      states: childStates,
-      on, after, always
+    childStates.__FLOW_DONE__ = {
+      type: 'final',
+      entry: {
+        "to": "#_parent",
+        "type": "xstate.send",
+        "event": {
+          "type": "SUBFLOW_DONE"
+        },
+        "id": "SUBFLOW_DONE"
+      }
     }
   }
+  childStates.__ASSERTION_FAILED__ = { type: 'final' }
+
+  let { on, after, always } = interpretTransitions(rootName);
+  // Object.assign(on, getJumpEvents(visitor) as any)
+
+  on.CHANGED_CONTEXT_IN_STATE_STORE = {
+    actions: [
+      '_copyContext',
+    ]
+  }
+
+  switch (variant) {
+    case 'ui':
+      childStates.__FLOW_DONE__.entry = {
+        unquoted: true,
+        raw: `sendParent('UI_DONE'),`
+      }
+      break
+
+    case 'mainflow':
+      on.CHANGED_CONTEXT_IN_STATE_STORE.actions.push('_persist')
+
+      on.CHANGED_STATE_IN_CHILD_MACHINE = {
+        actions: [
+          '_persist',
+          // '_updateChildMachineState',
+        ]
+      }
+      on.CHANGED_CONTEXT_IN_CHILD_MACHINE = {
+        actions: [
+          '_copyContext',
+          '_persist',
+          {
+            unquoted: true,
+            raw: `raise({type: 'HAVE_CONTEXT_VARIABLES_CHANGED', namesOfChangedVariables: [...Object.keys(context)]}),`
+          },
+        ]
+      }
+      on.HAVE_CONTEXT_VARIABLES_CHANGED = {
+        unquoted: true,
+        raw: `{
+    actions: derivedRecomputeActions,
+  }`
+      }
+      on.REQUEST_UI_START = {
+        actions: [
+          '_loadChallenge',
+        ]
+      }
+      on.REQUEST_UI_STOP = {
+        actions: [
+          '_unloadChallenge',
+        ]
+      }
+      on.UI_DONE = {
+        actions: [
+          '_unloadChallenge',
+        ]
+      }
+      break
+  }
+
+  return {
+    id: rootName,
+    predictableActionArguments: true,
+    initial: children[0].name,
+    states: childStates,
+    on, after, always
+  }
+}
 }
 
 function interpretTransitions(fqPath: string, node?: dsl.StateNode) {

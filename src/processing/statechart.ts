@@ -17,9 +17,9 @@ export function useFlowToStatechart(flow: string, rootNodeId = '<ROOT>', variant
   rootName = rootNodeId
   useIssueTracker(parser, visitor, flow, rootNodeId, true)
   const json = stateNodeToJsonRecursive(rootNodeId, variant)
-  console.log("🚀 ~ file: statechart.ts:20 ~ useFlowToStatechart ~ json:")
+  // console.log("🚀 ~ file: statechart.ts:20 ~ useFlowToStatechart ~ json:")
   const dynamicExpressions = extractDynamicExpressions()
-  console.log("🚀 ~ file: statechart.ts:21 ~ useFlowToStatechart ~ dynamicExpressions:", dynamicExpressions)
+  // console.log("🚀 ~ file: statechart.ts:21 ~ useFlowToStatechart ~ dynamicExpressions:", dynamicExpressions)
   return { json, visitor, dynamicExpressions }
 }
 
@@ -184,28 +184,41 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
 
     const assignments = node.assignVariables
     if (assignments) {
-      json.entry = assignments.map(({ varName, value }) => ({
-        unquoted: true,
-        raw:
-          `choose([
-  {
-    cond: (context) => Array.isArray(context.${varName}) && Array.isArray((${evaluateInContext(value)})(context)),
-    actions: [
-      (context) => {
-        const newArray = (${evaluateInContext(value)})(context)
-        context.${varName}.splice(0, Infinity, ...newArray)
-      },
-    ],
-  },
-  {
-    actions: [
-      assign({
-        ${assignments.map(({ varName, value }) => `    ${varName}: ${evaluateInContext(value)}`).join(',\n')}
-      })
-    ],
-  },
-])`,
-      }))
+      json.entry = [
+        {
+          type: 'xstate.raise',
+          event: { type: 'REQUEST_EVAL', expressions: assignments.map(({ value }) => value) },
+        },
+        {
+          type: '_assignEvaluationResults',
+          varNames: assignments.map(({ varName }) => varName),
+          //implementation should look sth like this:
+          // (_, __, { actionMeta: { varNames } }) => assign(Object.fromEntries(varNames.map((n, i) => [n, context => context.evaluationResult[i]])))
+        },
+      ]
+      //       json.entry = assignments.map(({ varName, value }) => ({
+
+      //         unquoted: true,
+      //         raw:
+      //           `choose([
+      //   {
+      //     cond: (context) => Array.isArray(context.${varName}) && Array.isArray((${evaluateInContext(value)})(context)),
+      //     actions: [
+      //       (context) => {
+      //         const newArray = (${evaluateInContext(value)})(context)
+      //         context.${varName}.splice(0, Infinity, ...newArray)
+      //       },
+      //     ],
+      //   },
+      //   {
+      //     actions: [
+      //       assign({
+      //         ${assignments.map(({ varName, value }) => `    ${varName}: ${evaluateInContext(value)}`).join(',\n')}
+      //       })
+      //     ],
+      //   },
+      // ])`,
+      //       }))
       if (variant === 'mainflow') {
         json.entry.push({
           unquoted: true,
@@ -396,10 +409,8 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       json.entry = (expressionArray && expressionArray.length) ? {
         // type: 'xstate.raise', event: { type: 'REQUEST_EVAL', expressions: resultedExpressionArray ? [...resultedExpressionArray] : [] }
         type: 'xstate.raise', event: { type: 'REQUEST_EVAL', expressions: [...expressionArray] }
-
-      } :
-        {},
-        json.initial = '__SEND_MESSAGE_ACTIVE__'
+      } : {}
+      json.initial = '__SEND_MESSAGE_ACTIVE__'
       json.after = {}
       json.always = []
       json.states = {
@@ -545,7 +556,6 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     states: childStates,
     on, after, always
   }
-}
 }
 
 function interpretTransitions(fqPath: string, node?: dsl.StateNode) {

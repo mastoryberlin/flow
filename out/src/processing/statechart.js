@@ -190,9 +190,13 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         // ========================================================================================================================
         var assignments = node.assignVariables;
         if (assignments) {
+            console.log('assignments.map(({ value }) => value):', assignments.map(function (_a) {
+                var value = _a.value;
+                return value;
+            }));
             json.entry = [
                 {
-                    type: 'xstate.raise',
+                    type: 'xstate.send',
                     event: { type: 'REQUEST_EVAL', expressions: assignments.map(function (_a) {
                             var value = _a.value;
                             return value;
@@ -228,18 +232,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             //   },
             // ])`,
             //       }))
-            if (variant === 'mainflow') {
-                json.entry.push({
-                    unquoted: true,
-                    raw: "raise({\n  type: 'HAVE_CONTEXT_VARIABLES_CHANGED',\n  namesOfChangedVariables: [".concat(assignments.map(function (_a) {
-                        var varName = _a.varName;
-                        return "'".concat(varName, "'");
-                    }).join(', '), "]\n})")
-                });
-            }
-            else {
-                json.entry.push('_shareContextWithParent');
-            }
+            json.entry.push('_shareContextWithParent');
         }
         // ========================================================================================================================
         // Directives

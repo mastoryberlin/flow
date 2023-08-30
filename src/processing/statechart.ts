@@ -184,9 +184,10 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
 
     const assignments = node.assignVariables
     if (assignments) {
+      console.log('assignments.map(({ value }) => value):', assignments.map(({ value }) => value))
       json.entry = [
         {
-          type: 'xstate.raise',
+          type: 'xstate.send',
           event: { type: 'REQUEST_EVAL', expressions: assignments.map(({ value }) => value) },
         },
         {
@@ -219,18 +220,9 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       //   },
       // ])`,
       //       }))
-      if (variant === 'mainflow') {
-        json.entry.push({
-          unquoted: true,
-          raw:
-            `raise({
-  type: 'HAVE_CONTEXT_VARIABLES_CHANGED',
-  namesOfChangedVariables: [${assignments.map(({ varName }) => `'${varName}'`).join(', ')}]
-})`
-        })
-      } else {
-        json.entry.push('_shareContextWithParent')
-      }
+
+      json.entry.push('_shareContextWithParent')
+
     }
 
     // ========================================================================================================================

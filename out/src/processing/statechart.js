@@ -188,29 +188,29 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         // ========================================================================================================================
         // Variable Assignments
         // ========================================================================================================================
-        var assignments_1 = node.assignVariables;
-        if (assignments_1) {
-            console.log('assignments.map(({ value }) => value):', assignments_1.map(function (_a) {
+        var assignments = node.assignVariables;
+        if (assignments) {
+            console.log('assignments.map(({ value }) => value):', assignments.map(function (_a) {
                 var value = _a.value;
                 return value;
             }));
             json.entry = [
-                // {
-                //   type: 'xstate.raise',
-                //   event: { type: 'REQUEST_EVAL', expressions: assignments.map(({ value }) => value) },
-                // },
                 {
-                    type: 'xstate.assign',
-                    "assignments": {
-                        $evaluationResults: function (context, event) { return assignments_1.map(function (_a) {
+                    type: 'xstate.raise',
+                    event: { type: 'REQUEST_EVAL', expressions: assignments.map(function (_a) {
                             var value = _a.value;
                             return value;
-                        }); }
-                    }
+                        }) }
                 },
+                // {
+                //   type: 'xstate.assign',
+                //   "assignments": {
+                //     $evaluationResults: (context, event) => assignments.map(({ value }) => value)
+                //   }
+                // },
                 {
                     type: '_assignEvaluationResults',
-                    varNames: assignments_1.map(function (_a) {
+                    varNames: assignments.map(function (_a) {
                         var varName = _a.varName;
                         return varName;
                     })

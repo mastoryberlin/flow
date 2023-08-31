@@ -186,16 +186,16 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     if (assignments) {
       console.log('assignments.map(({ value }) => value):', assignments.map(({ value }) => value))
       json.entry = [
-        // {
-        //   type: 'xstate.raise',
-        //   event: { type: 'REQUEST_EVAL', expressions: assignments.map(({ value }) => value) },
-        // },
         {
-          type: 'xstate.assign',
-          "assignments": {
-            $evaluationResults: (context, event) => assignments.map(({ value }) => value)
-          }
+          type: 'xstate.raise',
+          event: { type: 'REQUEST_EVAL', expressions: assignments.map(({ value }) => value) },
         },
+        // {
+        //   type: 'xstate.assign',
+        //   "assignments": {
+        //     $evaluationResults: (context, event) => assignments.map(({ value }) => value)
+        //   }
+        // },
         {
           type: '_assignEvaluationResults',
           varNames: assignments.map(({ varName }) => varName),

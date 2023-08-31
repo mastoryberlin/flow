@@ -7,11 +7,12 @@ import { evaluateInContext } from "./unit-context";
 // import { getJumpEvents } from "./getJump";
 import type { StatechartVariant } from "../types";
 import { escapeDots, promptStateRegExp } from "../util";
-import { interpolationSymbolEnd, interpolationSymbolStart } from "../constants";
 
 let rootName: string
 const parser = useParser()
 const visitor = useVisitor()
+
+const interpolationRegexp = /(?<=\$)\w+|(?<=\{)[^{}]*(?:(?:\{[^{}]*\}[^{}]*)*)(?=\})/g
 
 export function useFlowToStatechart(flow: string, rootNodeId = '<ROOT>', variant: StatechartVariant = 'mainflow') {
   rootName = rootNodeId
@@ -23,64 +24,37 @@ export function useFlowToStatechart(flow: string, rootNodeId = '<ROOT>', variant
   return { json, visitor, dynamicExpressions }
 }
 
-function removeOutermostCurlyBraces(str) {
-  let count = 0;
-  let startIndex = -1;
+function extractDynamicExpressions() {
+  const statesWhichMayHaveExpressions = visitor.allStateNodes().filter(state =>
+    state.assignVariables?.length
+    || (state.transitions?.length && state.transitions.some(t => t.guard && 'condition' in t.guard))
+    || (state.message?.type === 'text')
+  )
 
-  for (let i = 0; i < str.length; i++) {
-    if (str[i] === '{') {
-      if (count === 0) {
-        startIndex = i;
-      }
-      count++;
-    } else if (str[i] === '}') {
-      count--;
-      if (count === 0 && startIndex !== -1) {
-        const beforeBrace = str.slice(0, startIndex);
-        const afterBrace = str.slice(i + 1);
-        return beforeBrace + afterBrace;
+  const expressions = new Set<string>()
+  for (const state of statesWhichMayHaveExpressions) {
+    for (const assignment of state.assignVariables ?? []) {
+      expressions.add(assignment.value.trim())
+    }
+
+    for (const guardedTransition of state.transitions.filter(t => t.guard && 'condition' in t.guard)) {
+      expressions.add((guardedTransition.guard as dsl.IfTransitionGuard).condition.trim())
+    }
+
+    if (state.message?.type === 'text') {
+      const messageText = (state.message as dsl.TextMessage).text.replace(/`(.*?)`/g, "$${formula`$1`}")
+      console.log('Message Text in state', state.path, messageText)
+      const matches = messageText.match(interpolationRegexp)
+      for (const m of matches ?? []) {
+        expressions.add(m.trim())
       }
     }
   }
+  if (expressions.has('')) {
+    expressions.delete('')
+  }
 
-  return str;
-}
-
-function extractDynamicExpressions() {
-  const messagesWithExpressions = visitor.allStateNodes()
-    .filter(state => state.name.replace(/`(.*?)`/g, "$${formula`$1`}").match(/(?<=\$)\w+|(?<=\{)[^{}]*(?:(?:\{[^{}]*\}[^{}]*)*)(?=\})/g) || state.assignVariables?.length || (state.transitions?.length && state.transitions[0].guard))
-    .map(state => {
-      console.log('STATE:', state)
-      if (state.assignVariables?.length) {
-        return state.assignVariables[0].value
-      }
-      if (state.transitions?.length && state.transitions[0].guard) {
-        //@ts-ignore
-        return state.transitions[0].guard.condition
-      }
-      return state.name.replace(/`(.*?)`/g, "$${formula`$1`}")
-
-    })
-  //@ts-ignore
-  const resultedExpressionsArray = Array.from(new Set(messagesWithExpressions.map(message => {
-    const interpolationVariables = message.match(/(?<=\$)\w+|(?<=\{)[^{}]*(?:(?:\{[^{}]*\}[^{}]*)*)(?=\})/g)
-    if (interpolationVariables) {
-      for (const variable of interpolationVariables) {
-        // console.log('formattedVariableBefore:', variable)
-        let formattedVariable = variable.replaceAll('$', '').replace('{', '')
-        // console.log('formattedVariable:', formattedVariable)
-        const closingBracketIndex = formattedVariable.lastIndexOf('}')
-        if (closingBracketIndex > -1) {
-          formattedVariable = formattedVariable.slice(0, closingBracketIndex) + formattedVariable.slice(closingBracketIndex + 1)
-        }
-        formattedVariable = formattedVariable.replaceAll('{', interpolationSymbolStart).replaceAll('}', interpolationSymbolEnd)
-        return formattedVariable.trim()
-      }
-    }
-    return message.trim()
-  }).filter(el => el))).sort()
-  console.log('resultedExpressionArray', resultedExpressionsArray)
-  return resultedExpressionsArray
+  return Array.from(expressions)
 }
 
 function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, node?: dsl.StateNode, parentInfo?: { nluContext: dsl.NLUContext | undefined }): any {

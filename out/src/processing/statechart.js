@@ -1,6 +1,6 @@
 "use strict";
 var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
+    __assign = Object.assign || function (t) {
         for (var s, i = 1, n = arguments.length; i < n; i++) {
             s = arguments[i];
             for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
@@ -67,17 +67,17 @@ function extractDynamicExpressions() {
     var messagesWithExpressions = visitor.allStateNodes()
         .filter(function (state) { var _a, _b; return state.name.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g) || ((_a = state.assignVariables) === null || _a === void 0 ? void 0 : _a.length) || (((_b = state.transitions) === null || _b === void 0 ? void 0 : _b.length) && state.transitions[0].guard); })
         .map(function (state) {
-        var _a, _b;
-        console.log('STATE:', state);
-        if ((_a = state.assignVariables) === null || _a === void 0 ? void 0 : _a.length) {
-            return state.assignVariables[0].value;
-        }
-        if (((_b = state.transitions) === null || _b === void 0 ? void 0 : _b.length) && state.transitions[0].guard) {
-            //@ts-ignore
-            return state.transitions[0].guard.condition;
-        }
-        return state.name.replace(/`(.*?)`/g, "$${formula`$1`}");
-    });
+            var _a, _b;
+            console.log('STATE:', state);
+            if ((_a = state.assignVariables) === null || _a === void 0 ? void 0 : _a.length) {
+                return state.assignVariables[0].value;
+            }
+            if (((_b = state.transitions) === null || _b === void 0 ? void 0 : _b.length) && state.transitions[0].guard) {
+                //@ts-ignore
+                return state.transitions[0].guard.condition;
+            }
+            return state.name.replace(/`(.*?)`/g, "$${formula`$1`}");
+        });
     //@ts-ignore
     var resultedExpressionsArray = Array.from(new Set(messagesWithExpressions.map(function (message) {
         var interpolationVariables = message.match(/\$(\w+)|\$\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g);
@@ -176,11 +176,13 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 json.exit = 'LEAVE_NLU_CONTEXT';
                 // ================================================================
                 json.on = {
-                    INTENT: __spreadArray([], nluContext_1.intents.map(function (intentName) { return ({
-                        target: (0, util_1.escapeDots)("\"".concat(intentName, "\"")),
-                        internal: true,
-                        cond: { type: 'isIntentName', intentName: intentName }
-                    }); }), true)
+                    INTENT: __spreadArray([], nluContext_1.intents.map(function (intentName) {
+                        return ({
+                            target: (0, util_1.escapeDots)("\"".concat(intentName, "\"")),
+                            internal: true,
+                            cond: { type: 'isIntentName', intentName: intentName }
+                        });
+                    }), true)
                 };
             }
         }
@@ -197,30 +199,22 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             json.entry = [
                 {
                     type: 'xstate.raise',
-                    event: { type: 'REQUEST_EVAL', expressions: assignments.map(function (_a) {
+                    event: {
+                        type: 'REQUEST_EVAL', expressions: assignments.map(function (_a) {
                             var value = _a.value;
                             return value;
-                        }) }
+                        })
+                    }
                 },
-                // {
-                //   type: 'xstate.assign',
-                //   "assignments": {
-                //     $evaluationResults: (context, event) => assignments.map(({ value }) => value)
-                //   }
-                // },
                 {
                     type: 'xstate.raise',
-                    event: { type: 'ASSIGN_EVALUATION_RESULTS_VARIABLES', varNames: assignments.map(function (_a) {
+                    event: {
+                        type: 'ASSIGN_EVALUATION_RESULTS_VARIABLES', varNames: assignments.map(function (_a) {
                             var varName = _a.varName;
                             return varName;
-                        }) }
+                        })
+                    }
                 },
-                // {
-                //   type: '_assignEvaluationResults',
-                //   varNames: assignments.map(({ varName }) => varName),
-                //   //implementation should look sth like this:
-                //   // (_, __, { actionMeta: { varNames } }) => assign(Object.fromEntries(varNames.map((n, i) => [n, context => context.evaluationResult[i]])))
-                // },
             ];
             //       json.entry = assignments.map(({ varName, value }) => ({
             //         unquoted: true,
@@ -405,7 +399,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         if (node.message && node.message.sender) {
             var _u = node.message, kind = _u.type, sender = _u.sender;
             // @ts-ignore
-            var expressionArray = node.message.text ? node.message.text.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g) : [];
+            var expressionArray = node.message.text ? node.message.text.replace(/`(.*?)`/g, "$${formula`$1`}").match(/(?<=\$)\w+|(?<=\{)[^{}]*(?:(?:\{[^{}]*\}[^{}]*)*)(?=\})/g) : [];
             // let resultedExpressionArray
             // if (expressionArray) {
             //   resultedExpressionArray = expressionArray.map(e => removeOutermostCurlyBraces(e))
@@ -438,14 +432,16 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             json.initial = '__SEND_MESSAGE_ACTIVE__';
             json.after = {};
             json.always = [];
-            json.states = __assign({ __SEND_MESSAGE_ACTIVE__: {
+            json.states = __assign({
+                __SEND_MESSAGE_ACTIVE__: {
                     after: {
                         "2000": {
                             "target": "__SEND_MESSAGE_DONE__",
                             "internal": true
                         }
                     }
-                }, __SEND_MESSAGE_DONE__: { on: on_1, invoke: invoke } }, json.states);
+                }, __SEND_MESSAGE_DONE__: { on: on_1, invoke: invoke }
+            }, json.states);
             // json.on.REQUEST_MESSAGE_INTERPOLATION = {
             //   actions: {
             //     unquoted: true,
@@ -591,16 +587,20 @@ function interpretTransitions(fqPath, node) {
         var eventTransitions = transitions.filter(function (t) { return t.type === 'event'; });
         var afterTransitions = transitions.filter(function (t) { return t.type === 'after'; });
         var alwaysTransitions = transitions.filter(function (t) { return t.type === 'always'; });
-        var getTransitionTarget_1 = function (t) { return t.target
-            ? (t.target.unknown
-                ? undefined
-                : '#' + (t.target.label || t.target.path.join('.')))
-            : undefined; };
-        var getTransitionGuard_1 = function (t) { return t.guard
-            ? ('condition' in t.guard)
-                ? { cond: { type: '_expressionEval_', expression: t.guard.condition } }
-                : { "in": t.guard.refState.label ? '#' + t.guard.refState.label : t.guard.refState.path } //TODO: this could be a relative path!
-            : {}; };
+        var getTransitionTarget_1 = function (t) {
+            return t.target
+                ? (t.target.unknown
+                    ? undefined
+                    : '#' + (t.target.label || t.target.path.join('.')))
+                : undefined;
+        };
+        var getTransitionGuard_1 = function (t) {
+            return t.guard
+                ? ('condition' in t.guard)
+                    ? { cond: { type: '_expressionEval_', expression: t.guard.condition } }
+                    : { "in": t.guard.refState.label ? '#' + t.guard.refState.label : t.guard.refState.path } //TODO: this could be a relative path!
+                : {};
+        };
         if (eventTransitions.length) {
             on = eventTransitions.reduce(function (group, t) {
                 var _a;

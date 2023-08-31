@@ -1,6 +1,6 @@
 "use strict";
 var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function (t) {
+    __assign = Object.assign || function(t) {
         for (var s, i = 1, n = arguments.length; i < n; i++) {
             s = arguments[i];
             for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
@@ -26,10 +26,10 @@ var issue_tracker_1 = require("./issue-tracker");
 var constants_1 = require("../constants");
 var directives_1 = require("./directives");
 var util_1 = require("../util");
-var constants_2 = require("../constants");
 var rootName;
 var parser = (0, chevrotain_1.useParser)();
 var visitor = (0, chevrotain_1.useVisitor)();
+var interpolationRegexp = /(?<=\$)\w+|(?<=\{)[^{}]*(?:(?:\{[^{}]*\}[^{}]*)*)(?=\})/g;
 function useFlowToStatechart(flow, rootNodeId, variant) {
     if (rootNodeId === void 0) { rootNodeId = '<ROOT>'; }
     if (variant === void 0) { variant = 'mainflow'; }
@@ -42,63 +42,39 @@ function useFlowToStatechart(flow, rootNodeId, variant) {
     return { json: json, visitor: visitor, dynamicExpressions: dynamicExpressions };
 }
 exports.useFlowToStatechart = useFlowToStatechart;
-function removeOutermostCurlyBraces(str) {
-    var count = 0;
-    var startIndex = -1;
-    for (var i = 0; i < str.length; i++) {
-        if (str[i] === '{') {
-            if (count === 0) {
-                startIndex = i;
-            }
-            count++;
+function extractDynamicExpressions() {
+    var _a, _b;
+    var statesWhichMayHaveExpressions = visitor.allStateNodes().filter(function (state) {
+        var _a, _b, _c;
+        return ((_a = state.assignVariables) === null || _a === void 0 ? void 0 : _a.length)
+            || (((_b = state.transitions) === null || _b === void 0 ? void 0 : _b.length) && state.transitions.some(function (t) { return t.guard && 'condition' in t.guard; }))
+            || (((_c = state.message) === null || _c === void 0 ? void 0 : _c.type) === 'text');
+    });
+    var expressions = new Set();
+    for (var _i = 0, statesWhichMayHaveExpressions_1 = statesWhichMayHaveExpressions; _i < statesWhichMayHaveExpressions_1.length; _i++) {
+        var state = statesWhichMayHaveExpressions_1[_i];
+        for (var _c = 0, _d = (_a = state.assignVariables) !== null && _a !== void 0 ? _a : []; _c < _d.length; _c++) {
+            var assignment = _d[_c];
+            expressions.add(assignment.value.trim());
         }
-        else if (str[i] === '}') {
-            count--;
-            if (count === 0 && startIndex !== -1) {
-                var beforeBrace = str.slice(0, startIndex);
-                var afterBrace = str.slice(i + 1);
-                return beforeBrace + afterBrace;
+        for (var _e = 0, _f = state.transitions.filter(function (t) { return t.guard && 'condition' in t.guard; }); _e < _f.length; _e++) {
+            var guardedTransition = _f[_e];
+            expressions.add(guardedTransition.guard.condition.trim());
+        }
+        if (((_b = state.message) === null || _b === void 0 ? void 0 : _b.type) === 'text') {
+            var messageText = state.message.text.replace(/`(.*?)`/g, "$${formula`$1`}");
+            console.log('Message Text in state', state.path, messageText);
+            var matches = messageText.match(interpolationRegexp);
+            for (var _g = 0, _h = matches !== null && matches !== void 0 ? matches : []; _g < _h.length; _g++) {
+                var m = _h[_g];
+                expressions.add(m.trim());
             }
         }
     }
-    return str;
-}
-function extractDynamicExpressions() {
-    var messagesWithExpressions = visitor.allStateNodes()
-        .filter(function (state) { var _a, _b; return state.name.replace(/`(.*?)`/g, "$${formula`$1`}").match(/(?<=\$)\w+|(?<=\{)[^{}]*(?:(?:\{[^{}]*\}[^{}]*)*)(?=\})/g) || ((_a = state.assignVariables) === null || _a === void 0 ? void 0 : _a.length) || (((_b = state.transitions) === null || _b === void 0 ? void 0 : _b.length) && state.transitions[0].guard); })
-        .map(function (state) {
-            var _a, _b;
-            console.log('STATE:', state);
-            if ((_a = state.assignVariables) === null || _a === void 0 ? void 0 : _a.length) {
-                return state.assignVariables[0].value;
-            }
-            if (((_b = state.transitions) === null || _b === void 0 ? void 0 : _b.length) && state.transitions[0].guard) {
-                //@ts-ignore
-                return state.transitions[0].guard.condition;
-            }
-            return state.name.replace(/`(.*?)`/g, "$${formula`$1`}");
-        });
-    //@ts-ignore
-    var resultedExpressionsArray = Array.from(new Set(messagesWithExpressions.map(function (message) {
-        var interpolationVariables = message.match(/(?<=\$)\w+|(?<=\{)[^{}]*(?:(?:\{[^{}]*\}[^{}]*)*)(?=\})/g);
-        if (interpolationVariables) {
-            for (var _i = 0, interpolationVariables_1 = interpolationVariables; _i < interpolationVariables_1.length; _i++) {
-                var variable = interpolationVariables_1[_i];
-                // console.log('formattedVariableBefore:', variable)
-                var formattedVariable = variable.replaceAll('$', '').replace('{', '');
-                // console.log('formattedVariable:', formattedVariable)
-                var closingBracketIndex = formattedVariable.lastIndexOf('}');
-                if (closingBracketIndex > -1) {
-                    formattedVariable = formattedVariable.slice(0, closingBracketIndex) + formattedVariable.slice(closingBracketIndex + 1);
-                }
-                formattedVariable = formattedVariable.replaceAll('{', constants_2.interpolationSymbolStart).replaceAll('}', constants_2.interpolationSymbolEnd);
-                return formattedVariable.trim();
-            }
-        }
-        return message.trim();
-    }).filter(function (el) { return el; }))).sort();
-    console.log('resultedExpressionArray', resultedExpressionsArray);
-    return resultedExpressionsArray;
+    if (expressions.has('')) {
+        expressions["delete"]('');
+    }
+    return Array.from(expressions);
 }
 function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
     var _a;
@@ -176,13 +152,11 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 json.exit = 'LEAVE_NLU_CONTEXT';
                 // ================================================================
                 json.on = {
-                    INTENT: __spreadArray([], nluContext_1.intents.map(function (intentName) {
-                        return ({
-                            target: (0, util_1.escapeDots)("\"".concat(intentName, "\"")),
-                            internal: true,
-                            cond: { type: 'isIntentName', intentName: intentName }
-                        });
-                    }), true)
+                    INTENT: __spreadArray([], nluContext_1.intents.map(function (intentName) { return ({
+                        target: (0, util_1.escapeDots)("\"".concat(intentName, "\"")),
+                        internal: true,
+                        cond: { type: 'isIntentName', intentName: intentName }
+                    }); }), true)
                 };
             }
         }
@@ -199,21 +173,17 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             json.entry = [
                 {
                     type: 'xstate.raise',
-                    event: {
-                        type: 'REQUEST_EVAL', expressions: assignments.map(function (_a) {
+                    event: { type: 'REQUEST_EVAL', expressions: assignments.map(function (_a) {
                             var value = _a.value;
                             return value;
-                        })
-                    }
+                        }) }
                 },
                 {
                     type: 'xstate.raise',
-                    event: {
-                        type: 'ASSIGN_EVALUATION_RESULTS_VARIABLES', varNames: assignments.map(function (_a) {
+                    event: { type: 'ASSIGN_EVALUATION_RESULTS_VARIABLES', varNames: assignments.map(function (_a) {
                             var varName = _a.varName;
                             return varName;
-                        })
-                    }
+                        }) }
                 },
             ];
             //       json.entry = assignments.map(({ varName, value }) => ({
@@ -400,11 +370,6 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             var _u = node.message, kind = _u.type, sender = _u.sender;
             // @ts-ignore
             var expressionArray = node.message.text ? node.message.text.replace(/`(.*?)`/g, "$${formula`$1`}").match(/(?<=\$)\w+|(?<=\{)[^{}]*(?:(?:\{[^{}]*\}[^{}]*)*)(?=\})/g) : [];
-            // let resultedExpressionArray
-            // if (expressionArray) {
-            //   resultedExpressionArray = expressionArray.map(e => removeOutermostCurlyBraces(e))
-            //   console.log("🚀 ~ file: statechart.ts:376 ~ stateNodeToJsonRecursive ~ resultedExpressionArray:", resultedExpressionArray)
-            // }
             var nestedInitialValue = void 0;
             if (children && children[0] && children[0].name) {
                 nestedInitialValue = children[0].name;
@@ -426,22 +391,19 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 invoke.src.showcase = node.message.showcase;
             }
             json.entry = (expressionArray && expressionArray.length) ? {
-                // type: 'xstate.raise', event: { type: 'REQUEST_EVAL', expressions: resultedExpressionArray ? [...resultedExpressionArray] : [] }
                 type: 'xstate.raise', event: { type: 'REQUEST_EVAL', expressions: __spreadArray([], expressionArray, true) }
             } : {};
             json.initial = '__SEND_MESSAGE_ACTIVE__';
             json.after = {};
             json.always = [];
-            json.states = __assign({
-                __SEND_MESSAGE_ACTIVE__: {
+            json.states = __assign({ __SEND_MESSAGE_ACTIVE__: {
                     after: {
                         "2000": {
                             "target": "__SEND_MESSAGE_DONE__",
                             "internal": true
                         }
                     }
-                }, __SEND_MESSAGE_DONE__: { on: on_1, invoke: invoke }
-            }, json.states);
+                }, __SEND_MESSAGE_DONE__: { on: on_1, invoke: invoke } }, json.states);
             // json.on.REQUEST_MESSAGE_INTERPOLATION = {
             //   actions: {
             //     unquoted: true,
@@ -587,20 +549,16 @@ function interpretTransitions(fqPath, node) {
         var eventTransitions = transitions.filter(function (t) { return t.type === 'event'; });
         var afterTransitions = transitions.filter(function (t) { return t.type === 'after'; });
         var alwaysTransitions = transitions.filter(function (t) { return t.type === 'always'; });
-        var getTransitionTarget_1 = function (t) {
-            return t.target
-                ? (t.target.unknown
-                    ? undefined
-                    : '#' + (t.target.label || t.target.path.join('.')))
-                : undefined;
-        };
-        var getTransitionGuard_1 = function (t) {
-            return t.guard
-                ? ('condition' in t.guard)
-                    ? { cond: { type: '_expressionEval_', expression: t.guard.condition } }
-                    : { "in": t.guard.refState.label ? '#' + t.guard.refState.label : t.guard.refState.path } //TODO: this could be a relative path!
-                : {};
-        };
+        var getTransitionTarget_1 = function (t) { return t.target
+            ? (t.target.unknown
+                ? undefined
+                : '#' + (t.target.label || t.target.path.join('.')))
+            : undefined; };
+        var getTransitionGuard_1 = function (t) { return t.guard
+            ? ('condition' in t.guard)
+                ? { cond: { type: '_expressionEval_', expression: t.guard.condition } }
+                : { "in": t.guard.refState.label ? '#' + t.guard.refState.label : t.guard.refState.path } //TODO: this could be a relative path!
+            : {}; };
         if (eventTransitions.length) {
             on = eventTransitions.reduce(function (group, t) {
                 var _a;

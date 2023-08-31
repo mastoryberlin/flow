@@ -49,16 +49,25 @@ const variant = ref('subflow' as StatechartVariant)
     <h3>Statechart JSON</h3>
     <label for="rootId">Root Node ID:</label>
     <input type="text" name="rootId" id="rootId" v-model="rootNodeId">
-            <label for="variant">Variant:</label>
-            <select v-model="variant" name="variant" id="variant">
-              <option value="mainflow">Main Flow</option>
-              <option value="subflow">Subflow</option>
-              <option value="ui">UI Flow</option>
-            </select>
+    <label for="variant">Variant:</label>
+    <select v-model="variant" name="variant" id="variant">
+      <option value="mainflow">Main Flow</option>
+      <option value="subflow">Subflow</option>
+      <option value="ui">UI Flow</option>
+    </select>
     <div class="wrapper">
-        <textarea class="output-code" rows="20" readonly>{{ statechart.data?.json ? unquotedJSONstringify(statechart.data.json, 2) : '' }}</textarea>
+      <textarea class="output-code" rows="20"
+        readonly>{{ statechart.data?.json ? unquotedJSONstringify(statechart.data.json, 2) : '' }}</textarea>
       <div class="error">{{ statechart.error }}</div>
     </div>
+
+    <h3>Dynamic Expressions:</h3>
+    <div class="wrapper">
+      <ol v-if="statechart.data">
+        <li v-for="e in statechart.data.dynamicExpressions">{{ e }}</li>
+      </ol>
+    </div>
+
     <h3>Default Locale JSON</h3>
     <div class="wrapper">
       <textarea class="output-code" rows="20" readonly>{{ locale.data?.json }}</textarea>
@@ -76,12 +85,14 @@ const variant = ref('subflow' as StatechartVariant)
   height: 100%;
   box-sizing: border-box;
 }
+
 .output-code {
   width: 100%;
   height: 40%;
   box-sizing: border-box;
   font-size: 12pt;
 }
+
 .error {
   color: red;
 }

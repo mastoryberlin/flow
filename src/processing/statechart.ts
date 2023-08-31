@@ -186,9 +186,15 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     if (assignments) {
       console.log('assignments.map(({ value }) => value):', assignments.map(({ value }) => value))
       json.entry = [
+        // {
+        //   type: 'xstate.raise',
+        //   event: { type: 'REQUEST_EVAL', expressions: assignments.map(({ value }) => value) },
+        // },
         {
-          type: 'xstate.send',
-          event: { type: 'REQUEST_EVAL', expressions: assignments.map(({ value }) => value) },
+          type: 'xstate.assign',
+          "assignments": {
+            $evaluationResults: (context, event) => assignments.map(({ value }) => value)
+          }
         },
         {
           type: '_assignEvaluationResults',
@@ -370,7 +376,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     // Messages
     // ========================================================================================================================
 
-    if (node.message) {
+    if (node.message && node.message.sender) {
       const { type: kind, sender } = node.message
       // @ts-ignore
       const expressionArray = node.message.text ? node.message.text.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g) : []

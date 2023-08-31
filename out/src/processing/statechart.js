@@ -188,23 +188,29 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         // ========================================================================================================================
         // Variable Assignments
         // ========================================================================================================================
-        var assignments = node.assignVariables;
-        if (assignments) {
-            console.log('assignments.map(({ value }) => value):', assignments.map(function (_a) {
+        var assignments_1 = node.assignVariables;
+        if (assignments_1) {
+            console.log('assignments.map(({ value }) => value):', assignments_1.map(function (_a) {
                 var value = _a.value;
                 return value;
             }));
             json.entry = [
+                // {
+                //   type: 'xstate.raise',
+                //   event: { type: 'REQUEST_EVAL', expressions: assignments.map(({ value }) => value) },
+                // },
                 {
-                    type: 'xstate.send',
-                    event: { type: 'REQUEST_EVAL', expressions: assignments.map(function (_a) {
+                    type: 'xstate.assign',
+                    "assignments": {
+                        $evaluationResults: function (context, event) { return assignments_1.map(function (_a) {
                             var value = _a.value;
                             return value;
-                        }) }
+                        }); }
+                    }
                 },
                 {
                     type: '_assignEvaluationResults',
-                    varNames: assignments.map(function (_a) {
+                    varNames: assignments_1.map(function (_a) {
                         var varName = _a.varName;
                         return varName;
                     })
@@ -390,7 +396,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         // ========================================================================================================================
         // Messages
         // ========================================================================================================================
-        if (node.message) {
+        if (node.message && node.message.sender) {
             var _u = node.message, kind = _u.type, sender = _u.sender;
             // @ts-ignore
             var expressionArray = node.message.text ? node.message.text.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g) : [];

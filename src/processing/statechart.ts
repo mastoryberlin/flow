@@ -184,14 +184,15 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
 
     const assignments = node.assignVariables
     if (assignments) {
+      console.log('assignments.map(({ value }) => value):', assignments.map(({ value }) => value))
       json.entry = [
         {
           type: 'xstate.raise',
           event: { type: 'REQUEST_EVAL', expressions: assignments.map(({ value }) => value) },
         },
         {
-          type: '_assignEvaluationResults',
-          varNames: assignments.map(({ varName }) => varName),
+          type: 'xstate.raise',
+          event: { type: 'ASSIGN_EVALUATION_RESULTS_VARIABLES', varNames: assignments.map(({ varName }) => varName) }
         },
       ]
       //       json.entry = assignments.map(({ varName, value }) => ({
@@ -217,18 +218,9 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       //   },
       // ])`,
       //       }))
-      if (variant === 'mainflow') {
-        json.entry.push({
-          unquoted: true,
-          raw:
-            `raise({
-  type: 'HAVE_CONTEXT_VARIABLES_CHANGED',
-  namesOfChangedVariables: [${assignments.map(({ varName }) => `'${varName}'`).join(', ')}]
-})`
-        })
-      } else {
-        json.entry.push('_shareContextWithParent')
-      }
+
+      json.entry.push('_shareContextWithParent')
+
     }
 
     // ========================================================================================================================
@@ -376,7 +368,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     // Messages
     // ========================================================================================================================
 
-    if (node.message) {
+    if (node.message && node.message.sender) {
       const { type: kind, sender } = node.message
       // @ts-ignore
       const expressionArray = node.message.text ? node.message.text.replace(/`(.*?)`/g, "$${formula`$1`}").match(/(?<=\$)\w+|(?<=\{)[^{}]*(?:(?:\{[^{}]*\}[^{}]*)*)(?=\})/g) : []
@@ -500,6 +492,12 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     case 'mainflow':
       on.CHANGED_CONTEXT_IN_STATE_STORE.actions.push('_persist')
 
+      on.ASSIGN_EVALUATION_RESULTS_VARIABLES = {
+        actions: [
+          '_assignEvaluationResults'
+        ]
+      }
+
       on.CHANGED_STATE_IN_CHILD_MACHINE = {
         actions: [
           '_persist',
@@ -520,7 +518,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         unquoted: true,
         raw: `{
     actions: derivedRecomputeActions,
-  }`
+   }`
       }
       on.REQUEST_UI_START = {
         actions: [
@@ -538,6 +536,13 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         ]
       }
       break
+    default: {
+      on.ASSIGN_EVALUATION_RESULTS_VARIABLES = {
+        actions: [
+          '_assignEvaluationResults'
+        ]
+      }
+    }
   }
 
   return {

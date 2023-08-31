@@ -197,11 +197,15 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         //   }
         // },
         {
-          type: '_assignEvaluationResults',
-          varNames: assignments.map(({ varName }) => varName),
-          //implementation should look sth like this:
-          // (_, __, { actionMeta: { varNames } }) => assign(Object.fromEntries(varNames.map((n, i) => [n, context => context.evaluationResult[i]])))
+          type: 'xstate.raise',
+          event: { type: 'ASSIGN_EVALUATION_RESULTS_VARIABLES', varNames: assignments.map(({ varName }) => varName) }
         },
+        // {
+        //   type: '_assignEvaluationResults',
+        //   varNames: assignments.map(({ varName }) => varName),
+        //   //implementation should look sth like this:
+        //   // (_, __, { actionMeta: { varNames } }) => assign(Object.fromEntries(varNames.map((n, i) => [n, context => context.evaluationResult[i]])))
+        // },
       ]
       //       json.entry = assignments.map(({ varName, value }) => ({
 
@@ -507,6 +511,12 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     case 'mainflow':
       on.CHANGED_CONTEXT_IN_STATE_STORE.actions.push('_persist')
 
+      on.ASSIGN_EVALUATION_RESULTS_VARIABLES = {
+        actions: [
+          '_assignEvaluationResults'
+        ]
+      }
+
       on.CHANGED_STATE_IN_CHILD_MACHINE = {
         actions: [
           '_persist',
@@ -527,7 +537,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         unquoted: true,
         raw: `{
     actions: derivedRecomputeActions,
-  }`
+   }`
       }
       on.REQUEST_UI_START = {
         actions: [
@@ -545,6 +555,13 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         ]
       }
       break
+    default: {
+      on.ASSIGN_EVALUATION_RESULTS_VARIABLES = {
+        actions: [
+          '_assignEvaluationResults'
+        ]
+      }
+    }
   }
 
   return {

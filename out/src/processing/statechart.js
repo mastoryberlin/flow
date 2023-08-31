@@ -209,12 +209,18 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 //   }
                 // },
                 {
-                    type: '_assignEvaluationResults',
-                    varNames: assignments.map(function (_a) {
-                        var varName = _a.varName;
-                        return varName;
-                    })
+                    type: 'xstate.raise',
+                    event: { type: 'ASSIGN_EVALUATION_RESULTS_VARIABLES', varNames: assignments.map(function (_a) {
+                            var varName = _a.varName;
+                            return varName;
+                        }) }
                 },
+                // {
+                //   type: '_assignEvaluationResults',
+                //   varNames: assignments.map(({ varName }) => varName),
+                //   //implementation should look sth like this:
+                //   // (_, __, { actionMeta: { varNames } }) => assign(Object.fromEntries(varNames.map((n, i) => [n, context => context.evaluationResult[i]])))
+                // },
             ];
             //       json.entry = assignments.map(({ varName, value }) => ({
             //         unquoted: true,
@@ -514,6 +520,11 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             break;
         case 'mainflow':
             on.CHANGED_CONTEXT_IN_STATE_STORE.actions.push('_persist');
+            on.ASSIGN_EVALUATION_RESULTS_VARIABLES = {
+                actions: [
+                    '_assignEvaluationResults'
+                ]
+            };
             on.CHANGED_STATE_IN_CHILD_MACHINE = {
                 actions: [
                     '_persist',
@@ -532,7 +543,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             };
             on.HAVE_CONTEXT_VARIABLES_CHANGED = {
                 unquoted: true,
-                raw: "{\n    actions: derivedRecomputeActions,\n  }"
+                raw: "{\n    actions: derivedRecomputeActions,\n   }"
             };
             on.REQUEST_UI_START = {
                 actions: [
@@ -550,6 +561,13 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 ]
             };
             break;
+        default: {
+            on.ASSIGN_EVALUATION_RESULTS_VARIABLES = {
+                actions: [
+                    '_assignEvaluationResults'
+                ]
+            };
+        }
     }
     return {
         id: rootName,

@@ -65,7 +65,7 @@ function removeOutermostCurlyBraces(str) {
 }
 function extractDynamicExpressions() {
     var messagesWithExpressions = visitor.allStateNodes()
-        .filter(function (state) { var _a, _b; return state.name.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g) || ((_a = state.assignVariables) === null || _a === void 0 ? void 0 : _a.length) || (((_b = state.transitions) === null || _b === void 0 ? void 0 : _b.length) && state.transitions[0].guard); })
+        .filter(function (state) { var _a, _b; return state.name.replace(/`(.*?)`/g, "$${formula`$1`}").match(/(?<=\$)\w+|(?<=\{)[^{}]*(?:(?:\{[^{}]*\}[^{}]*)*)(?=\})/g) || ((_a = state.assignVariables) === null || _a === void 0 ? void 0 : _a.length) || (((_b = state.transitions) === null || _b === void 0 ? void 0 : _b.length) && state.transitions[0].guard); })
         .map(function (state) {
             var _a, _b;
             console.log('STATE:', state);
@@ -80,7 +80,7 @@ function extractDynamicExpressions() {
         });
     //@ts-ignore
     var resultedExpressionsArray = Array.from(new Set(messagesWithExpressions.map(function (message) {
-        var interpolationVariables = message.match(/\$(\w+)|\$\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g);
+        var interpolationVariables = message.match(/(?<=\$)\w+|(?<=\{)[^{}]*(?:(?:\{[^{}]*\}[^{}]*)*)(?=\})/g);
         if (interpolationVariables) {
             for (var _i = 0, interpolationVariables_1 = interpolationVariables; _i < interpolationVariables_1.length; _i++) {
                 var variable = interpolationVariables_1[_i];

@@ -48,7 +48,7 @@ function removeOutermostCurlyBraces(str) {
 
 function extractDynamicExpressions() {
   const messagesWithExpressions = visitor.allStateNodes()
-    .filter(state => state.name.replace(/`(.*?)`/g, "$${formula`$1`}").match(/\$(\w+)|\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g) || state.assignVariables?.length || (state.transitions?.length && state.transitions[0].guard))
+    .filter(state => state.name.replace(/`(.*?)`/g, "$${formula`$1`}").match(/(?<=\$)\w+|(?<=\{)[^{}]*(?:(?:\{[^{}]*\}[^{}]*)*)(?=\})/g) || state.assignVariables?.length || (state.transitions?.length && state.transitions[0].guard))
     .map(state => {
       console.log('STATE:', state)
       if (state.assignVariables?.length) {
@@ -63,7 +63,7 @@ function extractDynamicExpressions() {
     })
   //@ts-ignore
   const resultedExpressionsArray = Array.from(new Set(messagesWithExpressions.map(message => {
-    const interpolationVariables = message.match(/\$(\w+)|\$\{([^{}]*(?:(?:\{[^{}]*\}[^{}]*)*))\}/g)
+    const interpolationVariables = message.match(/(?<=\$)\w+|(?<=\{)[^{}]*(?:(?:\{[^{}]*\}[^{}]*)*)(?=\})/g)
     if (interpolationVariables) {
       for (const variable of interpolationVariables) {
         // console.log('formattedVariableBefore:', variable)

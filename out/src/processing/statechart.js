@@ -1,6 +1,6 @@
 "use strict";
 var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
+    __assign = Object.assign || function (t) {
         for (var s, i = 1, n = arguments.length; i < n; i++) {
             s = arguments[i];
             for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
@@ -63,7 +63,6 @@ function extractDynamicExpressions() {
         }
         if (((_b = state.message) === null || _b === void 0 ? void 0 : _b.type) === 'text') {
             var messageText = state.message.text.replace(/`(.*?)`/g, "$${formula`$1`}");
-            console.log('Message Text in state', state.path, messageText);
             var matches = messageText.match(interpolationRegexp);
             for (var _g = 0, _h = matches !== null && matches !== void 0 ? matches : []; _g < _h.length; _g++) {
                 var m = _h[_g];
@@ -152,11 +151,13 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 json.exit = 'LEAVE_NLU_CONTEXT';
                 // ================================================================
                 json.on = {
-                    INTENT: __spreadArray([], nluContext_1.intents.map(function (intentName) { return ({
-                        target: (0, util_1.escapeDots)("\"".concat(intentName, "\"")),
-                        internal: true,
-                        cond: { type: 'isIntentName', intentName: intentName }
-                    }); }), true)
+                    INTENT: __spreadArray([], nluContext_1.intents.map(function (intentName) {
+                        return ({
+                            target: (0, util_1.escapeDots)("\"".concat(intentName, "\"")),
+                            internal: true,
+                            cond: { type: 'isIntentName', intentName: intentName }
+                        });
+                    }), true)
                 };
             }
         }
@@ -166,24 +167,28 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         // ========================================================================================================================
         var assignments = node.assignVariables;
         if (assignments) {
-            console.log('assignments.map(({ value }) => value):', assignments.map(function (_a) {
-                var value = _a.value;
-                return value;
-            }));
+            // console.log('assignments.map(({ value }) => value):', assignments.map(function (_a) {
+            //     var value = _a.value;
+            //     return value;
+            // }));
             json.entry = [
                 {
                     type: 'xstate.raise',
-                    event: { type: 'REQUEST_EVAL', expressions: assignments.map(function (_a) {
+                    event: {
+                        type: 'REQUEST_EVAL', expressions: assignments.map(function (_a) {
                             var value = _a.value;
                             return value;
-                        }) }
+                        })
+                    }
                 },
                 {
                     type: 'xstate.raise',
-                    event: { type: 'ASSIGN_EVALUATION_RESULTS_VARIABLES', varNames: assignments.map(function (_a) {
+                    event: {
+                        type: 'ASSIGN_EVALUATION_RESULTS_VARIABLES', varNames: assignments.map(function (_a) {
                             var varName = _a.varName;
                             return varName;
-                        }) }
+                        })
+                    }
                 },
             ];
             //       json.entry = assignments.map(({ varName, value }) => ({
@@ -396,14 +401,16 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             json.initial = '__SEND_MESSAGE_ACTIVE__';
             json.after = {};
             json.always = [];
-            json.states = __assign({ __SEND_MESSAGE_ACTIVE__: {
+            json.states = __assign({
+                __SEND_MESSAGE_ACTIVE__: {
                     after: {
                         "2000": {
                             "target": "__SEND_MESSAGE_DONE__",
                             "internal": true
                         }
                     }
-                }, __SEND_MESSAGE_DONE__: { on: on_1, invoke: invoke } }, json.states);
+                }, __SEND_MESSAGE_DONE__: { on: on_1, invoke: invoke }
+            }, json.states);
             // json.on.REQUEST_MESSAGE_INTERPOLATION = {
             //   actions: {
             //     unquoted: true,
@@ -549,16 +556,20 @@ function interpretTransitions(fqPath, node) {
         var eventTransitions = transitions.filter(function (t) { return t.type === 'event'; });
         var afterTransitions = transitions.filter(function (t) { return t.type === 'after'; });
         var alwaysTransitions = transitions.filter(function (t) { return t.type === 'always'; });
-        var getTransitionTarget_1 = function (t) { return t.target
-            ? (t.target.unknown
-                ? undefined
-                : '#' + (t.target.label || t.target.path.join('.')))
-            : undefined; };
-        var getTransitionGuard_1 = function (t) { return t.guard
-            ? ('condition' in t.guard)
-                ? { cond: { type: '_expressionEval_', expression: t.guard.condition } }
-                : { "in": t.guard.refState.label ? '#' + t.guard.refState.label : t.guard.refState.path } //TODO: this could be a relative path!
-            : {}; };
+        var getTransitionTarget_1 = function (t) {
+            return t.target
+                ? (t.target.unknown
+                    ? undefined
+                    : '#' + (t.target.label || t.target.path.join('.')))
+                : undefined;
+        };
+        var getTransitionGuard_1 = function (t) {
+            return t.guard
+                ? ('condition' in t.guard)
+                    ? { cond: { type: '_expressionEval_', expression: t.guard.condition } }
+                    : { "in": t.guard.refState.label ? '#' + t.guard.refState.label : t.guard.refState.path } //TODO: this could be a relative path!
+                : {};
+        };
         if (eventTransitions.length) {
             on = eventTransitions.reduce(function (group, t) {
                 var _a;

@@ -45,7 +45,6 @@ function extractDynamicExpressions() {
 
     if (state.message?.type === 'text') {
       const messageText = (state.message as dsl.TextMessage).text.replace(/`(.*?)`/g, "$${formula`$1`}")
-      console.log('Message Text in state', state.path, messageText)
       const matches = messageText.match(interpolationRegexp)
       for (const m of matches ?? []) {
         expressions.add(m.trim())
@@ -160,7 +159,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
 
     const assignments = node.assignVariables
     if (assignments) {
-      console.log('assignments.map(({ value }) => value):', assignments.map(({ value }) => value))
+      // console.log('assignments.map(({ value }) => value):', assignments.map(({ value }) => value))
       json.entry = [
         {
           type: 'xstate.raise',

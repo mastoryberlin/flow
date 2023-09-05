@@ -1,4 +1,4 @@
-export declare function useFlowToLocale(flow: string, rootNodeId?: string): {
+export declare function useFlowToLocale(flow: string): {
     json: {
         flow: {
             messages: {};

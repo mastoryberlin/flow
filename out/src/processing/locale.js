@@ -5,10 +5,11 @@ var chevrotain_1 = require("../chevrotain");
 var issue_tracker_1 = require("./issue-tracker");
 var util_1 = require("../util");
 var rootName;
+var rootNodeId;
 var parser = (0, chevrotain_1.useParser)();
 var visitor = (0, chevrotain_1.useVisitor)();
-function useFlowToLocale(flow, rootNodeId) {
-    if (rootNodeId === void 0) { rootNodeId = '<ROOT>'; }
+function useFlowToLocale(flow) {
+    rootNodeId = '/';
     rootName = rootNodeId;
     (0, issue_tracker_1.useIssueTracker)(parser, visitor, flow, rootNodeId, true);
     var pathsArray = {};

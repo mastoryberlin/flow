@@ -1,6 +1,6 @@
 "use strict";
 var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function (t) {
+    __assign = Object.assign || function(t) {
         for (var s, i = 1, n = arguments.length; i < n; i++) {
             s = arguments[i];
             for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
@@ -26,16 +26,18 @@ var issue_tracker_1 = require("./issue-tracker");
 var constants_1 = require("../constants");
 var directives_1 = require("./directives");
 var util_1 = require("../util");
-var rootName;
+var rootId;
+var machineId;
 var parser = (0, chevrotain_1.useParser)();
 var visitor = (0, chevrotain_1.useVisitor)();
 var interpolationRegexp = /(?<=\$)\w+|(?<=\{)[^{}]*(?:(?:\{[^{}]*\}[^{}]*)*)(?=\})/g;
-function useFlowToStatechart(flow, rootNodeId, variant) {
-    if (rootNodeId === void 0) { rootNodeId = '<ROOT>'; }
+function useFlowToStatechart(flow, id, variant) {
+    if (id === void 0) { id = 'Unknown State Machine'; }
     if (variant === void 0) { variant = 'mainflow'; }
-    rootName = rootNodeId;
-    (0, issue_tracker_1.useIssueTracker)(parser, visitor, flow, rootNodeId, true);
-    var json = stateNodeToJsonRecursive(rootNodeId, variant);
+    machineId = id;
+    rootId = '/';
+    (0, issue_tracker_1.useIssueTracker)(parser, visitor, flow, rootId, true);
+    var json = stateNodeToJsonRecursive(rootId, variant);
     // console.log("🚀 ~ file: statechart.ts:20 ~ useFlowToStatechart ~ json:")
     var dynamicExpressions = extractDynamicExpressions();
     // console.log("🚀 ~ file: statechart.ts:21 ~ useFlowToStatechart ~ dynamicExpressions:", dynamicExpressions)
@@ -88,7 +90,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         children = visitor.allStateNodes().filter(function (n) { var _a; return ((_a = n.path) === null || _a === void 0 ? void 0 : _a.length) === 2; });
         if (!(children === null || children === void 0 ? void 0 : children.length)) {
             console.warn('Flow script contains no root state nodes, so I will output an empty JSON object.');
-            return { id: rootName };
+            return { id: machineId };
         }
     }
     // console.log('parentInfo-1:', fqPath)
@@ -151,13 +153,11 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 json.exit = 'LEAVE_NLU_CONTEXT';
                 // ================================================================
                 json.on = {
-                    INTENT: __spreadArray([], nluContext_1.intents.map(function (intentName) {
-                        return ({
-                            target: (0, util_1.escapeDots)("\"".concat(intentName, "\"")),
-                            internal: true,
-                            cond: { type: 'isIntentName', intentName: intentName }
-                        });
-                    }), true)
+                    INTENT: __spreadArray([], nluContext_1.intents.map(function (intentName) { return ({
+                        target: (0, util_1.escapeDots)("\"".concat(intentName, "\"")),
+                        internal: true,
+                        cond: { type: 'isIntentName', intentName: intentName }
+                    }); }), true)
                 };
             }
         }
@@ -167,28 +167,21 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         // ========================================================================================================================
         var assignments = node.assignVariables;
         if (assignments) {
-            // console.log('assignments.map(({ value }) => value):', assignments.map(function (_a) {
-            //     var value = _a.value;
-            //     return value;
-            // }));
+            // console.log('assignments.map(({ value }) => value):', assignments.map(({ value }) => value))
             json.entry = [
                 {
                     type: 'xstate.raise',
-                    event: {
-                        type: 'REQUEST_EVAL', expressions: assignments.map(function (_a) {
+                    event: { type: 'REQUEST_EVAL', expressions: assignments.map(function (_a) {
                             var value = _a.value;
                             return value;
-                        })
-                    }
+                        }) }
                 },
                 {
                     type: 'xstate.raise',
-                    event: {
-                        type: 'ASSIGN_EVALUATION_RESULTS_VARIABLES', varNames: assignments.map(function (_a) {
+                    event: { type: 'ASSIGN_EVALUATION_RESULTS_VARIABLES', varNames: assignments.map(function (_a) {
                             var varName = _a.varName;
                             return varName;
-                        })
-                    }
+                        }) }
                 },
             ];
             //       json.entry = assignments.map(({ varName, value }) => ({
@@ -313,7 +306,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                             if ('always' in d) {
                                 var def = d.always;
                                 if (typeof def === 'function') {
-                                    always_1 = def(args_3, rootName);
+                                    always_1 = def(args_3, rootId);
                                 }
                                 else {
                                     var cond = {};
@@ -322,7 +315,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                                         cond[k] = typeof v === 'function' ? v(args_3) : v;
                                     }
                                     always_1 = {
-                                        target: def.target(args_3, rootName),
+                                        target: def.target(args_3, rootId),
                                         cond: cond
                                     };
                                 }
@@ -401,16 +394,14 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             json.initial = '__SEND_MESSAGE_ACTIVE__';
             json.after = {};
             json.always = [];
-            json.states = __assign({
-                __SEND_MESSAGE_ACTIVE__: {
+            json.states = __assign({ __SEND_MESSAGE_ACTIVE__: {
                     after: {
                         "2000": {
                             "target": "__SEND_MESSAGE_DONE__",
                             "internal": true
                         }
                     }
-                }, __SEND_MESSAGE_DONE__: { on: on_1, invoke: invoke }
-            }, json.states);
+                }, __SEND_MESSAGE_DONE__: { on: on_1, invoke: invoke } }, json.states);
             // json.on.REQUEST_MESSAGE_INTERPOLATION = {
             //   actions: {
             //     unquoted: true,
@@ -469,7 +460,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         };
     }
     childStates.__ASSERTION_FAILED__ = { type: 'final' };
-    var _v = interpretTransitions(rootName), on = _v.on, after = _v.after, always = _v.always;
+    var _v = interpretTransitions(rootId), on = _v.on, after = _v.after, always = _v.always;
     // Object.assign(on, getJumpEvents(visitor) as any)
     on.CHANGED_CONTEXT_IN_STATE_STORE = {
         actions: [
@@ -535,13 +526,19 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         }
     }
     return {
-        id: rootName,
+        id: machineId,
         predictableActionArguments: true,
-        initial: children[0].name,
-        states: childStates,
-        on: on,
-        after: after,
-        always: always
+        initial: 'Root',
+        states: {
+            Root: {
+                id: rootId,
+                initial: children[0].name,
+                states: childStates,
+                on: on,
+                after: after,
+                always: always
+            }
+        }
     };
 }
 function interpretTransitions(fqPath, node) {
@@ -550,26 +547,22 @@ function interpretTransitions(fqPath, node) {
     var after = {};
     var transitions = visitor.transitionsBySourcePath[fqPath]; // node.transitions is currently empty
     if (node === null || node === void 0 ? void 0 : node.final) {
-        always = "#".concat(rootName, ".__FLOW_DONE__");
+        always = "#".concat(rootId, ".__FLOW_DONE__");
     }
     if (transitions) {
         var eventTransitions = transitions.filter(function (t) { return t.type === 'event'; });
         var afterTransitions = transitions.filter(function (t) { return t.type === 'after'; });
         var alwaysTransitions = transitions.filter(function (t) { return t.type === 'always'; });
-        var getTransitionTarget_1 = function (t) {
-            return t.target
-                ? (t.target.unknown
-                    ? undefined
-                    : '#' + (t.target.label || t.target.path.join('.')))
-                : undefined;
-        };
-        var getTransitionGuard_1 = function (t) {
-            return t.guard
-                ? ('condition' in t.guard)
-                    ? { cond: { type: '_expressionEval_', expression: t.guard.condition } }
-                    : { "in": t.guard.refState.label ? '#' + t.guard.refState.label : t.guard.refState.path } //TODO: this could be a relative path!
-                : {};
-        };
+        var getTransitionTarget_1 = function (t) { return t.target
+            ? (t.target.unknown
+                ? undefined
+                : '#' + (t.target.label || t.target.path.join('.')))
+            : undefined; };
+        var getTransitionGuard_1 = function (t) { return t.guard
+            ? ('condition' in t.guard)
+                ? { cond: { type: '_expressionEval_', expression: t.guard.condition } }
+                : { "in": t.guard.refState.label ? '#' + t.guard.refState.label : t.guard.refState.path } //TODO: this could be a relative path!
+            : {}; };
         if (eventTransitions.length) {
             on = eventTransitions.reduce(function (group, t) {
                 var _a;

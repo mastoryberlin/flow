@@ -4,10 +4,12 @@ import type * as dsl from '../dsl/types'
 import { promptStateRegExp, unescapeDots } from '../util'
 
 let rootName: string
+let rootNodeId: string
 const parser = useParser()
 const visitor = useVisitor()
 
-export function useFlowToLocale(flow: string, rootNodeId = '<ROOT>') {
+export function useFlowToLocale(flow: string) {
+  rootNodeId = '/'
   rootName = rootNodeId
   useIssueTracker(parser, visitor, flow, rootNodeId, true)
   const pathsArray = {} as Record<string, string>

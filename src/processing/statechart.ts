@@ -8,16 +8,18 @@ import { evaluateInContext } from "./unit-context";
 import type { StatechartVariant } from "../types";
 import { escapeDots, promptStateRegExp } from "../util";
 
-let rootName: string
+let rootId: string
+let machineId: string
 const parser = useParser()
 const visitor = useVisitor()
 
 const interpolationRegexp = /(?<=\$)\w+|(?<=\{)[^{}]*(?:(?:\{[^{}]*\}[^{}]*)*)(?=\})/g
 
-export function useFlowToStatechart(flow: string, rootNodeId = '<ROOT>', variant: StatechartVariant = 'mainflow') {
-  rootName = rootNodeId
-  useIssueTracker(parser, visitor, flow, rootNodeId, true)
-  const json = stateNodeToJsonRecursive(rootNodeId, variant)
+export function useFlowToStatechart(flow: string, id = 'Unknown State Machine', variant: StatechartVariant = 'mainflow') {
+  machineId = id
+  rootId = '/'
+  useIssueTracker(parser, visitor, flow, rootId, true)
+  const json = stateNodeToJsonRecursive(rootId, variant)
   // console.log("🚀 ~ file: statechart.ts:20 ~ useFlowToStatechart ~ json:")
   const dynamicExpressions = extractDynamicExpressions()
   // console.log("🚀 ~ file: statechart.ts:21 ~ useFlowToStatechart ~ dynamicExpressions:", dynamicExpressions)
@@ -68,7 +70,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     children = visitor.allStateNodes().filter(n => n.path?.length === 2)
     if (!children?.length) {
       console.warn('Flow script contains no root state nodes, so I will output an empty JSON object.')
-      return { id: rootName }
+      return { id: machineId }
     }
   }
 
@@ -285,14 +287,14 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
               if ('always' in d) {
                 const def = d.always!
                 if (typeof def === 'function') {
-                  always = def(args, rootName)
+                  always = def(args, rootId)
                 } else {
                   const cond = {} as any
                   for (const [k, v] of Object.entries(def.cond)) {
                     cond[k] = typeof v === 'function' ? v(args) : v
                   }
                   always = {
-                    target: def.target(args, rootName),
+                    target: def.target(args, rootId),
                     cond,
                   }
                 }
@@ -446,7 +448,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
   }
   childStates.__ASSERTION_FAILED__ = { type: 'final' }
 
-  let { on, after, always } = interpretTransitions(rootName);
+  let { on, after, always } = interpretTransitions(rootId);
   // Object.assign(on, getJumpEvents(visitor) as any)
 
   on.CHANGED_CONTEXT_IN_STATE_STORE = {
@@ -520,11 +522,17 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
   }
 
   return {
-    id: rootName,
+    id: machineId,
     predictableActionArguments: true,
-    initial: children[0].name,
-    states: childStates,
-    on, after, always
+    initial: 'Root',
+    states: {
+      Root: {
+        id: rootId,
+        initial: children[0].name,
+        states: childStates,
+        on, after, always
+      }
+    }
   }
 }
 
@@ -533,7 +541,7 @@ function interpretTransitions(fqPath: string, node?: dsl.StateNode) {
   let on = {} as any
   let after = {} as any
   const transitions = visitor.transitionsBySourcePath[fqPath]; // node.transitions is currently empty
-  if (node?.final) { always = `#${rootName}.__FLOW_DONE__`; }
+  if (node?.final) { always = `#${rootId}.__FLOW_DONE__`; }
 
   if (transitions) {
     const eventTransitions = transitions.filter(t => t.type === 'event') as dsl.EventTransition[];

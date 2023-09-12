@@ -78,7 +78,7 @@ function extractDynamicExpressions() {
     return Array.from(expressions);
 }
 function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
-    var _a;
+    var _a, _b;
     var children;
     var nluContext; // used as parentInfo param for recursion
     if (node) {
@@ -114,8 +114,8 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                         path: fqPath
                     }
                 };
-                for (var _i = 0, _b = children.filter(function (c) { return c.name !== '*'; }); _i < _b.length; _i++) {
-                    var k = _b[_i];
+                for (var _i = 0, _c = children.filter(function (c) { return c.name !== '*'; }); _i < _c.length; _i++) {
+                    var k = _c[_i];
                     var n = Number.parseInt(k.name);
                     childStates['0'].always.push({
                         target: k.name,
@@ -161,7 +161,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 };
             }
         }
-        var _c = interpretTransitions(fqPath, node), on_1 = _c.on, after_1 = _c.after, always_1 = _c.always;
+        var _d = interpretTransitions(fqPath, node), on_1 = _d.on, after_1 = _d.after, always_1 = _d.always;
         // ========================================================================================================================
         // Variable Assignments
         // ========================================================================================================================
@@ -263,21 +263,21 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                     break;
                 default:
                     var valid = true;
-                    for (var _d = 0, _e = Object.entries(directives_1.supportedDirectives); _d < _e.length; _d++) {
-                        var _f = _e[_d], dname = _f[0], d = _f[1];
+                    for (var _e = 0, _f = Object.entries(directives_1.supportedDirectives); _e < _f.length; _e++) {
+                        var _g = _f[_e], dname = _g[0], d = _g[1];
                         if (directive.name === dname) {
                             var args_3 = d.args(directive.arg);
-                            for (var _g = 0, _h = ['entry', 'exit', 'invoke']; _g < _h.length; _g++) {
-                                var key = _h[_g];
+                            for (var _h = 0, _j = ['entry', 'exit', 'invoke']; _h < _j.length; _h++) {
+                                var key = _j[_h];
                                 if (key in d) {
                                     var impl = d[key];
                                     if (Array.isArray(impl)) {
                                         json[key] = [];
-                                        for (var _j = 0, impl_1 = impl; _j < impl_1.length; _j++) {
-                                            var i = impl_1[_j];
+                                        for (var _k = 0, impl_1 = impl; _k < impl_1.length; _k++) {
+                                            var i = impl_1[_k];
                                             var out = {};
-                                            for (var _k = 0, _l = Object.entries(i); _k < _l.length; _k++) {
-                                                var _m = _l[_k], k = _m[0], v = _m[1];
+                                            for (var _l = 0, _m = Object.entries(i); _l < _m.length; _l++) {
+                                                var _o = _m[_l], k = _o[0], v = _o[1];
                                                 out[k] = typeof v === 'function' ? v(args_3) : v;
                                             }
                                             json[key].push(out);
@@ -285,8 +285,8 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                                     }
                                     else {
                                         var out = {};
-                                        for (var _o = 0, _p = Object.entries(impl); _o < _p.length; _o++) {
-                                            var _q = _p[_o], k = _q[0], v = _q[1];
+                                        for (var _p = 0, _q = Object.entries(impl); _p < _q.length; _p++) {
+                                            var _r = _q[_p], k = _r[0], v = _r[1];
                                             out[k] = typeof v === 'function' ? v(args_3) : v;
                                         }
                                         if (key === 'invoke') {
@@ -310,8 +310,8 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                                 }
                                 else {
                                     var cond = {};
-                                    for (var _r = 0, _s = Object.entries(def.cond); _r < _s.length; _r++) {
-                                        var _t = _s[_r], k = _t[0], v = _t[1];
+                                    for (var _s = 0, _t = Object.entries(def.cond); _s < _t.length; _s++) {
+                                        var _u = _t[_s], k = _u[0], v = _u[1];
                                         cond[k] = typeof v === 'function' ? v(args_3) : v;
                                     }
                                     always_1 = {
@@ -365,7 +365,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         // Messages
         // ========================================================================================================================
         if (node.message && node.message.sender) {
-            var _u = node.message, kind = _u.type, sender = _u.sender;
+            var _v = node.message, kind = _v.type, sender = _v.sender;
             // @ts-ignore
             var expressionArray = node.message.text ? node.message.text.replace(/`(.*?)`/g, "$${formula`$1`}").match(/(?<=\$)\w+|(?<=\{)[^{}]*(?:(?:\{[^{}]*\}[^{}]*)*)(?=\})/g) : [];
             var nestedInitialValue = void 0;
@@ -387,7 +387,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 invoke.src.text = node.message.text;
             }
             else {
-                invoke.src.attachment = node.message.source;
+                invoke.src.attachment = (_b = node.message.source) === null || _b === void 0 ? void 0 : _b.toString();
                 if (node.message.showcase) {
                     invoke.src.showcase = node.message.showcase;
                 }
@@ -464,7 +464,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         };
     }
     childStates.__ASSERTION_FAILED__ = { type: 'final' };
-    var _v = interpretTransitions(rootId), on = _v.on, after = _v.after, always = _v.always;
+    var _w = interpretTransitions(rootId), on = _w.on, after = _w.after, always = _w.always;
     // Object.assign(on, getJumpEvents(visitor) as any)
     on.CHANGED_CONTEXT_IN_STATE_STORE = {
         actions: [

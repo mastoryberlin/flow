@@ -364,7 +364,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       if (node.message.type === 'text') {
         invoke.src.text = (node.message as dsl.TextMessage).text
       } else {
-        invoke.src.attachment = (node.message as dsl.MediaMessage).source
+        invoke.src.attachment = (node.message as dsl.MediaMessage).source?.toString()
         if ((node.message as dsl.MediaMessage).showcase) {
           invoke.src.showcase = (node.message as dsl.MediaMessage).showcase
         }

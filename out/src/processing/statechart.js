@@ -379,14 +379,18 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 onDone: node.final ? always_1 : nestedInitialValue
             };
             invoke.src = {
-                // @ts-ignore
                 type: '_sendMessage',
                 kind: kind,
-                sender: sender,
-                text: node.message.text
+                sender: sender
             };
-            if (node.message.type !== 'text' && node.message.showcase) {
-                invoke.src.showcase = node.message.showcase;
+            if (node.message.type === 'text') {
+                invoke.src.text = node.message.text;
+            }
+            else {
+                invoke.src.attachment = node.message.source;
+                if (node.message.showcase) {
+                    invoke.src.showcase = node.message.showcase;
+                }
             }
             json.entry = (expressionArray && expressionArray.length) ? {
                 type: 'xstate.raise', event: { type: 'REQUEST_EVAL', expressions: __spreadArray([], expressionArray, true) }

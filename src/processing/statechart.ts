@@ -359,11 +359,15 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         onDone: node.final ? always : nestedInitialValue
       } as any
       invoke.src = {
-        // @ts-ignore
-        type: '_sendMessage', kind, sender, text: node.message.text
+        type: '_sendMessage', kind, sender
       }
-      if (node.message.type !== 'text' && (node.message as dsl.MediaMessage).showcase) {
-        invoke.src.showcase = (node.message as dsl.MediaMessage).showcase
+      if (node.message.type === 'text') {
+        invoke.src.text = (node.message as dsl.TextMessage).text
+      } else {
+        invoke.src.attachment = (node.message as dsl.MediaMessage).source
+        if ((node.message as dsl.MediaMessage).showcase) {
+          invoke.src.showcase = (node.message as dsl.MediaMessage).showcase
+        }
       }
       json.entry = (expressionArray && expressionArray.length) ? {
         type: 'xstate.raise', event: { type: 'REQUEST_EVAL', expressions: [...expressionArray] }

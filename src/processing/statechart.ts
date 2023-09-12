@@ -377,11 +377,10 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
             "2000": {
               "target": "__SEND_MESSAGE_DONE__",
               "internal": true
-
             }
           },
         },
-        __SEND_MESSAGE_DONE__: { on, invoke },
+        __SEND_MESSAGE_DONE__: { always, on, after, invoke },
         ...json.states
       } as any
       // json.on.REQUEST_MESSAGE_INTERPOLATION = {

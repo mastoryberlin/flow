@@ -401,7 +401,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                             "internal": true
                         }
                     }
-                }, __SEND_MESSAGE_DONE__: { on: on_1, invoke: invoke } }, json.states);
+                }, __SEND_MESSAGE_DONE__: { always: always_1, on: on_1, after: after_1, invoke: invoke } }, json.states);
             // json.on.REQUEST_MESSAGE_INTERPOLATION = {
             //   actions: {
             //     unquoted: true,

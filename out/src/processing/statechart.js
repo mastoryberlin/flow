@@ -376,12 +376,8 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 nestedInitialValue = Object.values(after_1)[0][0].target;
             }
             var invoke = {
-                onDone: node.final ? always_1 : nestedInitialValue
-            };
-            invoke.src = {
-                type: '_sendMessage',
-                kind: kind,
-                sender: sender
+                src: { type: '_sendMessage', kind: kind, sender: sender },
+                onDone: '__SEND_MESSAGE_DONE__'
             };
             if (node.message.type === 'text') {
                 invoke.src.text = node.message.text;
@@ -392,52 +388,24 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                     invoke.src.showcase = node.message.showcase;
                 }
             }
-            json.entry = (expressionArray && expressionArray.length) ? {
-                type: 'xstate.raise', event: { type: 'REQUEST_EVAL', expressions: __spreadArray([], expressionArray, true) }
-            } : {};
+            if (expressionArray && expressionArray.length) {
+                json.entry = {
+                    type: 'xstate.raise',
+                    event: { type: 'REQUEST_EVAL', expressions: __spreadArray([], expressionArray, true) }
+                };
+            }
             json.initial = '__SEND_MESSAGE_ACTIVE__';
-            json.after = {};
-            json.always = [];
             json.states = __assign({ __SEND_MESSAGE_ACTIVE__: {
-                    after: {
-                        "2000": {
-                            "target": "__SEND_MESSAGE_DONE__",
-                            "internal": true
-                        }
-                    }
-                }, __SEND_MESSAGE_DONE__: { always: always_1, on: on_1, after: after_1, invoke: invoke } }, json.states);
-            // json.on.REQUEST_MESSAGE_INTERPOLATION = {
-            //   actions: {
-            //     unquoted: true,
-            //     raw: `assign({ 
-            //         __interpolatedMessage: ${kind === 'text' ?
-            // `${evaluateInContext('`' + (node.message as dsl.TextMessage).text.replace(/`/g, '\\`').replace(/\$(\w+)/g, '$${$1}') + '`')}` :
-            //         `'${(node.message as dsl.MediaMessage).source?.toString()}'` || ''
-            //       }
-            //     })`,
-            //   }
-            // }
-            // json.on.REQUEST_EVAL = {
-            //   actions: {
-            //     unquoted: true,
-            //     raw: ` assign({$evaluationResults: []}),
-            //     _evaluateDynamicExpressions: pure((_, event) => event.dynamicExpressions.map(expr =>
-            //       assign({
-            //         $evaluationResults: context => [...context.$evaluationResults, ALL_EVALUATION_ACTIONS[expr](context)]
-            //       })
-            //     ))`
-            //   },
-            //   // invoke: {
-            //   //   onDone: "__DIRECTIVE_DONE__",
-            //   //   src: "eval",
-            //   //   data: {
-            //   //     unquoted: true,
-            //   //     raw: `context=>context`
-            //   //   }
-            //   // }
-            // }
+                    invoke: invoke
+                }, __SEND_MESSAGE_DONE__: {
+                    always: node.final ? "".concat(rootId, ".__FLOW_DONE__") : __spreadArray([], always_1, true),
+                    after: node.final ? {} : __assign({}, after_1)
+                } }, json.states);
+            json.always = [];
+            always_1 = [];
+            json.after = {};
+            after_1 = {};
         }
-        // }
         if (variant !== 'mainflow') {
             var shareAction = { type: '_shareStateWithParent', path: node.path.join('.') };
             json.entry = json.entry ? (Array.isArray(json.entry) ? __spreadArray([

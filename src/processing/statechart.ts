@@ -356,10 +356,8 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       }
 
       const invoke = {
-        onDone: node.final ? always : nestedInitialValue
-      } as any
-      invoke.src = {
-        type: '_sendMessage', kind, sender
+        src: { type: '_sendMessage', kind, sender } as { type: '_sendMessage', kind: dsl.MessageType, sender: dsl.NPC, text?: string, attachment?: string, showcase?: number },
+        onDone: '__SEND_MESSAGE_DONE__'
       }
       if (node.message.type === 'text') {
         invoke.src.text = (node.message as dsl.TextMessage).text
@@ -369,58 +367,28 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
           invoke.src.showcase = (node.message as dsl.MediaMessage).showcase
         }
       }
-      json.entry = (expressionArray && expressionArray.length) ? {
-        type: 'xstate.raise', event: { type: 'REQUEST_EVAL', expressions: [...expressionArray] }
-      } : {}
+
+      if (expressionArray && expressionArray.length) {
+        json.entry = {
+          type: 'xstate.raise',
+          event: { type: 'REQUEST_EVAL', expressions: [...expressionArray] }
+        }
+      }
+
       json.initial = '__SEND_MESSAGE_ACTIVE__'
-      json.after = {}
-      json.always = []
       json.states = {
         __SEND_MESSAGE_ACTIVE__: {
-          after: {
-            "2000": {
-              "target": "__SEND_MESSAGE_DONE__",
-              "internal": true
-            }
-          },
+          invoke
         },
-        __SEND_MESSAGE_DONE__: { always, on, after, invoke },
+        __SEND_MESSAGE_DONE__: {
+          always: node.final ? `${rootId}.__FLOW_DONE__` : [...always],
+          after: node.final ? {} : { ...after },
+        },
         ...json.states
       } as any
-      // json.on.REQUEST_MESSAGE_INTERPOLATION = {
-      //   actions: {
-      //     unquoted: true,
-      //     raw: `assign({ 
-      //         __interpolatedMessage: ${kind === 'text' ?
-      // `${evaluateInContext('`' + (node.message as dsl.TextMessage).text.replace(/`/g, '\\`').replace(/\$(\w+)/g, '$${$1}') + '`')}` :
-      //         `'${(node.message as dsl.MediaMessage).source?.toString()}'` || ''
-      //       }
-      //     })`,
-      //   }
-      // }
-      // json.on.REQUEST_EVAL = {
-      //   actions: {
-      //     unquoted: true,
-      //     raw: ` assign({$evaluationResults: []}),
-      //     _evaluateDynamicExpressions: pure((_, event) => event.dynamicExpressions.map(expr =>
-      //       assign({
-      //         $evaluationResults: context => [...context.$evaluationResults, ALL_EVALUATION_ACTIONS[expr](context)]
-      //       })
-      //     ))`
-      //   },
-      //   // invoke: {
-      //   //   onDone: "__DIRECTIVE_DONE__",
-      //   //   src: "eval",
-      //   //   data: {
-      //   //     unquoted: true,
-      //   //     raw: `context=>context`
-      //   //   }
-      //   // }
-      // }
+      json.always = []; always = []
+      json.after = {}; after = {}
     }
-    // }
-
-
 
     if (variant !== 'mainflow') {
       const shareAction = { type: '_shareStateWithParent', path: node.path.join('.') }

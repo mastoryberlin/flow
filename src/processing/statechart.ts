@@ -368,14 +368,6 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         }
       }
 
-      if (expressionArray && expressionArray.length) {
-        json.entry = {
-          type: 'xstate.raise',
-          event: { type: 'REQUEST_EVAL', expressions: [...expressionArray] }
-        }
-      }
-
-      json.initial = '__SEND_MESSAGE_ACTIVE__'
       json.states = {
         __SEND_MESSAGE_ACTIVE__: {
           invoke
@@ -386,6 +378,22 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         },
         ...json.states
       } as any
+
+      if (expressionArray && expressionArray.length) {
+        json.initial = '__DYNAMIC_EXPRESSIONS_EVALUATION__'
+        json.states.__DYNAMIC_EXPRESSIONS_EVALUATION__ = {
+          entry: {
+            type: 'xstate.raise',
+            event: { type: 'REQUEST_EVAL', expressions: [...expressionArray] }
+          },
+          after: {
+            80: '__SEND_MESSAGE_ACTIVE__'
+          }
+        }
+      } else {
+        json.initial = '__SEND_MESSAGE_ACTIVE__'
+      }
+
       json.always = []; always = []
       json.after = {}; after = {}
     }

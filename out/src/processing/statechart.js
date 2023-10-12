@@ -388,19 +388,27 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                     invoke.src.showcase = node.message.showcase;
                 }
             }
-            if (expressionArray && expressionArray.length) {
-                json.entry = {
-                    type: 'xstate.raise',
-                    event: { type: 'REQUEST_EVAL', expressions: __spreadArray([], expressionArray, true) }
-                };
-            }
-            json.initial = '__SEND_MESSAGE_ACTIVE__';
             json.states = __assign({ __SEND_MESSAGE_ACTIVE__: {
                     invoke: invoke
                 }, __SEND_MESSAGE_DONE__: {
                     always: node.final ? "".concat(rootId, ".__FLOW_DONE__") : __spreadArray([], always_1, true),
                     after: node.final ? {} : __assign({}, after_1)
                 } }, json.states);
+            if (expressionArray && expressionArray.length) {
+                json.initial = '__DYNAMIC_EXPRESSIONS_EVALUATION__';
+                json.states.__DYNAMIC_EXPRESSIONS_EVALUATION__ = {
+                    entry: {
+                        type: 'xstate.raise',
+                        event: { type: 'REQUEST_EVAL', expressions: __spreadArray([], expressionArray, true) }
+                    },
+                    after: {
+                        80: '__SEND_MESSAGE_ACTIVE__'
+                    }
+                };
+            }
+            else {
+                json.initial = '__SEND_MESSAGE_ACTIVE__';
+            }
             json.always = [];
             always_1 = [];
             json.after = {};

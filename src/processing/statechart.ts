@@ -13,7 +13,7 @@ let machineId: string
 const parser = useParser()
 const visitor = useVisitor()
 
-const interpolationRegexp = /(?<=\$)\w+|(?<=\{)[^{}]*(?:(?:\{[^{}]*\}[^{}]*)*)(?=\})/g
+const interpolationRegexp = /(?<=\$)\w+|(?<=\$\{)[^{}]*(?:(?:\{[^{}]*\}[^{}]*)*)(?=\})/g
 
 export function useFlowToStatechart(flow: string, id = 'Unknown State Machine', variant: StatechartVariant = 'mainflow') {
   machineId = id

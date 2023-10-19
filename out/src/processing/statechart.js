@@ -157,7 +157,13 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                         target: (0, util_1.escapeDots)("\"".concat(intentName, "\"")),
                         internal: true,
                         cond: { type: 'isIntentName', intentName: intentName }
-                    }); }), true)
+                    }); }), true),
+                    UNKNOWN_INTENT: [
+                        {
+                            target: '*',
+                            internal: true
+                        }
+                    ]
                 };
             }
         }

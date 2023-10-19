@@ -146,13 +146,15 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
               cond: { type: 'isIntentName', intentName },
             })),
             // { target: '*' } // fallback intent
-          ],
-          UNKNOWN_INTENT: [
+          ]
+        }
+        if (node.name === '?!') {
+          json.on['UNKNOWN_INTENT'] = [
             {
               target: '*',
               internal: true
             }
-          ],
+          ]
         }
       }
     }

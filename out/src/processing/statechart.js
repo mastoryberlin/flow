@@ -157,14 +157,16 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                         target: (0, util_1.escapeDots)("\"".concat(intentName, "\"")),
                         internal: true,
                         cond: { type: 'isIntentName', intentName: intentName }
-                    }); }), true),
-                    UNKNOWN_INTENT: [
+                    }); }), true)
+                };
+                if (node.name === '?!') {
+                    json.on['UNKNOWN_INTENT'] = [
                         {
                             target: '*',
                             internal: true
                         }
-                    ]
-                };
+                    ];
+                }
             }
         }
         var _d = interpretTransitions(fqPath, node), on_1 = _d.on, after_1 = _d.after, always_1 = _d.always;

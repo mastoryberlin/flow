@@ -310,7 +310,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       if (invoke.src) {
         json.initial = '__DIRECTIVE_ACTIVE__'
         json.states = {
-          __DIRECTIVE_ACTIVE__: { on: { SUBFLOW_DONE: '__DIRECTIVE_DONE__' } },
+          __DIRECTIVE_ACTIVE__: { on: { SUBFLOW_DONE: '__DIRECTIVE_DONE__', invoke } },
           __DIRECTIVE_DONE__: { on, after, always },
         } as any
         if (directive.name === 'offerHelp') {

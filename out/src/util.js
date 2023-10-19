@@ -47,4 +47,4 @@ function unquotedJSONstringify(object, space) {
     });
 }
 exports.unquotedJSONstringify = unquotedJSONstringify;
-exports.promptStateRegExp = /^\?\??$/;
+exports.promptStateRegExp = /^\?[?!]?$/;

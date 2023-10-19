@@ -343,6 +343,7 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                         nluContext = {
                             intents: intents,
                             keepIntentsEnabled: firstSubNodeNameDef.image === '??',
+                            freeText: firstSubNodeNameDef.image === '?!',
                             regExps: regExps,
                             includes: []
                         };

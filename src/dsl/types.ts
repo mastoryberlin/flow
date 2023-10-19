@@ -28,13 +28,14 @@ export interface MediaMessage extends BaseMessage {
   title: string
   source?: Uri
   showcase?: number
-}  
+}
 
 export type Message = TextMessage | MediaMessage
 
 export interface NLUContext {
   intents: Intent[]
   keepIntentsEnabled: boolean
+  freeText?: boolean
   regExps: RegExp[]
   includes: FqStateNodePath[]
 }

@@ -252,21 +252,21 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
             type = mediaTypeOrUrl.toLowerCase() as dsl.MessageType
           } else {
             type = 'image' // fallback unless overwritten
-            
+
             const url = unescapeDots(mediaTypeOrUrl)
             const extension = url.match(/\.(\w+)$/)
-            
+
             if (extension && extension[1]) {
               if (['png', 'jpg', 'gif'].includes(extension[1])) { type = 'image' }
               else if (['mp3', 'ogg', 'wav'].includes(extension[1])) { type = 'audio' }
               else if (['mp4'].includes(extension[1])) { type = 'video' }
             }
-            
+
             if (showcaseTimeout) {
               const showcaseMatch = showcaseTimeout.match(new RegExp(timeRegExpString))
               showcase = toMilliseconds(showcaseMatch!)
             }
-            
+
             source = vscode.Uri.parse(url)
           }
           message = { sender, type, source, title: unescapeDots(textOrPlaceholder), showcase }
@@ -306,6 +306,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
             nluContext = {
               intents,
               keepIntentsEnabled: firstSubNodeNameDef.image === '??',
+              freeText: firstSubNodeNameDef.image === '?!',
               regExps,
               includes: []
             }

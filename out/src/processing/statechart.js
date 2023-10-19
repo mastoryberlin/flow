@@ -30,7 +30,7 @@ var rootId;
 var machineId;
 var parser = (0, chevrotain_1.useParser)();
 var visitor = (0, chevrotain_1.useVisitor)();
-var interpolationRegexp = /(?<=\$)\w+|(?<=\{)[^{}]*(?:(?:\{[^{}]*\}[^{}]*)*)(?=\})/g;
+var interpolationRegexp = /(?<=\$)\w+|(?<=\$\{)[^{}]*(?:(?:\{[^{}]*\}[^{}]*)*)(?=\})/g;
 function useFlowToStatechart(flow, id, variant) {
     if (id === void 0) { id = 'Unknown State Machine'; }
     if (variant === void 0) { variant = 'mainflow'; }

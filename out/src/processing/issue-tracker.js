@@ -11,6 +11,7 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
 exports.__esModule = true;
 exports.useIssueTracker = void 0;
 var vscode_1 = require("../dsl/vscode");
+var util_1 = require("../util");
 function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     parser.parse(flow);
     visitor.rootNodeId = rootNodeId;
@@ -27,6 +28,9 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     var lines = flow.split('\n');
     var lastLine = lines.length || 1;
     var lastLineEndColumn = lines.length ? (lines[lastLine - 1].length || 1) : 1;
+    // ========================================================================================================================
+    // Collect parser errors
+    // ========================================================================================================================
     for (var _i = 0, _a = parser.errors; _i < _a.length; _i++) {
         var error = _a[_i];
         var r = error.token;
@@ -41,10 +45,13 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             payload: { message: message }
         });
     }
+    // ========================================================================================================================
+    // Define semantic (= visitor-related) checks
+    // ========================================================================================================================
     var checkDeadEnds = function () {
         kind = 'dead end';
         severity = 'warning';
-        var isExcluded = function (n) { var _a; return n.final || n.childNodes.length || /\?[?!]?/.test(n.name) || ((_a = n.directive) === null || _a === void 0 ? void 0 : _a.name) === 'done'; };
+        var isExcluded = function (n) { var _a; return n.final || n.childNodes.length || util_1.promptStateRegExp.test(n.name) || ((_a = n.directive) === null || _a === void 0 ? void 0 : _a.name) === 'done'; };
         var hasTransitions = function (n) { var _a; return !!((_a = visitor.transitionsBySourcePath[n.path.join('.')]) === null || _a === void 0 ? void 0 : _a.length); };
         var findDeadEndsRecursive = function (s) {
             if (s.parallel) {
@@ -73,6 +80,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
         }); }));
         // console.log('deadEnds:', deadEnds)
     };
+    // ------------------------------------------------------------------------------------------------------------------------
     var checkDuplicateStateNodeNames = function () {
         kind = 'state name is used multiple times in the same scope';
         severity = 'error';
@@ -86,6 +94,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             }
         }); }));
     };
+    // ------------------------------------------------------------------------------------------------------------------------
     var checkAmbiguousStateNodes = function () {
         kind = 'state node names must be unique in every scope';
         severity = 'error';
@@ -101,6 +110,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             }
         }); }));
     };
+    // ------------------------------------------------------------------------------------------------------------------------
     var checkExplicitSelfTransitions = function () {
         kind = 'transition will jump nowhere because the target state includes the transition definition';
         severity = 'warning';
@@ -129,6 +139,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             });
         }));
     };
+    // ------------------------------------------------------------------------------------------------------------------------
     var checkTransitionSources = function () {
         kind = 'transition does not come from a state node';
         severity = 'error';
@@ -143,6 +154,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             });
         }));
     };
+    // ------------------------------------------------------------------------------------------------------------------------
     var checkTransitionTargets = function () {
         kind = 'transition target unknown';
         severity = 'error';
@@ -157,6 +169,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             });
         }));
     };
+    // ------------------------------------------------------------------------------------------------------------------------
     var checkReenterableFallbacks = function () {
         kind = 'reenterable states (with child states 1, 2, ...) must define a * fallback child state';
         severity = 'error';
@@ -170,6 +183,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             }
         }); }));
     };
+    // ------------------------------------------------------------------------------------------------------------------------
     var mediaTypes = ['image', 'audio', 'video'];
     var checkMessageSenders = function () {
         kind = 'message sender unknown';
@@ -177,7 +191,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
         var unknownSenders = allStateNodes.filter(function (s) {
             return s.message &&
                 (s.path.length <= 2 ||
-                    stateNodeByPath[s.path.slice(0, s.path.length - 1).join('.')].childNodes[0].name !== '?') &&
+                    !util_1.promptStateRegExp.test(stateNodeByPath[s.path.slice(0, s.path.length - 1).join('.')].childNodes[0].name)) &&
                 !s.message.sender;
         });
         issues.push.apply(issues, unknownSenders.map(function (s) {
@@ -192,6 +206,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             });
         }));
     };
+    // ------------------------------------------------------------------------------------------------------------------------
     var checkMessageMediaUrl = function () {
         kind = 'media url undefined';
         severity = 'warning';
@@ -206,6 +221,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             severity: severity
         }); }));
     };
+    // ------------------------------------------------------------------------------------------------------------------------
     var checkTodos = function () {
         kind = 'unresolved TODO';
         severity = 'warning';
@@ -217,6 +233,9 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             payload: { todo: t.image.replace(/\/\/\s*|TODO:?\s*|TBD:?\s*/g, '') }
         }); }));
     };
+    // ========================================================================================================================
+    // Invoke every check and collect issues
+    // ========================================================================================================================
     checkAmbiguousStateNodes();
     checkDeadEnds();
     checkExplicitSelfTransitions();

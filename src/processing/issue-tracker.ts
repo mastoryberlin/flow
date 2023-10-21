@@ -2,6 +2,7 @@ import type { Parser, DslVisitorWithDefaults } from "../chevrotain";
 import type { MediaMessage, StateNode } from "../dsl/types";
 import type { Issue, IssueKind, IssueSeverity } from "../types";
 import { Range } from "../dsl/vscode";
+import { promptStateRegExp } from "../util";
 
 export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults, flow: string, rootNodeId: string, noThrow?: boolean) {
   parser.parse(flow)
@@ -24,6 +25,10 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   const lastLine = lines.length || 1
   const lastLineEndColumn = lines.length ? (lines[lastLine - 1].length || 1) : 1
 
+  // ========================================================================================================================
+  // Collect parser errors
+  // ========================================================================================================================
+
   for (const error of parser.errors) {
     const r = error.token
     const { message } = error
@@ -38,10 +43,14 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     })
   }
 
+  // ========================================================================================================================
+  // Define semantic (= visitor-related) checks
+  // ========================================================================================================================
+
   const checkDeadEnds = () => {
     kind = 'dead end'
     severity = 'warning'
-    const isExcluded = (n: StateNode) => n.final || n.childNodes.length || /\?[?!]?/.test(n.name) || n.directive?.name === 'done'
+    const isExcluded = (n: StateNode) => n.final || n.childNodes.length || promptStateRegExp.test(n.name) || n.directive?.name === 'done'
     const hasTransitions = (n: StateNode) => !!visitor.transitionsBySourcePath[n.path.join('.')]?.length
     const findDeadEndsRecursive = (s: StateNode): StateNode[] => {
       if (s.parallel) {
@@ -68,6 +77,8 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     // console.log('deadEnds:', deadEnds)
   }
 
+  // ------------------------------------------------------------------------------------------------------------------------
+
   const checkDuplicateStateNodeNames = () => {
     kind = 'state name is used multiple times in the same scope'
     severity = 'error'
@@ -81,6 +92,8 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
       }
     })))
   }
+
+  // ------------------------------------------------------------------------------------------------------------------------
 
   const checkAmbiguousStateNodes = () => {
     kind = 'state node names must be unique in every scope'
@@ -97,6 +110,8 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
       }
     })))
   }
+
+  // ------------------------------------------------------------------------------------------------------------------------
 
   const checkExplicitSelfTransitions = () => {
     kind = 'transition will jump nowhere because the target state includes the transition definition'
@@ -123,6 +138,8 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     })))
   }
 
+  // ------------------------------------------------------------------------------------------------------------------------
+
   const checkTransitionSources = () => {
     kind = 'transition does not come from a state node'
     severity = 'error'
@@ -135,6 +152,8 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     })))
   }
 
+  // ------------------------------------------------------------------------------------------------------------------------
+
   const checkTransitionTargets = () => {
     kind = 'transition target unknown'
     severity = 'error'
@@ -146,6 +165,8 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
       payload: { source: t.sourcePath, target: t.target?.label || t.target?.path }
     })))
   }
+
+  // ------------------------------------------------------------------------------------------------------------------------
 
   const checkReenterableFallbacks = () => {
     kind = 'reenterable states (with child states 1, 2, ...) must define a * fallback child state'
@@ -161,6 +182,8 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     })))
   }
 
+  // ------------------------------------------------------------------------------------------------------------------------
+
   const mediaTypes = ['image', 'audio', 'video']
   const checkMessageSenders = () => {
     kind = 'message sender unknown'
@@ -169,7 +192,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
       s.message &&
       (
         s.path.length <= 2 ||
-        stateNodeByPath[s.path.slice(0, s.path.length - 1).join('.')].childNodes[0].name !== '?'
+        !promptStateRegExp.test(stateNodeByPath[s.path.slice(0, s.path.length - 1).join('.')].childNodes[0].name)
       ) &&
       !s.message.sender
     )
@@ -182,6 +205,8 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
       }
     })))
   }
+
+  // ------------------------------------------------------------------------------------------------------------------------
 
   const checkMessageMediaUrl = () => {
     kind = 'media url undefined'
@@ -198,6 +223,8 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     })))
   }
 
+  // ------------------------------------------------------------------------------------------------------------------------
+
   const checkTodos = () => {
     kind = 'unresolved TODO'
     severity = 'warning'
@@ -209,6 +236,10 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
       payload: { todo: t.image.replace(/\/\/\s*|TODO:?\s*|TBD:?\s*/g, '') },
     })))
   }
+
+  // ========================================================================================================================
+  // Invoke every check and collect issues
+  // ========================================================================================================================
 
   checkAmbiguousStateNodes()
   checkDeadEnds()

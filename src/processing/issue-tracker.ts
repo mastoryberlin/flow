@@ -41,7 +41,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   const checkDeadEnds = () => {
     kind = 'dead end'
     severity = 'warning'
-    const isExcluded = (n: StateNode) => n.final || n.childNodes.length || n.name === '?' || n.directive?.name === 'done'
+    const isExcluded = (n: StateNode) => n.final || n.childNodes.length || /\?[?!]?/.test(n.name) || n.directive?.name === 'done'
     const hasTransitions = (n: StateNode) => !!visitor.transitionsBySourcePath[n.path.join('.')]?.length
     const findDeadEndsRecursive = (s: StateNode): StateNode[] => {
       if (s.parallel) {

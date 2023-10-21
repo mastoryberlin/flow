@@ -44,7 +44,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     var checkDeadEnds = function () {
         kind = 'dead end';
         severity = 'warning';
-        var isExcluded = function (n) { var _a; return n.final || n.childNodes.length || n.name === '?' || ((_a = n.directive) === null || _a === void 0 ? void 0 : _a.name) === 'done'; };
+        var isExcluded = function (n) { var _a; return n.final || n.childNodes.length || /\?[?!]?/.test(n.name) || ((_a = n.directive) === null || _a === void 0 ? void 0 : _a.name) === 'done'; };
         var hasTransitions = function (n) { var _a; return !!((_a = visitor.transitionsBySourcePath[n.path.join('.')]) === null || _a === void 0 ? void 0 : _a.length); };
         var findDeadEndsRecursive = function (s) {
             if (s.parallel) {

@@ -14,7 +14,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 exports.__esModule = true;
-exports.unquotedJSONstringify = exports.getTextMateGrammar = exports.useIssueTracker = exports.useFlowToLocale = exports.useFlowToStatechart = exports.useVisitor = exports.useParser = exports.useLexer = exports.useTokens = void 0;
+exports.interpolationRegexp = exports.unquotedJSONstringify = exports.getTextMateGrammar = exports.useIssueTracker = exports.useFlowToLocale = exports.useFlowToStatechart = exports.useVisitor = exports.useParser = exports.useLexer = exports.useTokens = void 0;
 var grammar_1 = require("./src/dsl/grammar");
 exports.getTextMateGrammar = grammar_1.getTextMateGrammar;
 var Lexer_1 = require("./src/chevrotain/Lexer");
@@ -30,6 +30,8 @@ var locale_1 = require("./src/processing/locale");
 exports.useFlowToLocale = locale_1.useFlowToLocale;
 var issue_tracker_1 = require("./src/processing/issue-tracker");
 exports.useIssueTracker = issue_tracker_1.useIssueTracker;
+var expressions_1 = require("./src/processing/expressions");
+exports.interpolationRegexp = expressions_1.interpolationRegexp;
 var util_1 = require("./src/util");
 exports.unquotedJSONstringify = util_1.unquotedJSONstringify;
 __exportStar(require("./src/dsl/types"), exports);

@@ -3,6 +3,7 @@ import { useIssueTracker } from "./issue-tracker";
 import type * as dsl from "../dsl/types"
 import { allNpcs } from "../constants";
 import { supportedDirectives } from './directives'
+import { interpolationRegexp, extractDynamicExpressions } from "./expressions";
 import { evaluateInContext } from "./unit-context";
 // import { getJumpEvents } from "./getJump";
 import type { StatechartVariant } from "../types";
@@ -13,49 +14,15 @@ let machineId: string
 const parser = useParser()
 const visitor = useVisitor()
 
-const interpolationRegexp = /(?<=\$)\w+|(?<=\$\{)[^{}]*(?:(?:\{[^{}]*\}[^{}]*)*)(?=\})/g
-
 export function useFlowToStatechart(flow: string, id = 'Unknown State Machine', variant: StatechartVariant = 'mainflow') {
   machineId = id
   rootId = '/'
   useIssueTracker(parser, visitor, flow, rootId, true)
   const json = stateNodeToJsonRecursive(rootId, variant)
   // console.log("🚀 ~ file: statechart.ts:20 ~ useFlowToStatechart ~ json:")
-  const dynamicExpressions = extractDynamicExpressions()
+  const dynamicExpressions = extractDynamicExpressions(visitor)
   // console.log("🚀 ~ file: statechart.ts:21 ~ useFlowToStatechart ~ dynamicExpressions:", dynamicExpressions)
   return { json, visitor, dynamicExpressions }
-}
-
-function extractDynamicExpressions() {
-  const statesWhichMayHaveExpressions = visitor.allStateNodes().filter(state =>
-    state.assignVariables?.length
-    || (state.transitions?.length && state.transitions.some(t => t.guard && 'condition' in t.guard))
-    || (state.message?.type === 'text')
-  )
-
-  const expressions = new Set<string>()
-  for (const state of statesWhichMayHaveExpressions) {
-    for (const assignment of state.assignVariables ?? []) {
-      expressions.add(assignment.value.trim())
-    }
-
-    for (const guardedTransition of state.transitions.filter(t => t.guard && 'condition' in t.guard)) {
-      expressions.add((guardedTransition.guard as dsl.IfTransitionGuard).condition.trim())
-    }
-
-    if (state.message?.type === 'text') {
-      const messageText = (state.message as dsl.TextMessage).text.replace(/`(.*?)`/g, "$${formula`$1`}")
-      const matches = messageText.match(interpolationRegexp)
-      for (const m of matches ?? []) {
-        expressions.add(m.trim())
-      }
-    }
-  }
-  if (expressions.has('')) {
-    expressions.delete('')
-  }
-
-  return Array.from(expressions)
 }
 
 function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, node?: dsl.StateNode, parentInfo?: { nluContext: dsl.NLUContext | undefined }): any {

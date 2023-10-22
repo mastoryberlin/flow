@@ -25,12 +25,12 @@ var chevrotain_1 = require("../chevrotain");
 var issue_tracker_1 = require("./issue-tracker");
 var constants_1 = require("../constants");
 var directives_1 = require("./directives");
+var expressions_1 = require("./expressions");
 var util_1 = require("../util");
 var rootId;
 var machineId;
 var parser = (0, chevrotain_1.useParser)();
 var visitor = (0, chevrotain_1.useVisitor)();
-var interpolationRegexp = /(?<=\$)\w+|(?<=\$\{)[^{}]*(?:(?:\{[^{}]*\}[^{}]*)*)(?=\})/g;
 function useFlowToStatechart(flow, id, variant) {
     if (id === void 0) { id = 'Unknown State Machine'; }
     if (variant === void 0) { variant = 'mainflow'; }
@@ -39,44 +39,11 @@ function useFlowToStatechart(flow, id, variant) {
     (0, issue_tracker_1.useIssueTracker)(parser, visitor, flow, rootId, true);
     var json = stateNodeToJsonRecursive(rootId, variant);
     // console.log("🚀 ~ file: statechart.ts:20 ~ useFlowToStatechart ~ json:")
-    var dynamicExpressions = extractDynamicExpressions();
+    var dynamicExpressions = (0, expressions_1.extractDynamicExpressions)(visitor);
     // console.log("🚀 ~ file: statechart.ts:21 ~ useFlowToStatechart ~ dynamicExpressions:", dynamicExpressions)
     return { json: json, visitor: visitor, dynamicExpressions: dynamicExpressions };
 }
 exports.useFlowToStatechart = useFlowToStatechart;
-function extractDynamicExpressions() {
-    var _a, _b;
-    var statesWhichMayHaveExpressions = visitor.allStateNodes().filter(function (state) {
-        var _a, _b, _c;
-        return ((_a = state.assignVariables) === null || _a === void 0 ? void 0 : _a.length)
-            || (((_b = state.transitions) === null || _b === void 0 ? void 0 : _b.length) && state.transitions.some(function (t) { return t.guard && 'condition' in t.guard; }))
-            || (((_c = state.message) === null || _c === void 0 ? void 0 : _c.type) === 'text');
-    });
-    var expressions = new Set();
-    for (var _i = 0, statesWhichMayHaveExpressions_1 = statesWhichMayHaveExpressions; _i < statesWhichMayHaveExpressions_1.length; _i++) {
-        var state = statesWhichMayHaveExpressions_1[_i];
-        for (var _c = 0, _d = (_a = state.assignVariables) !== null && _a !== void 0 ? _a : []; _c < _d.length; _c++) {
-            var assignment = _d[_c];
-            expressions.add(assignment.value.trim());
-        }
-        for (var _e = 0, _f = state.transitions.filter(function (t) { return t.guard && 'condition' in t.guard; }); _e < _f.length; _e++) {
-            var guardedTransition = _f[_e];
-            expressions.add(guardedTransition.guard.condition.trim());
-        }
-        if (((_b = state.message) === null || _b === void 0 ? void 0 : _b.type) === 'text') {
-            var messageText = state.message.text.replace(/`(.*?)`/g, "$${formula`$1`}");
-            var matches = messageText.match(interpolationRegexp);
-            for (var _g = 0, _h = matches !== null && matches !== void 0 ? matches : []; _g < _h.length; _g++) {
-                var m = _h[_g];
-                expressions.add(m.trim());
-            }
-        }
-    }
-    if (expressions.has('')) {
-        expressions["delete"]('');
-    }
-    return Array.from(expressions);
-}
 function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
     var _a, _b;
     var children;

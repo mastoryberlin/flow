@@ -8,21 +8,21 @@ import { evaluateInContext } from "./unit-context";
 // import { getJumpEvents } from "./getJump";
 import type { StatechartVariant } from "../types";
 import { escapeDots, promptStateRegExp } from "../util";
+import { parseFrontMatter } from "remark-mdc";
 
 let rootId: string
 let machineId: string
 const parser = useParser()
 const visitor = useVisitor()
 
-export function useFlowToStatechart(flow: string, id = 'Unknown State Machine', variant: StatechartVariant = 'mainflow') {
+export function useFlowToStatechart(flowFileContent: string, id = 'Unknown State Machine', variant: StatechartVariant = 'mainflow') {
   machineId = id
   rootId = '/'
-  useIssueTracker(parser, visitor, flow, rootId, true)
+  const { data, content } = parseFrontMatter(flowFileContent)
+  useIssueTracker(parser, visitor, content, rootId, true)
   const json = stateNodeToJsonRecursive(rootId, variant)
-  // console.log("🚀 ~ file: statechart.ts:20 ~ useFlowToStatechart ~ json:")
   const dynamicExpressions = extractDynamicExpressions(visitor)
-  // console.log("🚀 ~ file: statechart.ts:21 ~ useFlowToStatechart ~ dynamicExpressions:", dynamicExpressions)
-  return { json, visitor, dynamicExpressions }
+  return { json, visitor, dynamicExpressions, meta: data }
 }
 
 function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, node?: dsl.StateNode, parentInfo?: { nluContext: dsl.NLUContext | undefined }): any {

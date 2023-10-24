@@ -73,6 +73,12 @@ const variant = ref('subflow' as StatechartVariant)
       <textarea class="output-code" rows="20" readonly>{{ locale.data?.json }}</textarea>
       <div class="error">{{ locale.error }}</div>
     </div>
+
+    <h3>Generated YAML section</h3>
+    <div class="wrapper">
+      <textarea class="output-code" rows="20" readonly>{{ statechart.data?.meta }}</textarea>
+      <div class="error">{{ statechart.error }}</div>
+    </div>
   </div>
 </template>
 

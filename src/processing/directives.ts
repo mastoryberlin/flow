@@ -119,11 +119,11 @@ export const supportedDirectives = {
 
   achieve: defineDirective({
     args: s => ({
-      intensity: Number.parseInt(s) || 5,
+      achievement: s.trim(),
     }),
     entry: {
       type: '_achieve',
-      intensity: a => a.intensity
+      achievement: a => a.achievement,
     }
   }),
   /**

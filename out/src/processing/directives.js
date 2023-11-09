@@ -85,7 +85,7 @@ exports.supportedDirectives = {
     }),
     achieve: defineDirective({
         args: function (s) { return ({
-            achievement: s.trim()
+            achievement: s === null || s === void 0 ? void 0 : s.trim()
         }); },
         entry: {
             type: '_achieve',

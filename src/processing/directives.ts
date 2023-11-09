@@ -119,7 +119,7 @@ export const supportedDirectives = {
 
   achieve: defineDirective({
     args: s => ({
-      achievement: s.trim(),
+      achievement: s?.trim(),
     }),
     entry: {
       type: '_achieve',

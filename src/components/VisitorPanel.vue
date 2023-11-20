@@ -15,7 +15,7 @@ const props = defineProps<{
 }>()
 
 const parser = useParser()
-const visitor = useVisitor()
+const visitor = useVisitor(["Nick", "VZ", "Father"])
 
 const flowProp = computed(() => props.flow)
 let issueArray = ref([] as Issue[])

@@ -18,7 +18,7 @@ const props = defineProps<{
 const statechart = computed(() => {
   try {
     return {
-      data: useFlowToStatechart(props.flow, rootNodeId.value, variant.value),
+      data: useFlowToStatechart(props.flow, rootNodeId.value, variant.value, ["Nick", "VZ", "Father"]),
       error: ''
     }
   } catch (e) {

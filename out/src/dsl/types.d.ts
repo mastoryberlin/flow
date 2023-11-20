@@ -6,10 +6,9 @@ export interface SemanticUnit {
     range: Range;
     offset: number;
 }
-export declare type NPC = 'Alicia' | 'Nick' | 'Victoria' | 'Professor' | 'Maive';
 export declare type MessageType = 'text' | 'image' | 'audio' | 'video';
 export interface BaseMessage {
-    sender?: NPC;
+    sender?: string;
     type: MessageType;
 }
 export interface TextMessage extends BaseMessage {

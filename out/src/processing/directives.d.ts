@@ -66,7 +66,7 @@ export declare const supportedDirectives: {
      */
     focusApp: DirectiveInfo<{
         appId: string;
-        character: "Alicia" | "Nick" | "Professor" | "VZ";
+        character: "Nick" | "VZ" | "Alicia" | "Professor";
     }>;
     /**
      * Hides a UI element if it was previously displayed.

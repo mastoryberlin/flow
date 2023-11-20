@@ -56,7 +56,8 @@ function toMilliseconds(m) {
 }
 var DslVisitorWithDefaults = /** @class */ (function (_super) {
     __extends(DslVisitorWithDefaults, _super);
-    function DslVisitorWithDefaults() {
+    function DslVisitorWithDefaults(validSenders) {
+        if (validSenders === void 0) { validSenders = ['Nick', 'VZ', 'Alicia', 'Professor']; }
         var _this = _super.call(this) || this;
         _this.rootNodeId = 'Current Episode';
         _this.stateNodeByPath = {};
@@ -65,6 +66,7 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
         _this.childrenByPath = {};
         _this.ambiguousStateNodes = [];
         _this.path = [_this.rootNodeId]; // array to internally keep track of the currently traversed state node path
+        _this.validSenderNamesInLowerCase = validSenders.map(function (n) { return n.trim().toLowerCase(); });
         _this.validateVisitor();
         return _this;
     }
@@ -231,7 +233,6 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
     };
     DslVisitorWithDefaults.prototype.stateNode = function (ctx) {
         var _this = this;
-        var _a;
         var nameDef = this.getStateNodeNameDefinition(ctx);
         if (!nameDef) {
             return;
@@ -261,12 +262,6 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
         }
         else {
             // ... message details if applicable ...
-            var allSenderAliases = {
-                'Nick': ['nick', 'nic', 'nik'],
-                'Alicia': ['alicia', 'alcia', 'ali'],
-                'VZ': ['vz', 'vz|', 'victoria'],
-                'Professor': ['dr camarena', 'prof', 'dr| camarena', 'prof|', 'professor']
-            };
             var mediaTypes = ['image', 'audio', 'video'];
             var urlPattern = '\\w+://\\S+';
             var messagePattern = new RegExp("^(?:((?:(?!\"|".concat(mediaTypes.join('|'), ")(?:\\S(?!://))+\\s+)+))?") +
@@ -274,11 +269,10 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                 "\"([^\"]*)\"(?:\\s+(".concat(timeRegExpString, "))?$"), 'di');
             var messageMatch = name.match(messagePattern);
             if (messageMatch) {
-                var _ = messageMatch[0], alias_1 = messageMatch[1], mediaTypeOrUrl = messageMatch[2], textOrPlaceholder = messageMatch[3], showcaseTimeout = messageMatch[4];
-                var sender = alias_1 ? (_a = Object.entries(allSenderAliases).find(function (_a) {
-                    var _ = _a[0], aliases = _a[1];
-                    return aliases.includes(alias_1.trim().toLowerCase());
-                })) === null || _a === void 0 ? void 0 : _a[0] : undefined;
+                var _ = messageMatch[0], senderCaseInsensitive_1 = messageMatch[1], mediaTypeOrUrl = messageMatch[2], textOrPlaceholder = messageMatch[3], showcaseTimeout = messageMatch[4];
+                var sender = senderCaseInsensitive_1 ?
+                    this.validSenderNamesInLowerCase.find(function (n) { return n === senderCaseInsensitive_1.trim().toLowerCase(); }) :
+                    undefined;
                 if (mediaTypeOrUrl) {
                     var type = void 0, source = void 0, showcase 
                     // Media message
@@ -313,7 +307,7 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                 else {
                     // Text message
                     //@ts-ignore
-                    var _b = messageMatch.indices[3], startOffset_1 = _b[0], endOffset = _b[1];
+                    var _a = messageMatch.indices[3], startOffset_1 = _a[0], endOffset = _a[1];
                     message = {
                         sender: sender,
                         type: 'text',
@@ -530,5 +524,5 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
 }(BaseVisitorWithDefaults));
 exports.DslVisitorWithDefaults = DslVisitorWithDefaults;
 var reusableVisitor = new DslVisitorWithDefaults();
-var useVisitor = function () { return reusableVisitor; };
+var useVisitor = function (validSenders) { return validSenders ? new DslVisitorWithDefaults(validSenders) : reusableVisitor; };
 exports.useVisitor = useVisitor;

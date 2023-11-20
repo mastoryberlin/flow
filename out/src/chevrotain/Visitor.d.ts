@@ -10,7 +10,8 @@ export declare class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     childrenByPath: Record<string, dsl.StateNode[]>;
     ambiguousStateNodes: [string, vscode.Range][];
     path: string[];
-    constructor();
+    validSenderNamesInLowerCase: string[];
+    constructor(validSenders?: string[]);
     private getStateNodeNameDefinition;
     private fixTransitionTargets;
     private markLastStateNodeAsFinal;
@@ -22,5 +23,5 @@ export declare class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     stateNode(ctx: StateNodeCstChildren): void;
     transition(ctx: TransitionCstChildren): void;
 }
-export declare const useVisitor: () => DslVisitorWithDefaults;
+export declare const useVisitor: (validSenders?: string[]) => DslVisitorWithDefaults;
 export {};

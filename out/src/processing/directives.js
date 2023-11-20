@@ -85,11 +85,11 @@ exports.supportedDirectives = {
     }),
     achieve: defineDirective({
         args: function (s) { return ({
-            intensity: Number.parseInt(s) || 5
+            achievement: s === null || s === void 0 ? void 0 : s.trim()
         }); },
         entry: {
             type: '_achieve',
-            intensity: function (a) { return a.intensity; }
+            achievement: function (a) { return a.achievement; }
         }
     }),
     exec: defineDirective({

@@ -55,7 +55,7 @@ export declare const supportedDirectives: {
         intensity: number;
     }>;
     achieve: DirectiveInfo<{
-        intensity: number;
+        achievement: string;
     }>;
     exec: DirectiveInfo<{
         actionName: string;

@@ -226,12 +226,6 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
       assignVariables = ctx.Assignment.map(a => a.payload)
     } else {
       // ... message details if applicable ...
-      const allSenderAliases = {
-        'Nick': ['nick', 'nic', 'nik'],
-        'Alicia': ['alicia', 'alcia', 'ali'],
-        'VZ': ['vz', 'vz|', 'victoria'],
-        'Professor': ['dr camarena', 'prof', 'dr| camarena', 'prof|', 'professor']
-      }
       const mediaTypes = ['image', 'audio', 'video']
       const urlPattern = '\\w+://\\S+'
       const messagePattern = new RegExp(
@@ -243,7 +237,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
       const messageMatch = name.match(messagePattern)
       if (messageMatch) {
         const [_, alias, mediaTypeOrUrl, textOrPlaceholder, showcaseTimeout] = messageMatch
-        const sender = alias ? Object.entries(allSenderAliases).find(([_, aliases]) => aliases.includes(alias.trim().toLowerCase()))?.[0] as dsl.NPC : undefined
+        const sender = alias.trim().toLowerCase() || undefined
 
         if (mediaTypeOrUrl) {
           let type: dsl.MessageType, source: vscode.Uri | undefined, showcase: number | undefined

@@ -327,7 +327,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       if (children && children[0] && children[0].name) {
         nestedInitialValue = children[0].name
       } else if (Object.keys(after).length) {
-        nestedInitialValue = Object.values(after)[0][0].target
+        nestedInitialValue = (Object.values(after)[0] as { target: string }[])[0].target
       }
 
       const invoke = {

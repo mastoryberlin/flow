@@ -43,9 +43,13 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
   childrenByPath = {} as Record<string, dsl.StateNode[]>
   ambiguousStateNodes = [] as [string, vscode.Range][]
   path = [this.rootNodeId] // array to internally keep track of the currently traversed state node path
+  validSenderNamesInLowerCase: string[]
 
-  constructor() {
+  constructor(
+    validSenders = ['Nick', 'VZ', 'Alicia', 'Professor']
+  ) {
     super()
+    this.validSenderNamesInLowerCase = validSenders.map(n => n.trim().toLowerCase())
     this.validateVisitor()
   }
 
@@ -236,8 +240,10 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
       )
       const messageMatch = name.match(messagePattern)
       if (messageMatch) {
-        const [_, alias, mediaTypeOrUrl, textOrPlaceholder, showcaseTimeout] = messageMatch
-        const sender = alias.trim().toLowerCase() || undefined
+        const [_, senderCaseInsensitive, mediaTypeOrUrl, textOrPlaceholder, showcaseTimeout] = messageMatch
+        const sender = senderCaseInsensitive ?
+          this.validSenderNamesInLowerCase.find(n => n === senderCaseInsensitive.trim().toLowerCase()) :
+          undefined
 
         if (mediaTypeOrUrl) {
           let type: dsl.MessageType, source: vscode.Uri | undefined, showcase: number | undefined
@@ -482,4 +488,4 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
 }
 
 const reusableVisitor = new DslVisitorWithDefaults()
-export const useVisitor = () => reusableVisitor
+export const useVisitor = (validSenders?: string[]) => validSenders ? new DslVisitorWithDefaults(validSenders) : reusableVisitor

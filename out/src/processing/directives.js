@@ -102,10 +102,10 @@ exports.supportedDirectives = {
         }
     }),
     incomingCallFrom: defineDirective({
-        args: function (s) { return ({ interlocutors: s.split(/(?:[a-zA-Z]+(?:\s|,)+)+[a-zA-Z]+/) }); },
+        args: function (s) { return ({ interlocutors: s.split(/[\s,]+/) }); },
         entry: {
             type: '_startCall',
-            interlocutors: function (s) { return s.interlocutors; }
+            interlocutors: function (s) { return s; }
         }
     }),
     hangUp: defineDirective({

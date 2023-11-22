@@ -105,7 +105,7 @@ exports.supportedDirectives = {
         args: function (s) { return ({ interlocutors: s.split(/[\s,]+/) }); },
         entry: {
             type: '_startCall',
-            interlocutors: function (s) { return s; }
+            interlocutors: function (s) { return s.interlocutors; }
         }
     }),
     hangUp: defineDirective({

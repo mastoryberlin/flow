@@ -138,7 +138,7 @@ export const supportedDirectives = {
   }),
 
   incomingCallFrom: defineDirective({
-    args: s => ({ interlocutors: s.split(/\s*,?\s+/) }),
+    args: s => ({ interlocutors: s.split(/(?:[a-zA-Z]+(?:\s|,)+)+[a-zA-Z]+/) }),
     entry: {
       type: '_startCall',
       interlocutors: s => s.interlocutors

@@ -1,17 +1,15 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
-import CstView from './components/CstTreeView.vue';
+import { onMounted, ref } from 'vue';
 import FlowCodeInput from './components/FlowCodeInput.vue'
 import { useLexer } from "./chevrotain/Lexer";
 import { useParser } from "./chevrotain/Parser";
 import type { TopLevelSequenceCstNode } from './chevrotain/types';
 import ResultsPane from './components/ResultsPane.vue';
 import { useVisitor } from './chevrotain/Visitor';
-import type { IToken } from 'chevrotain';
 import packageJson from "../package.json";
 
 const code = ref(`Nick "Hello"
-. @continue VZ "Yeah, that's great`)
+. @continue VZy "Yeah, that's great"`)
 
 const lexer = useLexer()
 const parser = useParser()

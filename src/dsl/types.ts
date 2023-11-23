@@ -9,12 +9,10 @@ export interface SemanticUnit {
   offset: number
 }
 
-export type NPC = 'Alicia' | 'Nick' | 'Victoria' | 'Professor' | 'Maive'
-
 export type MessageType = 'text' | 'image' | 'audio' | 'video'
 
 export interface BaseMessage {
-  sender?: NPC
+  sender?: string
   type: MessageType
 }
 

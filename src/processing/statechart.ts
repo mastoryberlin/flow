@@ -1,4 +1,4 @@
-import { useParser, useVisitor } from "../chevrotain";
+import { useParser, useVisitor, DslVisitorWithDefaults } from "../chevrotain";
 import { useIssueTracker } from "./issue-tracker";
 import type * as dsl from "../dsl/types"
 import { allNpcs } from "../constants";
@@ -12,11 +12,12 @@ import { escapeDots, promptStateRegExp } from "../util";
 let rootId: string
 let machineId: string
 const parser = useParser()
-const visitor = useVisitor()
+let visitor: DslVisitorWithDefaults
 
-export function useFlowToStatechart(flow: string, id = 'Unknown State Machine', variant: StatechartVariant = 'mainflow') {
+export function useFlowToStatechart(flow: string, id = 'Unknown State Machine', variant: StatechartVariant = 'mainflow', validSenders = ['Nick', 'VZ', 'Alicia', 'Professor']) {
   machineId = id
   rootId = '/'
+  visitor = useVisitor(validSenders)
   useIssueTracker(parser, visitor, flow, rootId, true)
   const json = stateNodeToJsonRecursive(rootId, variant)
   // console.log("🚀 ~ file: statechart.ts:20 ~ useFlowToStatechart ~ json:")
@@ -327,11 +328,11 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       if (children && children[0] && children[0].name) {
         nestedInitialValue = children[0].name
       } else if (Object.keys(after).length) {
-        nestedInitialValue = Object.values(after)[0][0].target
+        nestedInitialValue = (Object.values(after)[0] as { target: string }[])[0].target
       }
 
       const invoke = {
-        src: { type: '_sendMessage', kind, sender } as { type: '_sendMessage', kind: dsl.MessageType, sender: dsl.NPC, text?: string, attachment?: string, showcase?: number },
+        src: { type: '_sendMessage', kind, sender } as { type: '_sendMessage', kind: dsl.MessageType, sender: string, text?: string, attachment?: string, showcase?: number },
         onDone: '__SEND_MESSAGE_DONE__'
       }
       if (node.message.type === 'text') {

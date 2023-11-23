@@ -138,8 +138,10 @@ export const supportedDirectives = {
   }),
 
   incomingCallFrom: defineDirective({
-    args: s => ({ interlocutors: s.split(/[\s,]+/) }),
-    entry: {
+    args: s => ({
+      interlocutors: s.split(/[\s,]+/)
+    }),
+    invoke: {
       type: '_startCall',
       interlocutors: s => s.interlocutors
     }

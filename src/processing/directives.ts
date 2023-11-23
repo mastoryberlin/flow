@@ -142,7 +142,7 @@ export const supportedDirectives = {
     }),
     entry: {
       type: '_npcJoinCall',
-      actionName: a => a.NPCName
+      NPCName: a => a.NPCName
     }
   }),
   leaveCall: defineDirective({
@@ -151,7 +151,7 @@ export const supportedDirectives = {
     }),
     entry: {
       type: '_npcLeaveCall',
-      actionName: a => a.NPCName
+      NPCName: a => a.NPCName
     }
   }),
 

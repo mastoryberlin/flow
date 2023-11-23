@@ -107,7 +107,7 @@ exports.supportedDirectives = {
         }); },
         entry: {
             type: '_npcJoinCall',
-            actionName: function (a) { return a.NPCName; }
+            NPCName: function (a) { return a.NPCName; }
         }
     }),
     leaveCall: defineDirective({
@@ -116,7 +116,7 @@ exports.supportedDirectives = {
         }); },
         entry: {
             type: '_npcLeaveCall',
-            actionName: function (a) { return a.NPCName; }
+            NPCName: function (a) { return a.NPCName; }
         }
     }),
     incomingCallFrom: defineDirective({

@@ -136,6 +136,24 @@ export const supportedDirectives = {
       actionName: a => a.actionName
     }
   }),
+  joinCall: defineDirective({
+    args: s => ({
+      NPCName: s,
+    }),
+    entry: {
+      type: '_npcJoinCall',
+      actionName: a => a.NPCName
+    }
+  }),
+  leaveCall: defineDirective({
+    args: s => ({
+      NPCName: s,
+    }),
+    entry: {
+      type: '_npcLeaveCall',
+      actionName: a => a.NPCName
+    }
+  }),
 
   incomingCallFrom: defineDirective({
     args: s => ({

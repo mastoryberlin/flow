@@ -60,6 +60,12 @@ export declare const supportedDirectives: {
     exec: DirectiveInfo<{
         actionName: string;
     }>;
+    joinCall: DirectiveInfo<{
+        NPCName: string;
+    }>;
+    leaveCall: DirectiveInfo<{
+        NPCName: string;
+    }>;
     incomingCallFrom: DirectiveInfo<{
         interlocutors: string[];
     }>;

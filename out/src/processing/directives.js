@@ -101,6 +101,24 @@ exports.supportedDirectives = {
             actionName: function (a) { return a.actionName; }
         }
     }),
+    joinCall: defineDirective({
+        args: function (s) { return ({
+            NPCName: s
+        }); },
+        entry: {
+            type: '_npcJoinCall',
+            actionName: function (a) { return a.NPCName; }
+        }
+    }),
+    leaveCall: defineDirective({
+        args: function (s) { return ({
+            NPCName: s
+        }); },
+        entry: {
+            type: '_npcLeaveCall',
+            actionName: function (a) { return a.NPCName; }
+        }
+    }),
     incomingCallFrom: defineDirective({
         args: function (s) { return ({
             interlocutors: s.split(/[\s,]+/)

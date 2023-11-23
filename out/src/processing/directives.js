@@ -106,7 +106,7 @@ exports.supportedDirectives = {
             interlocutors: s.split(/[\s,]+/)
         }); },
         invoke: {
-            type: '_startCall',
+            type: 'startCall',
             interlocutors: function (s) { return s.interlocutors; }
         }
     }),

@@ -142,7 +142,7 @@ export const supportedDirectives = {
       interlocutors: s.split(/[\s,]+/)
     }),
     invoke: {
-      type: '_startCall',
+      type: 'startCall',
       interlocutors: s => s.interlocutors
     }
   }),

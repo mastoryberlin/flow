@@ -263,9 +263,10 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
         else {
             // ... message details if applicable ...
             var mediaTypes = ['image', 'audio', 'video'];
+            var mediaKeyword = mediaTypes.join('|');
             var urlPattern = '\\w+://\\S+';
-            var messagePattern = new RegExp("^(?:((?:(?!\"|".concat(mediaTypes.join('|'), ")(?:\\S(?!://))+\\s+)+))?") +
-                "(?:(".concat(mediaTypes.join('|'), "|").concat(urlPattern, ")\\s+)?") +
+            var messagePattern = new RegExp("^(?:((?:(?!\"|".concat(mediaKeyword, ")(?:\\S(?!://))+\\s+)+))?") +
+                "(?:(".concat(mediaKeyword, "|").concat(urlPattern, ")\\s+)?") +
                 "\"([^\"]*)\"(?:\\s+(".concat(timeRegExpString, "))?$"), 'di');
             var messageMatch = name.match(messagePattern);
             if (messageMatch) {

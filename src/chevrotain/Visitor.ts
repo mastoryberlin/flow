@@ -231,10 +231,11 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     } else {
       // ... message details if applicable ...
       const mediaTypes = ['image', 'audio', 'video']
+      const mediaKeyword = mediaTypes.join('|')
       const urlPattern = '\\w+://\\S+'
       const messagePattern = new RegExp(
-        `^(?:((?:(?!"|${mediaTypes.join('|')})(?:\\S(?!://))+\\s+)+))?` +
-        `(?:(${mediaTypes.join('|')}|${urlPattern})\\s+)?` +
+        `^(?:((?:(?!"|${mediaKeyword})(?:\\S(?!://))+\\s+)+))?` +
+        `(?:(${mediaKeyword}|${urlPattern})\\s+)?` +
         `"([^"]*)"(?:\\s+(${timeRegExpString}))?$`,
         'di'
       )

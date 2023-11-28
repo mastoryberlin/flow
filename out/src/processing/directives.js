@@ -134,15 +134,20 @@ exports.supportedDirectives = {
             type: '_hangUp'
         }
     }),
-    chooseSubflow: defineDirective(({
-        args: function (s) { return ({
-            unitVariable: s
-        }); },
+    chooseSubflow: defineDirective({
+        args: function (s) {
+            var _a = s.trim().split(/\s+/), varName = _a[0], option = _a[1];
+            return {
+                unitVariable: varName,
+                promptStateName: option !== null && option !== void 0 ? option : '??'
+            };
+        },
         invoke: {
             type: '_chooseSubflow',
-            unitVariable: function (s) { return s.unitVariable; }
+            unitVariable: function (s) { return s.unitVariable; },
+            promptStateName: function (s) { return s.promptStateName; }
         }
-    })),
+    }),
     /**
      * Terminates the flow at this point.\n\nIf this directive appears in a subflow, it stops the subflow state machine and returns control back to the main flow. If it appears in an episode main flow, it stops the episode entirely. If it appears in a challenge flow, it unloads the challenge from the Wire.
      */

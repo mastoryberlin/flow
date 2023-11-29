@@ -143,6 +143,17 @@ exports.supportedDirectives = {
             unitVariable: function (s) { return s.unitVariable; }
         }
     })),
+    let: defineDirective(({
+        args: function (s) { return ({
+            npcName: s.split(' ')[0],
+            promptDoc: s.split(' ')[1]
+        }); },
+        invoke: {
+            type: '_let',
+            npcName: function (s) { return s.npcName; },
+            promptDoc: function (s) { return s.promptDoc; }
+        }
+    })),
     /**
      * Terminates the flow at this point.\n\nIf this directive appears in a subflow, it stops the subflow state machine and returns control back to the main flow. If it appears in an episode main flow, it stops the episode entirely. If it appears in a challenge flow, it unloads the challenge from the Wire.
      */

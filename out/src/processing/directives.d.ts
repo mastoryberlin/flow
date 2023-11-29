@@ -73,6 +73,10 @@ export declare const supportedDirectives: {
     chooseSubflow: DirectiveInfo<{
         unitVariable: string;
     }>;
+    let: DirectiveInfo<{
+        npcName: string;
+        promptDoc: string;
+    }>;
     /**
      * Terminates the flow at this point.\n\nIf this directive appears in a subflow, it stops the subflow state machine and returns control back to the main flow. If it appears in an episode main flow, it stops the episode entirely. If it appears in a challenge flow, it unloads the challenge from the Wire.
      */

@@ -185,12 +185,14 @@ export const supportedDirectives = {
   let: defineDirective(({
     args: s => ({
       npcName: s.split(' ')[0],
-      promptDoc: s.split(' ')[1]
+      promptDoc: s.split(' ')[1],
+      fallback: s.match(/"([^"]*)"/)![0]
     }),
     invoke: {
       type: '_let',
       npcName: s => s.npcName,
-      promptDoc: s => s.promptDoc
+      promptDoc: s => s.promptDoc,
+      fallback: s => s.fallback
     }
   })),
   /**

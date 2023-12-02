@@ -15,6 +15,57 @@ var splitArgs = {
     }
 };
 exports.supportedDirectives = {
+    /**
+      * Freezes the UI in the given fragment, i.e. prevents any further user input.
+      */
+    freeze: defineDirective({
+        args: function (s) {
+            //TODO: split the non-dotword part of the directive state name into arguments
+            var fragmentId = s.trim().split(/\s+/)[0];
+            return {
+                fragmentId: fragmentId
+            };
+        },
+        entry: {
+            type: '_freeze',
+            //TODO: process the arguments from above into additional props of the implementation object
+            fragmentId: function (s) { return s.fragmentId; }
+        }
+    }),
+    /**
+      * Unfreezes the UI in the given fragment, i.e. allows user input (again).
+      */
+    unfreeze: defineDirective({
+        args: function (s) {
+            //TODO: split the non-dotword part of the directive state name into arguments
+            var fragmentId = s.trim().split(/\s+/)[0];
+            return {
+                fragmentId: fragmentId
+            };
+        },
+        entry: {
+            type: '_unfreeze',
+            //TODO: process the arguments from above into additional props of the implementation object
+            fragmentId: function (s) { return s.fragmentId; }
+        }
+    }),
+    /**
+     * Reveals the sample solution for the given fragment.
+     */
+    reveal: defineDirective({
+        args: function (s) {
+            //TODO: split the non-dotword part of the directive state name into arguments
+            var fragmentId = s.trim().split(/\s+/)[0];
+            return {
+                fragmentId: fragmentId
+            };
+        },
+        entry: {
+            type: '_reveal',
+            //TODO: process the arguments from above into additional props of the implementation object
+            fragmentId: function (s) { return s.fragmentId; }
+        }
+    }),
     actorPoints: defineDirective({
         args: function (s) { return ({
             actorPointsData: s

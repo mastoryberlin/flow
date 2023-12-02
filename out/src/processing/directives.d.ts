@@ -33,6 +33,24 @@ export declare type DirectiveInfo<A extends DirectiveArgumentsTypes> = {
 export declare function defineDirective<A extends DirectiveArgumentsTypes>(d: DirectiveInfo<A>): DirectiveInfo<A>;
 export declare type UiElementId = 'submitButton' | 'callButton';
 export declare const supportedDirectives: {
+    /**
+      * Freezes the UI in the given fragment, i.e. prevents any further user input.
+      */
+    freeze: DirectiveInfo<{
+        fragmentId: string;
+    }>;
+    /**
+      * Unfreezes the UI in the given fragment, i.e. allows user input (again).
+      */
+    unfreeze: DirectiveInfo<{
+        fragmentId: string;
+    }>;
+    /**
+     * Reveals the sample solution for the given fragment.
+     */
+    reveal: DirectiveInfo<{
+        fragmentId: string;
+    }>;
     actorPoints: DirectiveInfo<{
         actorPointsData: string;
     }>;
@@ -94,7 +112,7 @@ export declare const supportedDirectives: {
      * Hides a UI element if it was previously displayed.
      */
     hide: DirectiveInfo<{
-        uiElement: "submitButton" | "callButton";
+        uiElement: string;
     }>;
     inChallenge: DirectiveInfo<{
         eventName: string;
@@ -126,7 +144,7 @@ export declare const supportedDirectives: {
      * Shows a UI element if it was previously hidden.
      */
     show: DirectiveInfo<{
-        uiElement: "submitButton" | "callButton";
+        uiElement: string;
     }>;
     /**
      * Loads a flow statechart and executes it as a subflow.

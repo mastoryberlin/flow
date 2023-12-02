@@ -56,59 +56,23 @@ const splitArgs = {
 export type UiElementId = 'submitButton' | 'callButton'
 
 export const supportedDirectives = {
-  /**
-    * Freezes the UI in the given fragment, i.e. prevents any further user input.
-    */
-  freeze: defineDirective({
-    args: s => {
-      //TODO: split the non-dotword part of the directive state name into arguments
-      const [fragmentId,] = s.trim().split(/\s+/)
-      return {
-        fragmentId,
-      }
-    },
-    entry: {
-      type: '_freeze',
-      //TODO: process the arguments from above into additional props of the implementation object
-      fragmentId: s => s.fragmentId,
-    },
-  }),
-
-  /**
-    * Unfreezes the UI in the given fragment, i.e. allows user input (again).
-    */
-  unfreeze: defineDirective({
-    args: s => {
-      //TODO: split the non-dotword part of the directive state name into arguments
-      const [fragmentId,] = s.trim().split(/\s+/)
-      return {
-        fragmentId,
-      }
-    },
-    entry: {
-      type: '_unfreeze',
-      //TODO: process the arguments from above into additional props of the implementation object
-      fragmentId: s => s.fragmentId,
-    },
-  }),
-
-  /**
-   * Reveals the sample solution for the given fragment.
-   */
-  reveal: defineDirective({
-    args: s => {
-      //TODO: split the non-dotword part of the directive state name into arguments
-      const [fragmentId,] = s.trim().split(/\s+/)
-      return {
-        fragmentId,
-      }
-    },
-    entry: {
-      type: '_reveal',
-      //TODO: process the arguments from above into additional props of the implementation object
-      fragmentId: s => s.fragmentId,
-    },
-  }),
+    /**
+     * Reveals the sample solution for the given fragment.
+     */
+    reveal: defineDirective({
+      args: s => {
+        //TODO: split the non-dotword part of the directive state name into arguments
+        const [fragmentId, ] = s.trim().split(/\s+/) 
+        return {
+          fragmentId,
+        }
+      },
+      entry: {
+        type: '_reveal',
+        //TODO: process the arguments from above into additional props of the implementation object
+        fragmentId: s => s.fragmentId,
+      },
+    }),
 
   actorPoints: defineDirective({
     args: s => ({
@@ -289,7 +253,7 @@ export const supportedDirectives = {
   hide: defineDirective({
     args: s => ({
       /** The UI element to hide */
-      uiElement: s,
+      uiElement: s as UiElementId,
     }),
     entry: {
       type: '_hide',
@@ -407,7 +371,7 @@ export const supportedDirectives = {
   show: defineDirective({
     args: s => ({
       /** The UI element to show */
-      uiElement: s,
+      uiElement: s as UiElementId,
     }),
     entry: {
       type: '_show',

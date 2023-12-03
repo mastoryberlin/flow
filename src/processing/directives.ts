@@ -424,13 +424,8 @@ export const supportedDirectives = {
       subflowId: s,
     }),
     invoke: {
+      type: '_subflow',
       id: a => a.subflowId,
-      // autoForward: a => true,
-      src: a => '_subflow',/* ,
-      data: a => ({
-        unquoted: true,
-        raw: `context => context`,
-      }) */
     },
   }),
 }

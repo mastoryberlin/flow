@@ -358,9 +358,8 @@ exports.supportedDirectives = {
             subflowId: s
         }); },
         invoke: {
-            id: function (a) { return a.subflowId; },
-            // autoForward: a => true,
-            src: function (a) { return '_subflow'; }
+            type: '_subflow',
+            id: function (a) { return a.subflowId; }
         }
     })
 };

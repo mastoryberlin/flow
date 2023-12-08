@@ -1,5 +1,5 @@
 import type { Parser, DslVisitorWithDefaults } from "../chevrotain";
-import type { MediaMessage, StateNode } from "../dsl/types";
+import type { MediaMessage, StateNode, TextMessage } from "../dsl/types";
 import type { Issue, IssueKind, IssueSeverity } from "../types";
 import { Range } from "../dsl/vscode";
 import { promptStateRegExp } from "../util";
@@ -237,10 +237,26 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     })))
   }
 
+  // ------------------------------------------------------------------------------------------------------------------------
+
+  const checkAdditionalDots = () => {
+    kind = 'additional dots'
+    severity = 'warning'
+    const additionalDots = allStateNodes.filter(s =>
+      s.name.endsWith('|')
+    )
+    issues.push(...additionalDots.map(s => ({
+      kind,
+      range: s.range,
+      severity,
+    })))
+    console.log("🚀 ~ file: issue-tracker.ts:254 ~ checkAdditionalDots ~ issues:", issues)
+  }
+
   // ========================================================================================================================
   // Invoke every check and collect issues
   // ========================================================================================================================
-
+  checkAdditionalDots()
   checkAmbiguousStateNodes()
   checkDeadEnds()
   checkExplicitSelfTransitions()

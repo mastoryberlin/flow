@@ -233,9 +233,27 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             payload: { todo: t.image.replace(/\/\/\s*|TODO:?\s*|TBD:?\s*/g, '') }
         }); }));
     };
+    // ------------------------------------------------------------------------------------------------------------------------
+    var checkAdditionalDots = function () {
+        kind = 'additional dots';
+        severity = 'warning';
+        var additionalDots = allStateNodes.filter(function (s) {
+            console.log("🚀 ~ file: issue-tracker.ts:249 ~ checkAdditionalDots ~ s.message:", s);
+            s.message &&
+                s.message.type === 'text' &&
+                s.message;
+        });
+        // issues.push(...todos.map(t => ({
+        //   kind,
+        //   range: new Range(t.startLine || 0, t.startColumn || 0, t.endLine || 0, t.endColumn || 0),
+        //   severity,
+        //   payload: { todo: t.image.replace(/\/\/\s*|TODO:?\s*|TBD:?\s*/g, '') },
+        // })))
+    };
     // ========================================================================================================================
     // Invoke every check and collect issues
     // ========================================================================================================================
+    checkAdditionalDots();
     checkAmbiguousStateNodes();
     checkDeadEnds();
     checkExplicitSelfTransitions();

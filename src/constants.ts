@@ -24,6 +24,7 @@ export const allErrors = [
 ] as const
 
 export const allWarnings = [
+  'additional dots',
   'dead end',
   'media url undefined',
   'unresolved TODO',

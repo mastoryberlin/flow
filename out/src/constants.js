@@ -31,6 +31,7 @@ exports.allErrors = [
     'state node names must be unique in every scope',
 ];
 exports.allWarnings = [
+    'additional dots',
     'dead end',
     'media url undefined',
     'unresolved TODO',

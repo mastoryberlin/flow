@@ -183,7 +183,7 @@ export const supportedDirectives = {
 
   exec: defineDirective({
     args: s => ({
-      actionName: s,
+      actionName: s.trim(),
     }),
     entry: {
       type: '_exec',

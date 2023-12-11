@@ -14,6 +14,10 @@ export const allNpcs = [
 ] as const
 
 export const allErrors = [
+  'missing "*" state',
+  'missing ats',
+  'unnecessary dots',
+  'duplicate labels',
   'parser error',
   'state name is used multiple times in the same scope',
   'message sender unknown',
@@ -24,6 +28,10 @@ export const allErrors = [
 ] as const
 
 export const allWarnings = [
+  'missing done directive',
+  'variables assignment as the first child',
+  'not in root state',
+  'reserved name',
   'additional dots',
   'dead end',
   'media url undefined',

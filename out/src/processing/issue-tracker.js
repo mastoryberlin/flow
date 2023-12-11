@@ -238,21 +238,33 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
         kind = 'additional dots';
         severity = 'warning';
         var additionalDots = allStateNodes.filter(function (s) {
-            console.log("🚀 ~ file: issue-tracker.ts:249 ~ checkAdditionalDots ~ s.message:", s);
-            s.message &&
-                s.message.type === 'text' &&
-                s.message;
+            return s.name.endsWith('|');
         });
-        // issues.push(...todos.map(t => ({
-        //   kind,
-        //   range: new Range(t.startLine || 0, t.startColumn || 0, t.endLine || 0, t.endColumn || 0),
-        //   severity,
-        //   payload: { todo: t.image.replace(/\/\/\s*|TODO:?\s*|TBD:?\s*/g, '') },
-        // })))
+        issues.push.apply(issues, additionalDots.map(function (s) { return ({
+            kind: kind,
+            range: s.range,
+            severity: severity
+        }); }));
+        console.log("🚀 ~ file: issue-tracker.ts:254 ~ checkAdditionalDots ~ issues:", issues);
+    };
+    // ------------------------------------------------------------------------------------------------------------------------
+    var checkMissingAts = function () {
+        kind = 'missing ats';
+        severity = 'error';
+        var additionalDots = allStateNodes.filter(function (s) {
+            return s.name;
+        });
+        console.log("🚀 ~ file: issue-tracker.ts:254 ~ checkAdditionalDots ~ issues:", additionalDots);
+        issues.push.apply(issues, additionalDots.map(function (s) { return ({
+            kind: kind,
+            range: s.range,
+            severity: severity
+        }); }));
     };
     // ========================================================================================================================
     // Invoke every check and collect issues
     // ========================================================================================================================
+    checkMissingAts();
     checkAdditionalDots();
     checkAmbiguousStateNodes();
     checkDeadEnds();

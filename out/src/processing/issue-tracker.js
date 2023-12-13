@@ -12,6 +12,7 @@ exports.__esModule = true;
 exports.useIssueTracker = void 0;
 var vscode_1 = require("../dsl/vscode");
 var util_1 = require("../util");
+var directives_1 = require("./directives");
 function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     parser.parse(flow);
     visitor.rootNodeId = rootNodeId;
@@ -245,17 +246,124 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
             range: s.range,
             severity: severity
         }); }));
-        console.log("🚀 ~ file: issue-tracker.ts:254 ~ checkAdditionalDots ~ issues:", issues);
     };
     // ------------------------------------------------------------------------------------------------------------------------
     var checkMissingAts = function () {
         kind = 'missing ats';
         severity = 'error';
-        var additionalDots = allStateNodes.filter(function (s) {
-            return s.name;
+        var regExp = /\b(\w+)\s+(\w+)\b(?=\s*("[^"]*"|{))/;
+        var missingAts = allStateNodes.filter(function (s) {
+            return regExp.test(s.name);
         });
-        console.log("🚀 ~ file: issue-tracker.ts:254 ~ checkAdditionalDots ~ issues:", additionalDots);
-        issues.push.apply(issues, additionalDots.map(function (s) { return ({
+        // console.log("🚀 ~ file: issue-tracker.ts:265 ~ missingAts ~ allStateNodes:", allStateNodes)
+        // allTransitions
+        // console.log("🚀 ~ file: issue-tracker.ts:264 ~ additionalDots ~ additionalDots:", missingAts)
+        issues.push.apply(issues, missingAts.map(function (s) { return ({
+            kind: kind,
+            range: s.range,
+            severity: severity
+        }); }));
+    };
+    // ------------------------------------------------------------------------------------------------------------------------
+    var checkDuplicateLabels = function () {
+        kind = 'duplicate labels';
+        severity = 'error';
+        var duplicateLabels = allStateNodes.filter(function (s) {
+            return s.label && allStateNodes.some(function (otherState) { return s !== otherState && s.label === otherState.label; });
+        });
+        issues.push.apply(issues, duplicateLabels.map(function (s) { return ({
+            kind: kind,
+            range: s.range,
+            severity: severity
+        }); }));
+    };
+    // ------------------------------------------------------------------------------------------------------------------------
+    // const checkUnnecessaryDots = () => {
+    //   kind = 'unnecessary dots'
+    //   severity = 'error'
+    //   const duplicateLabels = allStateNodes.filter(s => {
+    //     return s.childNodes && s.childNodes.length && s.childNodes[0]
+    //   })
+    //   console.log("🚀 ~ file: issue-tracker.ts:298 ~ duplicateLabels ~ duplicateLabels:", duplicateLabels)
+    //   console.log("🚀 ~ file: issue-tracker.ts:300 ~ checkUnnecessaryDots ~ allTransitions:", allTransitions)
+    //   issues.push(...duplicateLabels.map(s => ({
+    //     kind,
+    //     range: s.range,
+    //     severity,
+    //   })))
+    // }
+    // ------------------------------------------------------------------------------------------------------------------------
+    var checkUsageOfReservedNames = function () {
+        kind = 'reserved name';
+        severity = 'warning';
+        var directiveNames = Object.keys(directives_1.supportedDirectives);
+        var reservedNames = allStateNodes.filter(function (s) {
+            return !s.name.startsWith('|') && directiveNames.includes(s.name.split(' ')[0]);
+        });
+        issues.push.apply(issues, reservedNames.map(function (s) { return ({
+            kind: kind,
+            range: s.range,
+            severity: severity
+        }); }));
+    };
+    // ------------------------------------------------------------------------------------------------------------------------
+    var checkForWrapperRootState = function () {
+        kind = 'not in root state';
+        severity = 'warning';
+        var rootName = rootStateNodes[0].name;
+        var flowCodeOutsideRootState = allStateNodes.filter(function (s) {
+            return !s.path.includes(rootName);
+        });
+        issues.push.apply(issues, flowCodeOutsideRootState.map(function (s) { return ({
+            kind: kind,
+            range: s.range,
+            severity: severity
+        }); }));
+    };
+    // ------------------------------------------------------------------------------------------------------------------------
+    var checkForVariablesAssignment = function () {
+        kind = 'variables assignment as the first child';
+        severity = 'warning';
+        var variablesAssignmentAsFirstChild = allStateNodes.filter(function (s) {
+            return s.childNodes && s.childNodes.length && s.childNodes[0].assignVariables;
+        });
+        issues.push.apply(issues, variablesAssignmentAsFirstChild.map(function (s) { return ({
+            kind: kind,
+            range: s.childNodes[0].range,
+            severity: severity
+        }); }));
+    };
+    // ------------------------------------------------------------------------------------------------------------------------
+    var checkDoneState = function () {
+        kind = 'missing done directive';
+        severity = 'warning';
+        var missingDone = allStateNodes[allStateNodes.length - 1].name !== '|done' ? allStateNodes[allStateNodes.length - 1] : '';
+        if (typeof missingDone !== 'string') {
+            issues.push({
+                kind: kind,
+                range: missingDone.range,
+                severity: severity
+            });
+        }
+    };
+    // ------------------------------------------------------------------------------------------------------------------------
+    var checkFallbackState = function () {
+        kind = 'missing "*" state';
+        severity = 'error';
+        var allInputsWithFreeTextPaths = allStateNodes.filter(function (s) {
+            return s.name === '?!';
+        });
+        var allFallbackStars = allStateNodes.filter(function (s) {
+            return s.name === '*';
+        });
+        var conversationsWithoutFallback = allInputsWithFreeTextPaths.filter(function (item) {
+            return !allFallbackStars.some(function (obj) {
+                var freeTextInputPath = item.path.slice(0, -1).join('/');
+                var starPath = obj.path.join('/');
+                return starPath.startsWith(freeTextInputPath);
+            });
+        });
+        issues.push.apply(issues, conversationsWithoutFallback.map(function (s) { return ({
             kind: kind,
             range: s.range,
             severity: severity
@@ -264,6 +372,13 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     // ========================================================================================================================
     // Invoke every check and collect issues
     // ========================================================================================================================
+    checkFallbackState();
+    checkDoneState();
+    checkForVariablesAssignment();
+    checkForWrapperRootState();
+    checkUsageOfReservedNames();
+    // checkUnnecessaryDots()
+    checkDuplicateLabels();
     checkMissingAts();
     checkAdditionalDots();
     checkAmbiguousStateNodes();
@@ -276,6 +391,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     checkMessageSenders();
     checkMessageMediaUrl();
     checkTodos();
+    console.log("🚀 ~ file: issue-tracker.ts:324 ~ checkUsageOfReservedNames ~ issues:", issues);
     issues.sort(function (i, j) { return 1000 * (i.range.start.line - j.range.start.line) + i.range.start.character - j.range.start.character; });
     if (!noThrow) {
         issues.forEach(function (i) {

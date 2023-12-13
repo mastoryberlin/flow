@@ -22,6 +22,10 @@ exports.allNpcs = [
     "Professor",
 ];
 exports.allErrors = [
+    'missing "*" state',
+    'missing ats',
+    'unnecessary dots',
+    'duplicate labels',
     'parser error',
     'state name is used multiple times in the same scope',
     'message sender unknown',
@@ -31,7 +35,10 @@ exports.allErrors = [
     'state node names must be unique in every scope',
 ];
 exports.allWarnings = [
-    'missing ats',
+    'missing done directive',
+    'variables assignment as the first child',
+    'not in root state',
+    'reserved name',
     'additional dots',
     'dead end',
     'media url undefined',

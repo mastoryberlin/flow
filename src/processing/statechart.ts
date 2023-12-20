@@ -180,7 +180,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
 
     const directive = node.directive
     if (directive) {
-      directive.arg = directive.arg?.replace(/\\r/g, '')
+      directive.arg = directive.arg?.trim().replace(/\\r/g, '')
       const sepHelper = '&.&'
       const argSplitter = new RegExp('\\s+|(?<!^)\\b(?!$)')
       const invoke = {
@@ -201,7 +201,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
           }
           break
         case 'reach': {
-          const args = directive.arg.trim().split(' ')
+          const args = directive.arg.split(' ')
           const section = args[0]
           const path = args[1]
           json.entry = { type: '_showEntry', section, path }
@@ -213,14 +213,14 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         } break;
         case 'tut':
           {
-            var args = directive.arg.trim().split(' ');
+            var args = directive.arg.split(' ');
             var elementId = args[0];
             var message = args.splice(1).join(' ');
             invoke.src = { type: '_tutorial', elementId, message };
           }
           break;
         case 'goal': {
-          const goalString = directive.arg.trim()
+          const goalString = directive.arg
           json.entry = { type: '_setWireGoal', goalString }
         }
           break;

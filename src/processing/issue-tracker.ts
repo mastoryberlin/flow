@@ -1,8 +1,9 @@
 import type { Parser, DslVisitorWithDefaults } from "../chevrotain";
-import type { MediaMessage, StateNode } from "../dsl/types";
+import type { MediaMessage, StateNode, TextMessage } from "../dsl/types";
 import type { Issue, IssueKind, IssueSeverity } from "../types";
 import { Range } from "../dsl/vscode";
 import { promptStateRegExp } from "../util";
+import { supportedDirectives } from './directives'
 
 export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults, flow: string, rootNodeId: string, noThrow?: boolean) {
   parser.parse(flow)
@@ -237,10 +238,182 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     })))
   }
 
+  // ------------------------------------------------------------------------------------------------------------------------
+
+  const checkAdditionalDots = () => {
+    kind = 'additional dots'
+    severity = 'warning'
+    const additionalDots = allStateNodes.filter(s =>
+      s.name.endsWith('|')
+    )
+    issues.push(...additionalDots.map(s => ({
+      kind,
+      range: s.range,
+      severity,
+    })))
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------------
+
+  const checkMissingAts = () => {
+    kind = 'missing ats'
+    severity = 'error'
+    const regExp = /\b(\w+)\s+(\w+)\b(?=\s*("[^"]*"|{))/
+    const missingAts = allStateNodes.filter(s => {
+      return regExp.test(s.name)
+    })
+    // console.log("🚀 ~ file: issue-tracker.ts:265 ~ missingAts ~ allStateNodes:", allStateNodes)
+    // allTransitions
+    // console.log("🚀 ~ file: issue-tracker.ts:264 ~ additionalDots ~ additionalDots:", missingAts)
+    issues.push(...missingAts.map(s => ({
+      kind,
+      range: s.range,
+      severity,
+    })))
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------------
+
+  const checkDuplicateLabels = () => {
+    kind = 'duplicate labels'
+    severity = 'error'
+    const duplicateLabels = allStateNodes.filter(s => {
+      return s.label && allStateNodes.some(otherState => s !== otherState && s.label === otherState.label)
+    })
+
+    issues.push(...duplicateLabels.map(s => ({
+      kind,
+      range: s.range,
+      severity,
+    })))
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------------
+
+  // const checkUnnecessaryDots = () => {
+  //   kind = 'unnecessary dots'
+  //   severity = 'error'
+  //   const duplicateLabels = allStateNodes.filter(s => {
+  //     return s.childNodes && s.childNodes.length && s.childNodes[0]
+  //   })
+  //   console.log("🚀 ~ file: issue-tracker.ts:298 ~ duplicateLabels ~ duplicateLabels:", duplicateLabels)
+  //   console.log("🚀 ~ file: issue-tracker.ts:300 ~ checkUnnecessaryDots ~ allTransitions:", allTransitions)
+  //   issues.push(...duplicateLabels.map(s => ({
+  //     kind,
+  //     range: s.range,
+  //     severity,
+  //   })))
+  // }
+
+  // ------------------------------------------------------------------------------------------------------------------------
+
+  const checkUsageOfReservedNames = () => {
+    kind = 'reserved name'
+    severity = 'warning'
+    const directiveNames = Object.keys(supportedDirectives)
+    const reservedNames = allStateNodes.filter(s => {
+      return !s.name.startsWith('|') && directiveNames.includes(s.name.split(' ')[0])
+    })
+    issues.push(...reservedNames.map(s => ({
+      kind,
+      range: s.range,
+      severity,
+    })))
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------------
+
+  const checkForWrapperRootState = () => {
+    kind = 'not in root state'
+    severity = 'warning'
+    const rootName = rootStateNodes[0].name
+    const flowCodeOutsideRootState = allStateNodes.filter(s => {
+
+      return !s.path.includes(rootName)
+
+    })
+
+    issues.push(...flowCodeOutsideRootState.map(s => ({
+      kind,
+      range: s.range,
+      severity,
+    })))
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------------
+
+  const checkForVariablesAssignment = () => {
+    kind = 'variables assignment as the first child'
+    severity = 'warning'
+    const variablesAssignmentAsFirstChild = allStateNodes.filter(s => {
+      return s.childNodes && s.childNodes.length && s.childNodes[0].assignVariables
+    })
+
+    issues.push(...variablesAssignmentAsFirstChild.map(s => ({
+      kind,
+      range: s.childNodes[0].range,
+      severity,
+    })))
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------------
+
+  const checkDoneState = () => {
+    kind = 'missing done directive'
+    severity = 'warning'
+    const missingDone = allStateNodes[allStateNodes.length - 1].name !== '|done' ? allStateNodes[allStateNodes.length - 1] : ''
+
+    if (typeof missingDone !== 'string') {
+      issues.push({
+        kind,
+        range: missingDone.range,
+        severity,
+      })
+    }
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------------
+
+  const checkFallbackState = () => {
+    kind = 'missing "*" state'
+    severity = 'error'
+    const allInputsWithFreeTextPaths = allStateNodes.filter(s => {
+      return s.name === '?!'
+    })
+    const allFallbackStars = allStateNodes.filter(s => {
+      return s.name === '*'
+    })
+
+    const conversationsWithoutFallback = allInputsWithFreeTextPaths.filter(item =>
+      !allFallbackStars.some(obj => {
+        const freeTextInputPath = item.path.slice(0, -1).join('/')
+        const starPath = obj.path.join('/')
+        return starPath.startsWith(freeTextInputPath)
+      })
+    )
+
+
+    issues.push(...conversationsWithoutFallback.map(s => ({
+      kind,
+      range: s.range,
+      severity,
+    })))
+  }
+
+
+
   // ========================================================================================================================
   // Invoke every check and collect issues
   // ========================================================================================================================
-
+  checkFallbackState()
+  checkDoneState()
+  checkForVariablesAssignment()
+  checkForWrapperRootState()
+  checkUsageOfReservedNames()
+  // checkUnnecessaryDots()
+  checkDuplicateLabels()
+  checkMissingAts()
+  checkAdditionalDots()
   checkAmbiguousStateNodes()
   checkDeadEnds()
   checkExplicitSelfTransitions()
@@ -251,6 +424,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   checkMessageSenders()
   checkMessageMediaUrl()
   checkTodos()
+  console.log("🚀 ~ file: issue-tracker.ts:324 ~ checkUsageOfReservedNames ~ issues:", issues)
 
   issues.sort((i, j) => 1000 * (i.range.start.line - j.range.start.line) + i.range.start.character - j.range.start.character)
 

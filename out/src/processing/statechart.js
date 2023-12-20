@@ -190,7 +190,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         // ========================================================================================================================
         var directive = node.directive;
         if (directive) {
-            directive.arg = (_a = directive.arg) === null || _a === void 0 ? void 0 : _a.replace(/\\r/g, '');
+            directive.arg = (_a = directive.arg) === null || _a === void 0 ? void 0 : _a.trim().replace(/\\r/g, '');
             var sepHelper = '&.&';
             var argSplitter = new RegExp('\\s+|(?<!^)\\b(?!$)');
             var invoke = {
@@ -213,7 +213,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                     break;
                 case 'reach':
                     {
-                        var args_2 = directive.arg.trim().split(' ');
+                        var args_2 = directive.arg.split(' ');
                         var section = args_2[0];
                         var path = args_2[1];
                         json.entry = { type: '_showEntry', section: section, path: path };
@@ -226,7 +226,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                     break;
                 case 'tut':
                     {
-                        var args = directive.arg.trim().split(' ');
+                        var args = directive.arg.split(' ');
                         var elementId = args[0];
                         var message = args.splice(1).join(' ');
                         invoke.src = { type: '_tutorial', elementId: elementId, message: message };
@@ -234,7 +234,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                     break;
                 case 'goal':
                     {
-                        var goalString = directive.arg.trim();
+                        var goalString = directive.arg;
                         json.entry = { type: '_setWireGoal', goalString: goalString };
                     }
                     break;

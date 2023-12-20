@@ -145,7 +145,7 @@ exports.supportedDirectives = {
     }),
     exec: defineDirective({
         args: function (s) { return ({
-            actionName: s
+            actionName: s.trim()
         }); },
         entry: {
             type: '_exec',

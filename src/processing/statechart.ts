@@ -20,9 +20,7 @@ export function useFlowToStatechart(flow: string, id = 'Unknown State Machine', 
   visitor = useVisitor(validSenders)
   useIssueTracker(parser, visitor, flow, rootId, true)
   const json = stateNodeToJsonRecursive(rootId, variant)
-  // console.log("🚀 ~ file: statechart.ts:20 ~ useFlowToStatechart ~ json:")
   const dynamicExpressions = extractDynamicExpressions(visitor)
-  // console.log("🚀 ~ file: statechart.ts:21 ~ useFlowToStatechart ~ dynamicExpressions:", dynamicExpressions)
   return { json, visitor, dynamicExpressions }
 }
 

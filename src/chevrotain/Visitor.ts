@@ -310,7 +310,6 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
               regExps,
               includes: []
             }
-            console.log("🚀 ~ file: Visitor.ts:307 ~ DslVisitorWithDefaults ~ stateNode ~ nluContext:", nluContext, firstSubNodeNameDef.image, /^\?!\s\w+$/.test(firstSubNodeNameDef.image))
           }
         }
       }

@@ -255,9 +255,6 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
         var missingAts = allStateNodes.filter(function (s) {
             return regExp.test(s.name);
         });
-        // console.log("🚀 ~ file: issue-tracker.ts:265 ~ missingAts ~ allStateNodes:", allStateNodes)
-        // allTransitions
-        // console.log("🚀 ~ file: issue-tracker.ts:264 ~ additionalDots ~ additionalDots:", missingAts)
         issues.push.apply(issues, missingAts.map(function (s) { return ({
             kind: kind,
             range: s.range,
@@ -269,7 +266,6 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
         kind = 'duplicate labels';
         severity = 'error';
         var duplicateLabels = allStateNodes.filter(function (s) {
-            console.log("🚀 ~ file: issue-tracker.ts:286 ~ duplicateLabels ~ s:", s);
             return s.label && allStateNodes.some(function (otherState) { return s !== otherState && s.label === otherState.label; });
         });
         issues.push.apply(issues, duplicateLabels.map(function (s) { return ({
@@ -285,8 +281,6 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     //   const duplicateLabels = allStateNodes.filter(s => {
     //     return s.childNodes && s.childNodes.length && s.childNodes[0]
     //   })
-    //   console.log("🚀 ~ file: issue-tracker.ts:298 ~ duplicateLabels ~ duplicateLabels:", duplicateLabels)
-    //   console.log("🚀 ~ file: issue-tracker.ts:300 ~ checkUnnecessaryDots ~ allTransitions:", allTransitions)
     //   issues.push(...duplicateLabels.map(s => ({
     //     kind,
     //     range: s.range,
@@ -392,7 +386,6 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     checkMessageSenders();
     checkMessageMediaUrl();
     checkTodos();
-    console.log("🚀 ~ file: issue-tracker.ts:324 ~ checkUsageOfReservedNames ~ issues:", issues);
     issues.sort(function (i, j) { return 1000 * (i.range.start.line - j.range.start.line) + i.range.start.character - j.range.start.character; });
     if (!noThrow) {
         issues.forEach(function (i) {

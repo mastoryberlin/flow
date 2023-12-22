@@ -338,9 +338,11 @@ var DslVisitorWithDefaults = /** @class */ (function (_super) {
                             intents: intents,
                             keepIntentsEnabled: firstSubNodeNameDef.image === '??',
                             freeText: firstSubNodeNameDef.image === '?!' || /^\?!\s\w+$/.test(firstSubNodeNameDef.image),
+                            contextId: /^\?!\s\w+$/.test(firstSubNodeNameDef.image) ? firstSubNodeNameDef.image.match(/^\?!\s\w+$/)[0] : null,
                             regExps: regExps,
                             includes: []
                         };
+                        console.log("🚀 ~ file: Visitor.ts:307 ~ DslVisitorWithDefaults ~ stateNode ~ nluContext:", nluContext);
                     }
                 }
             }

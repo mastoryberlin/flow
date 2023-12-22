@@ -337,11 +337,11 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     var checkDoneState = function () {
         kind = 'missing done directive';
         severity = 'warning';
-        var missingDone = allStateNodes[allStateNodes.length - 1].name !== '|done' ? allStateNodes[allStateNodes.length - 1] : '';
-        if (typeof missingDone !== 'string') {
+        var lastState = allStateNodes[allStateNodes.length - 1];
+        if (lastState && lastState.name !== '|done') {
             issues.push({
                 kind: kind,
-                range: missingDone.range,
+                range: lastState.range,
                 severity: severity
             });
         }

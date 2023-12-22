@@ -361,12 +361,12 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   const checkDoneState = () => {
     kind = 'missing done directive'
     severity = 'warning'
-    const missingDone = allStateNodes[allStateNodes.length - 1].name !== '|done' ? allStateNodes[allStateNodes.length - 1] : ''
 
-    if (typeof missingDone !== 'string') {
+    const lastState = allStateNodes[allStateNodes.length - 1]
+    if (lastState && lastState.name !== '|done') {
       issues.push({
         kind,
-        range: missingDone.range,
+        range: lastState.range,
         severity,
       })
     }

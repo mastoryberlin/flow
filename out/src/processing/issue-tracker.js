@@ -310,9 +310,13 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     var checkForWrapperRootState = function () {
         kind = 'not in root state';
         severity = 'warning';
-        var rootName = rootStateNodes[0].name;
+        var rootState = rootStateNodes[0];
+        if (!rootState) {
+            return;
+        }
+        var rootPath = rootState.path.join('.');
         var flowCodeOutsideRootState = allStateNodes.filter(function (s) {
-            return !s.path.includes(rootName);
+            return !s.path.join('.').startsWith(rootPath);
         });
         issues.push.apply(issues, flowCodeOutsideRootState.map(function (s) { return ({
             kind: kind,

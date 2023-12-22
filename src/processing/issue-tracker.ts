@@ -326,11 +326,15 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   const checkForWrapperRootState = () => {
     kind = 'not in root state'
     severity = 'warning'
-    const rootName = rootStateNodes[0].name
+
+    const rootState = rootStateNodes[0]
+    if (!rootState) {
+      return
+    }
+
+    const rootPath = rootState.path.join('.')
     const flowCodeOutsideRootState = allStateNodes.filter(s => {
-
-      return !s.path.includes(rootName)
-
+      return !s.path.join('.').startsWith(rootPath)
     })
 
     issues.push(...flowCodeOutsideRootState.map(s => ({

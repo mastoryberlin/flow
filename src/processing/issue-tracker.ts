@@ -322,18 +322,20 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   const checkForWrapperRootState = () => {
     kind = 'not in root state'
     severity = 'warning'
-    const rootName = rootStateNodes[0].name
-    const flowCodeOutsideRootState = allStateNodes.filter(s => {
+    if (rootStateNodes[0] && rootStateNodes[0].name) {
+      const rootName = rootStateNodes[0].name
+      const flowCodeOutsideRootState = allStateNodes.filter(s => {
 
-      return !s.path.includes(rootName)
+        return !s.path.includes(rootName)
 
-    })
+      })
 
-    issues.push(...flowCodeOutsideRootState.map(s => ({
-      kind,
-      range: s.range,
-      severity,
-    })))
+      issues.push(...flowCodeOutsideRootState.map(s => ({
+        kind,
+        range: s.range,
+        severity,
+      })))
+    }
   }
 
   // ------------------------------------------------------------------------------------------------------------------------
@@ -376,10 +378,10 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     kind = 'missing "*" state'
     severity = 'error'
     const allInputsWithFreeTextPaths = allStateNodes.filter(s => {
-      return s.name === '?!'
+      return s.name && s.name === '?!'
     })
     const allFallbackStars = allStateNodes.filter(s => {
-      return s.name === '*'
+      return s.name && s.name === '*'
     })
 
     const conversationsWithoutFallback = allInputsWithFreeTextPaths.filter(item =>

@@ -305,15 +305,17 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     var checkForWrapperRootState = function () {
         kind = 'not in root state';
         severity = 'warning';
-        var rootName = rootStateNodes[0].name;
-        var flowCodeOutsideRootState = allStateNodes.filter(function (s) {
-            return !s.path.includes(rootName);
-        });
-        issues.push.apply(issues, flowCodeOutsideRootState.map(function (s) { return ({
-            kind: kind,
-            range: s.range,
-            severity: severity
-        }); }));
+        if (rootStateNodes[0] && rootStateNodes[0].name) {
+            var rootName_1 = rootStateNodes[0].name;
+            var flowCodeOutsideRootState = allStateNodes.filter(function (s) {
+                return !s.path.includes(rootName_1);
+            });
+            issues.push.apply(issues, flowCodeOutsideRootState.map(function (s) { return ({
+                kind: kind,
+                range: s.range,
+                severity: severity
+            }); }));
+        }
     };
     // ------------------------------------------------------------------------------------------------------------------------
     var checkForVariablesAssignment = function () {
@@ -348,10 +350,10 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
         kind = 'missing "*" state';
         severity = 'error';
         var allInputsWithFreeTextPaths = allStateNodes.filter(function (s) {
-            return s.name === '?!';
+            return s.name && s.name === '?!';
         });
         var allFallbackStars = allStateNodes.filter(function (s) {
-            return s.name === '*';
+            return s.name && s.name === '*';
         });
         var conversationsWithoutFallback = allInputsWithFreeTextPaths.filter(function (item) {
             return !allFallbackStars.some(function (obj) {

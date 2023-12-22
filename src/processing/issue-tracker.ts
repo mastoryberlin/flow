@@ -278,6 +278,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     kind = 'duplicate labels'
     severity = 'error'
     const duplicateLabels = allStateNodes.filter(s => {
+      console.log("🚀 ~ file: issue-tracker.ts:286 ~ duplicateLabels ~ s:", s)
       return s.label && allStateNodes.some(otherState => s !== otherState && s.label === otherState.label)
     })
 

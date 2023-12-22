@@ -44,4 +44,4 @@ export function unquotedJSONstringify(object: any, space?: string | number) {
   });
 }
 
-export const promptStateRegExp = /^\?[?!]?$/
+export const promptStateRegExp = /^\?[?!]?$|^\?!\s\w+$/

@@ -306,10 +306,11 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
             nluContext = {
               intents,
               keepIntentsEnabled: firstSubNodeNameDef.image === '??',
-              freeText: firstSubNodeNameDef.image === '?!',
+              freeText: firstSubNodeNameDef.image === '?!' || /^\?!\s\w+$/.test(firstSubNodeNameDef.image),
               regExps,
               includes: []
             }
+            console.log("🚀 ~ file: Visitor.ts:307 ~ DslVisitorWithDefaults ~ stateNode ~ nluContext:", nluContext, firstSubNodeNameDef.image, /^\?!\s\w+$/.test(firstSubNodeNameDef.image))
           }
         }
       }

@@ -128,7 +128,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                         cond: { type: 'isIntentName', intentName: intentName }
                     }); }), true)
                 };
-                if (node.name === '?!') {
+                if (node.name === '?!' || /^\?!\s\w+$/.test(node.name)) { // match ?! singleWord
                     json.on['UNKNOWN_INTENT'] = [
                         {
                             target: '*',

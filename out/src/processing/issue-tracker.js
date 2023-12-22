@@ -269,6 +269,7 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
         kind = 'duplicate labels';
         severity = 'error';
         var duplicateLabels = allStateNodes.filter(function (s) {
+            console.log("🚀 ~ file: issue-tracker.ts:286 ~ duplicateLabels ~ s:", s);
             return s.label && allStateNodes.some(function (otherState) { return s !== otherState && s.label === otherState.label; });
         });
         issues.push.apply(issues, duplicateLabels.map(function (s) { return ({

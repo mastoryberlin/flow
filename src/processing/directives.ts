@@ -151,13 +151,19 @@ export const supportedDirectives = {
    * Starts a video player in fullscreen "cinema" mode.\n\nThe player closes automatically when the video reaches its end. This will also mark the directive as done, and there is no way for the user to close the window (other than jumping to the very end of the video).
    */
   cinema: defineDirective({
-    args: s => ({
-      /** The URL of the video file to play */
-      source: s,
-    }),
+    args: s => {
+      const [source, freeze] = s.split(/\s+/)
+      const freezeLastFrame = freeze === 'freeze'
+      return {
+        /** The URL of the video file to play */
+        source,
+        freezeLastFrame,
+      }
+    },
     invoke: {
       type: 'cinema',
       source: ({ source }) => source,
+      freezeLastFrame: ({ freezeLastFrame }) => freezeLastFrame,
     },
   }),
 

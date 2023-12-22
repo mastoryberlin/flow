@@ -68,6 +68,7 @@ export declare const supportedDirectives: {
      */
     cinema: DirectiveInfo<{
         source: string;
+        freezeLastFrame: boolean;
     }>;
     confetti: DirectiveInfo<{
         intensity: number;

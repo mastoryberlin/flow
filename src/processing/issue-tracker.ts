@@ -357,14 +357,16 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   const checkDoneState = () => {
     kind = 'missing done directive'
     severity = 'warning'
-    const missingDone = allStateNodes[allStateNodes.length - 1].name !== '|done' ? allStateNodes[allStateNodes.length - 1] : ''
+    if (allStateNodes[allStateNodes.length - 1] && allStateNodes[allStateNodes.length - 1].name) {
+      const missingDone = allStateNodes[allStateNodes.length - 1].name !== '|done' ? allStateNodes[allStateNodes.length - 1] : ''
 
-    if (typeof missingDone !== 'string') {
-      issues.push({
-        kind,
-        range: missingDone.range,
-        severity,
-      })
+      if (typeof missingDone !== 'string') {
+        issues.push({
+          kind,
+          range: missingDone.range,
+          severity,
+        })
+      }
     }
   }
 

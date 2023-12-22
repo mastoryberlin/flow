@@ -332,13 +332,15 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     var checkDoneState = function () {
         kind = 'missing done directive';
         severity = 'warning';
-        var missingDone = allStateNodes[allStateNodes.length - 1].name !== '|done' ? allStateNodes[allStateNodes.length - 1] : '';
-        if (typeof missingDone !== 'string') {
-            issues.push({
-                kind: kind,
-                range: missingDone.range,
-                severity: severity
-            });
+        if (allStateNodes[allStateNodes.length - 1] && allStateNodes[allStateNodes.length - 1].name) {
+            var missingDone = allStateNodes[allStateNodes.length - 1].name !== '|done' ? allStateNodes[allStateNodes.length - 1] : '';
+            if (typeof missingDone !== 'string') {
+                issues.push({
+                    kind: kind,
+                    range: missingDone.range,
+                    severity: severity
+                });
+            }
         }
     };
     // ------------------------------------------------------------------------------------------------------------------------

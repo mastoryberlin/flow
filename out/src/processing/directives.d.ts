@@ -51,6 +51,9 @@ export declare const supportedDirectives: {
     reveal: DirectiveInfo<{
         fragmentId: string;
     }>;
+    achieve: DirectiveInfo<{
+        achievement: string;
+    }>;
     actorPoints: DirectiveInfo<{
         actorPointsData: string;
     }>;
@@ -63,6 +66,10 @@ export declare const supportedDirectives: {
     assert: DirectiveInfo<{
         expression: string;
     }>;
+    chooseSubflow: DirectiveInfo<{
+        unitVariable: string;
+        promptStateName: string;
+    }>;
     /**
      * Starts a video player in fullscreen "cinema" mode.\n\nThe player closes automatically when the video reaches its end. This will also mark the directive as done, and there is no way for the user to close the window (other than jumping to the very end of the video).
      */
@@ -73,35 +80,13 @@ export declare const supportedDirectives: {
     confetti: DirectiveInfo<{
         intensity: number;
     }>;
-    achieve: DirectiveInfo<{
-        achievement: string;
-    }>;
-    exec: DirectiveInfo<{
-        actionName: string;
-    }>;
-    joinCall: DirectiveInfo<{
-        NPCName: string;
-    }>;
-    leaveCall: DirectiveInfo<{
-        NPCName: string;
-    }>;
-    incomingCallFrom: DirectiveInfo<{
-        interlocutors: string[];
-    }>;
-    hangUp: DirectiveInfo<object>;
-    chooseSubflow: DirectiveInfo<{
-        unitVariable: string;
-        promptStateName: string;
-    }>;
-    let: DirectiveInfo<{
-        npcName: string;
-        promptDoc: string;
-        fallback: string;
-    }>;
     /**
      * Terminates the flow at this point.\n\nIf this directive appears in a subflow, it stops the subflow state machine and returns control back to the main flow. If it appears in an episode main flow, it stops the episode entirely. If it appears in a challenge flow, it unloads the challenge from the Wire.
      */
     done: DirectiveInfo<object>;
+    exec: DirectiveInfo<{
+        actionName: string;
+    }>;
     /**
      * Selects one of the "apps" from the Mastory dock and opens it as if a user had clicked on the dock icon.
      */
@@ -109,6 +94,7 @@ export declare const supportedDirectives: {
         appId: string;
         character: "Nick" | "VZ" | "Alicia" | "Professor";
     }>;
+    hangUp: DirectiveInfo<object>;
     /**
      * Hides a UI element if it was previously displayed.
      */
@@ -123,14 +109,24 @@ export declare const supportedDirectives: {
         eventName: string;
         eventData: string;
     }>;
+    incomingCallFrom: DirectiveInfo<{
+        interlocutors: string[];
+    }>;
+    joinCall: DirectiveInfo<{
+        NPCName: string;
+    }>;
+    leaveCall: DirectiveInfo<{
+        NPCName: string;
+    }>;
+    let: DirectiveInfo<{
+        npcName: string;
+        promptDoc: string;
+        fallback: string;
+    }>;
     /**
      * Loads the current unit's challenge UI and makes it appear on the Wire page.
      */
     loadChallenge: DirectiveInfo<object>;
-    /**
-     * Unloads the current unit's challenge UI and turns the Wire page into the idle state with "No Challenge Available".
-     */
-    unloadChallenge: DirectiveInfo<object>;
     /**
      * Offers help according to the dynamic "help map" passed as an argument.
      *
@@ -140,6 +136,13 @@ export declare const supportedDirectives: {
      */
     offerHelp: DirectiveInfo<{
         helpMap: string;
+    }>;
+    /**
+     * Adds an element to an array, similar to an array's `push()` method in TypeScript.
+     */
+    push: DirectiveInfo<{
+        array: string;
+        element: string;
     }>;
     /**
      * Shows a UI element if it was previously hidden.
@@ -153,5 +156,9 @@ export declare const supportedDirectives: {
     subflow: DirectiveInfo<{
         subflowId: string;
     }>;
+    /**
+     * Unloads the current unit's challenge UI and turns the Wire page into the idle state with "No Challenge Available".
+     */
+    unloadChallenge: DirectiveInfo<object>;
 };
 export {};

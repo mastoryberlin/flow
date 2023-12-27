@@ -438,6 +438,11 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                     '_assignEvaluationResults'
                 ]
             };
+            on.PUSH_EVALUATION_RESULTS_TO_ARRAY = {
+                actions: [
+                    '_pushEvaluationResults'
+                ]
+            };
             on.CHANGED_STATE_IN_CHILD_MACHINE = {
                 actions: [
                     '_persist',

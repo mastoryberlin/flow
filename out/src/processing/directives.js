@@ -66,6 +66,15 @@ exports.supportedDirectives = {
             fragmentId: function (s) { return s.fragmentId; }
         }
     }),
+    achieve: defineDirective({
+        args: function (s) { return ({
+            achievement: s === null || s === void 0 ? void 0 : s.trim()
+        }); },
+        entry: {
+            type: '_achieve',
+            achievement: function (a) { return a.achievement; }
+        }
+    }),
     actorPoints: defineDirective({
         args: function (s) { return ({
             actorPointsData: s
@@ -109,6 +118,20 @@ exports.supportedDirectives = {
             }
         }
     }),
+    chooseSubflow: defineDirective({
+        args: function (s) {
+            var _a = s.trim().split(/\s+/), varName = _a[0], option = _a[1];
+            return {
+                unitVariable: varName,
+                promptStateName: option !== null && option !== void 0 ? option : '??'
+            };
+        },
+        invoke: {
+            type: '_chooseSubflow',
+            unitVariable: function (s) { return s.unitVariable; },
+            promptStateName: function (s) { return s.promptStateName; }
+        }
+    }),
     /**
      * Starts a video player in fullscreen "cinema" mode.\n\nThe player closes automatically when the video reaches its end. This will also mark the directive as done, and there is no way for the user to close the window (other than jumping to the very end of the video).
      */
@@ -143,14 +166,12 @@ exports.supportedDirectives = {
             intensity: function (a) { return a.intensity; }
         }
     }),
-    achieve: defineDirective({
-        args: function (s) { return ({
-            achievement: s === null || s === void 0 ? void 0 : s.trim()
-        }); },
-        entry: {
-            type: '_achieve',
-            achievement: function (a) { return a.achievement; }
-        }
+    /**
+     * Terminates the flow at this point.\n\nIf this directive appears in a subflow, it stops the subflow state machine and returns control back to the main flow. If it appears in an episode main flow, it stops the episode entirely. If it appears in a challenge flow, it unloads the challenge from the Wire.
+     */
+    done: defineDirective({
+        args: function (s) { return ({}); },
+        always: function (args, root) { return "#".concat(root, ".__FLOW_DONE__"); }
     }),
     exec: defineDirective({
         args: function (s) { return ({
@@ -160,73 +181,6 @@ exports.supportedDirectives = {
             type: '_exec',
             actionName: function (a) { return a.actionName; }
         }
-    }),
-    joinCall: defineDirective({
-        args: function (s) { return ({
-            NPCName: s
-        }); },
-        entry: {
-            type: '_npcJoinCall',
-            NPCName: function (a) { return a.NPCName; }
-        }
-    }),
-    leaveCall: defineDirective({
-        args: function (s) { return ({
-            NPCName: s
-        }); },
-        entry: {
-            type: '_npcLeaveCall',
-            NPCName: function (a) { return a.NPCName; }
-        }
-    }),
-    incomingCallFrom: defineDirective({
-        args: function (s) { return ({
-            interlocutors: s.split(/[\s,]+/)
-        }); },
-        invoke: {
-            type: 'startCall',
-            interlocutors: function (s) { return s.interlocutors; }
-        }
-    }),
-    hangUp: defineDirective({
-        args: function (s) { return ({}); },
-        entry: {
-            type: '_hangUp'
-        }
-    }),
-    chooseSubflow: defineDirective({
-        args: function (s) {
-            var _a = s.trim().split(/\s+/), varName = _a[0], option = _a[1];
-            return {
-                unitVariable: varName,
-                promptStateName: option !== null && option !== void 0 ? option : '??'
-            };
-        },
-        invoke: {
-            type: '_chooseSubflow',
-            unitVariable: function (s) { return s.unitVariable; },
-            promptStateName: function (s) { return s.promptStateName; }
-        }
-    }),
-    let: defineDirective(({
-        args: function (s) { return ({
-            npcName: s.split(' ')[0],
-            promptDoc: s.split(' ')[1],
-            fallback: s.match(/"([^"]*)"/)[0]
-        }); },
-        invoke: {
-            type: '_let',
-            npcName: function (s) { return s.npcName; },
-            promptDoc: function (s) { return s.promptDoc; },
-            fallback: function (s) { return s.fallback; }
-        }
-    })),
-    /**
-     * Terminates the flow at this point.\n\nIf this directive appears in a subflow, it stops the subflow state machine and returns control back to the main flow. If it appears in an episode main flow, it stops the episode entirely. If it appears in a challenge flow, it unloads the challenge from the Wire.
-     */
-    done: defineDirective({
-        args: function (s) { return ({}); },
-        always: function (args, root) { return "#".concat(root, ".__FLOW_DONE__"); }
     }),
     /**
      * Selects one of the "apps" from the Mastory dock and opens it as if a user had clicked on the dock icon.
@@ -245,6 +199,12 @@ exports.supportedDirectives = {
             type: 'focusApp',
             appId: function (a) { return a.appId; },
             character: function (a) { return a.character; }
+        }
+    }),
+    hangUp: defineDirective({
+        args: function (s) { return ({}); },
+        entry: {
+            type: '_hangUp'
         }
     }),
     /**
@@ -310,19 +270,52 @@ exports.supportedDirectives = {
             }
         }
     }),
+    incomingCallFrom: defineDirective({
+        args: function (s) { return ({
+            interlocutors: s.split(/[\s,]+/)
+        }); },
+        invoke: {
+            type: 'startCall',
+            interlocutors: function (s) { return s.interlocutors; }
+        }
+    }),
+    joinCall: defineDirective({
+        args: function (s) { return ({
+            NPCName: s
+        }); },
+        entry: {
+            type: '_npcJoinCall',
+            NPCName: function (a) { return a.NPCName; }
+        }
+    }),
+    leaveCall: defineDirective({
+        args: function (s) { return ({
+            NPCName: s
+        }); },
+        entry: {
+            type: '_npcLeaveCall',
+            NPCName: function (a) { return a.NPCName; }
+        }
+    }),
+    let: defineDirective(({
+        args: function (s) { return ({
+            npcName: s.split(' ')[0],
+            promptDoc: s.split(' ')[1],
+            fallback: s.match(/"([^"]*)"/)[0]
+        }); },
+        invoke: {
+            type: '_let',
+            npcName: function (s) { return s.npcName; },
+            promptDoc: function (s) { return s.promptDoc; },
+            fallback: function (s) { return s.fallback; }
+        }
+    })),
     /**
      * Loads the current unit's challenge UI and makes it appear on the Wire page.
      */
     loadChallenge: defineDirective({
         args: function (s) { return ({}); },
         entry: { type: '_loadChallenge' }
-    }),
-    /**
-     * Unloads the current unit's challenge UI and turns the Wire page into the idle state with "No Challenge Available".
-     */
-    unloadChallenge: defineDirective({
-        args: function (s) { return ({}); },
-        entry: { type: '_unloadChallenge' }
     }),
     /**
      * Offers help according to the dynamic "help map" passed as an argument.
@@ -344,6 +337,25 @@ exports.supportedDirectives = {
                 raw: "context => context"
             }); }
         }
+    }),
+    /**
+     * Adds an element to an array, similar to an array's `push()` method in TypeScript.
+     */
+    push: defineDirective({
+        args: function (s) {
+            var _a = s.replace(/\s+/, sepHelper).split(sepHelper), array = _a[0], element = _a[1];
+            return { array: array, element: element };
+        },
+        entry: [
+            {
+                type: 'xstate.raise',
+                event: function (a) { return ({ type: 'REQUEST_EVAL', expressions: [a.element] }); }
+            },
+            {
+                type: 'xstate.raise',
+                event: function (a) { return ({ type: 'PUSH_EVALUATION_RESULTS_TO_ARRAY', arrayName: a.array }); }
+            },
+        ]
     }),
     /**
      * Shows a UI element if it was previously hidden.
@@ -370,5 +382,12 @@ exports.supportedDirectives = {
             type: '_subflow',
             id: function (a) { return a.subflowId; }
         }
+    }),
+    /**
+     * Unloads the current unit's challenge UI and turns the Wire page into the idle state with "No Challenge Available".
+     */
+    unloadChallenge: defineDirective({
+        args: function (s) { return ({}); },
+        entry: { type: '_unloadChallenge' }
     })
 };

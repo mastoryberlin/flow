@@ -110,6 +110,16 @@ export const supportedDirectives = {
     },
   }),
 
+  achieve: defineDirective({
+    args: s => ({
+      achievement: s?.trim(),
+    }),
+    entry: {
+      type: '_achieve',
+      achievement: a => a.achievement,
+    }
+  }),
+
   actorPoints: defineDirective({
     args: s => ({
       actorPointsData: s,
@@ -147,6 +157,21 @@ export const supportedDirectives = {
     },
   }),
 
+  chooseSubflow: defineDirective({
+    args: s => {
+      const [varName, option] = s.trim().split(/\s+/)
+      return {
+        unitVariable: varName,
+        promptStateName: option ?? '??',
+      }
+    },
+    invoke: {
+      type: '_chooseSubflow',
+      unitVariable: s => s.unitVariable,
+      promptStateName: s => s.promptStateName,
+    }
+  }),
+
   /**
    * Starts a video player in fullscreen "cinema" mode.\n\nThe player closes automatically when the video reaches its end. This will also mark the directive as done, and there is no way for the user to close the window (other than jumping to the very end of the video).
    */
@@ -177,14 +202,12 @@ export const supportedDirectives = {
     }
   }),
 
-  achieve: defineDirective({
-    args: s => ({
-      achievement: s?.trim(),
-    }),
-    entry: {
-      type: '_achieve',
-      achievement: a => a.achievement,
-    }
+  /**
+   * Terminates the flow at this point.\n\nIf this directive appears in a subflow, it stops the subflow state machine and returns control back to the main flow. If it appears in an episode main flow, it stops the episode entirely. If it appears in a challenge flow, it unloads the challenge from the Wire.
+   */
+  done: defineDirective({
+    args: s => ({}),
+    always: (args, root) => `#${root}.__FLOW_DONE__`,
   }),
 
   exec: defineDirective({
@@ -195,77 +218,6 @@ export const supportedDirectives = {
       type: '_exec',
       actionName: a => a.actionName
     }
-  }),
-  joinCall: defineDirective({
-    args: s => ({
-      NPCName: s,
-    }),
-    entry: {
-      type: '_npcJoinCall',
-      NPCName: a => a.NPCName
-    }
-  }),
-  leaveCall: defineDirective({
-    args: s => ({
-      NPCName: s,
-    }),
-    entry: {
-      type: '_npcLeaveCall',
-      NPCName: a => a.NPCName
-    }
-  }),
-
-  incomingCallFrom: defineDirective({
-    args: s => ({
-      interlocutors: s.split(/[\s,]+/)
-    }),
-    invoke: {
-      type: 'startCall',
-      interlocutors: s => s.interlocutors
-    }
-  }),
-
-  hangUp: defineDirective({
-    args: s => ({}),
-    entry: {
-      type: '_hangUp',
-    }
-  }),
-
-  chooseSubflow: defineDirective({
-    args: s => {
-      const [varName, option] = s.trim().split(/\s+/)
-      return {
-        unitVariable: varName,
-        promptStateName: option ?? '??',
-      }
-    },
-    invoke: {
-      type: '_chooseSubflow',
-      unitVariable: s => s.unitVariable,
-      promptStateName: s => s.promptStateName,
-    }
-  }),
-
-  let: defineDirective(({
-    args: s => ({
-      npcName: s.split(' ')[0],
-      promptDoc: s.split(' ')[1],
-      fallback: s.match(/"([^"]*)"/)![0]
-    }),
-    invoke: {
-      type: '_let',
-      npcName: s => s.npcName,
-      promptDoc: s => s.promptDoc,
-      fallback: s => s.fallback
-    }
-  })),
-  /**
-   * Terminates the flow at this point.\n\nIf this directive appears in a subflow, it stops the subflow state machine and returns control back to the main flow. If it appears in an episode main flow, it stops the episode entirely. If it appears in a challenge flow, it unloads the challenge from the Wire.
-   */
-  done: defineDirective({
-    args: s => ({}),
-    always: (args, root) => `#${root}.__FLOW_DONE__`,
   }),
 
   /**
@@ -286,6 +238,13 @@ export const supportedDirectives = {
       type: 'focusApp',
       appId: a => a.appId,
       character: a => a.character
+    }
+  }),
+
+  hangUp: defineDirective({
+    args: s => ({}),
+    entry: {
+      type: '_hangUp',
     }
   }),
 
@@ -370,19 +329,55 @@ export const supportedDirectives = {
     }
   }),
 
+  incomingCallFrom: defineDirective({
+    args: s => ({
+      interlocutors: s.split(/[\s,]+/)
+    }),
+    invoke: {
+      type: 'startCall',
+      interlocutors: s => s.interlocutors
+    }
+  }),
+
+  joinCall: defineDirective({
+    args: s => ({
+      NPCName: s,
+    }),
+    entry: {
+      type: '_npcJoinCall',
+      NPCName: a => a.NPCName
+    }
+  }),
+
+  leaveCall: defineDirective({
+    args: s => ({
+      NPCName: s,
+    }),
+    entry: {
+      type: '_npcLeaveCall',
+      NPCName: a => a.NPCName
+    }
+  }),
+
+  let: defineDirective(({
+    args: s => ({
+      npcName: s.split(' ')[0],
+      promptDoc: s.split(' ')[1],
+      fallback: s.match(/"([^"]*)"/)![0]
+    }),
+    invoke: {
+      type: '_let',
+      npcName: s => s.npcName,
+      promptDoc: s => s.promptDoc,
+      fallback: s => s.fallback
+    }
+  })),
   /**
    * Loads the current unit's challenge UI and makes it appear on the Wire page.
    */
   loadChallenge: defineDirective({
     args: s => ({}),
     entry: { type: '_loadChallenge' }
-  }),
-  /**
-   * Unloads the current unit's challenge UI and turns the Wire page into the idle state with "No Challenge Available".
-   */
-  unloadChallenge: defineDirective({
-    args: s => ({}),
-    entry: { type: '_unloadChallenge' }
   }),
 
   /**
@@ -405,6 +400,26 @@ export const supportedDirectives = {
         raw: `context => context`,
       })
     },
+  }),
+
+  /**
+   * Adds an element to an array, similar to an array's `push()` method in TypeScript.
+   */
+  push: defineDirective({
+    args: s => {
+      const [array, element] = s.replace(/\s+/, sepHelper).split(sepHelper)
+      return { array, element }
+    },
+    entry: [
+      {
+        type: 'xstate.raise',
+        event: a => ({ type: 'REQUEST_EVAL', expressions: [a.element] })
+      },
+      {
+        type: 'xstate.raise',
+        event: a => ({ type: 'PUSH_EVALUATION_RESULTS_TO_ARRAY', arrayName: a.array })
+      },
+    ]
   }),
 
   /**
@@ -433,5 +448,13 @@ export const supportedDirectives = {
       type: '_subflow',
       id: a => a.subflowId,
     },
+  }),
+
+  /**
+   * Unloads the current unit's challenge UI and turns the Wire page into the idle state with "No Challenge Available".
+   */
+  unloadChallenge: defineDirective({
+    args: s => ({}),
+    entry: { type: '_unloadChallenge' }
   }),
 }

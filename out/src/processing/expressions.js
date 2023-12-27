@@ -34,7 +34,7 @@ function extractDynamicExpressions(visitor) {
             var sepHelper = '&.&';
             var _k = state.directive.arg.replace(/\w+/, sepHelper).split(sepHelper), _ = _k[0], expr = _k[1];
             if (expr) {
-                expressions.add(expr);
+                expressions.add(expr.trim());
             }
         }
     }

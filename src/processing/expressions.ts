@@ -32,7 +32,7 @@ export function extractDynamicExpressions(visitor: DslVisitorWithDefaults) {
       const sepHelper = '&.&'
       const [_, expr] = state.directive.arg.replace(/\w+/, sepHelper).split(sepHelper)
       if (expr) {
-        expressions.add(expr)
+        expressions.add(expr.trim())
       }
     }
   }

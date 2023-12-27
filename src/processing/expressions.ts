@@ -8,6 +8,7 @@ export function extractDynamicExpressions(visitor: DslVisitorWithDefaults) {
     state.assignVariables?.length
     || (state.transitions?.length && state.transitions.some(t => t.guard && 'condition' in t.guard))
     || (state.message?.type === 'text')
+    || (state.directive?.name === 'push')
   )
 
   const expressions = new Set<string>()
@@ -25,6 +26,13 @@ export function extractDynamicExpressions(visitor: DslVisitorWithDefaults) {
       const matches = messageText.match(interpolationRegexp)
       for (const m of matches ?? []) {
         expressions.add(m.trim())
+      }
+    }
+    else if (state.directive?.name === 'push') {
+      const sepHelper = '&.&'
+      const [_, expr] = state.directive.arg.replace(/\w+/, sepHelper).split(sepHelper)
+      if (expr) {
+        expressions.add(expr)
       }
     }
   }

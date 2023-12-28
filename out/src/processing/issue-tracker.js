@@ -255,9 +255,6 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
         var missingAts = allStateNodes.filter(function (s) {
             return regExp.test(s.name);
         });
-        // console.log("🚀 ~ file: issue-tracker.ts:265 ~ missingAts ~ allStateNodes:", allStateNodes)
-        // allTransitions
-        // console.log("🚀 ~ file: issue-tracker.ts:264 ~ additionalDots ~ additionalDots:", missingAts)
         issues.push.apply(issues, missingAts.map(function (s) { return ({
             kind: kind,
             range: s.range,
@@ -284,8 +281,6 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     //   const duplicateLabels = allStateNodes.filter(s => {
     //     return s.childNodes && s.childNodes.length && s.childNodes[0]
     //   })
-    //   console.log("🚀 ~ file: issue-tracker.ts:298 ~ duplicateLabels ~ duplicateLabels:", duplicateLabels)
-    //   console.log("🚀 ~ file: issue-tracker.ts:300 ~ checkUnnecessaryDots ~ allTransitions:", allTransitions)
     //   issues.push(...duplicateLabels.map(s => ({
     //     kind,
     //     range: s.range,
@@ -355,10 +350,10 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
         kind = 'missing "*" state';
         severity = 'error';
         var allInputsWithFreeTextPaths = allStateNodes.filter(function (s) {
-            return s.name === '?!';
+            return s.name && s.name === '?!';
         });
         var allFallbackStars = allStateNodes.filter(function (s) {
-            return s.name === '*';
+            return s.name && s.name === '*';
         });
         var conversationsWithoutFallback = allInputsWithFreeTextPaths.filter(function (item) {
             return !allFallbackStars.some(function (obj) {
@@ -395,7 +390,6 @@ function useIssueTracker(parser, visitor, flow, rootNodeId, noThrow) {
     checkMessageSenders();
     checkMessageMediaUrl();
     checkTodos();
-    console.log("🚀 ~ file: issue-tracker.ts:324 ~ checkUsageOfReservedNames ~ issues:", issues);
     issues.sort(function (i, j) { return 1000 * (i.range.start.line - j.range.start.line) + i.range.start.character - j.range.start.character; });
     if (!noThrow) {
         issues.forEach(function (i) {

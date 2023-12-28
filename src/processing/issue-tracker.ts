@@ -262,9 +262,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     const missingAts = allStateNodes.filter(s => {
       return regExp.test(s.name)
     })
-    // console.log("🚀 ~ file: issue-tracker.ts:265 ~ missingAts ~ allStateNodes:", allStateNodes)
-    // allTransitions
-    // console.log("🚀 ~ file: issue-tracker.ts:264 ~ additionalDots ~ additionalDots:", missingAts)
+
     issues.push(...missingAts.map(s => ({
       kind,
       range: s.range,
@@ -296,8 +294,6 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   //   const duplicateLabels = allStateNodes.filter(s => {
   //     return s.childNodes && s.childNodes.length && s.childNodes[0]
   //   })
-  //   console.log("🚀 ~ file: issue-tracker.ts:298 ~ duplicateLabels ~ duplicateLabels:", duplicateLabels)
-  //   console.log("🚀 ~ file: issue-tracker.ts:300 ~ checkUnnecessaryDots ~ allTransitions:", allTransitions)
   //   issues.push(...duplicateLabels.map(s => ({
   //     kind,
   //     range: s.range,
@@ -382,10 +378,10 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
     kind = 'missing "*" state'
     severity = 'error'
     const allInputsWithFreeTextPaths = allStateNodes.filter(s => {
-      return s.name === '?!'
+      return s.name && s.name === '?!'
     })
     const allFallbackStars = allStateNodes.filter(s => {
-      return s.name === '*'
+      return s.name && s.name === '*'
     })
 
     const conversationsWithoutFallback = allInputsWithFreeTextPaths.filter(item =>
@@ -428,7 +424,6 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   checkMessageSenders()
   checkMessageMediaUrl()
   checkTodos()
-  console.log("🚀 ~ file: issue-tracker.ts:324 ~ checkUsageOfReservedNames ~ issues:", issues)
 
   issues.sort((i, j) => 1000 * (i.range.start.line - j.range.start.line) + i.range.start.character - j.range.start.character)
 

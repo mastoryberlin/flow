@@ -26,6 +26,7 @@ export interface NLUContext {
     intents: Intent[];
     keepIntentsEnabled: boolean;
     freeText?: boolean;
+    contextId?: string | null;
     regExps: RegExp[];
     includes: FqStateNodePath[];
 }

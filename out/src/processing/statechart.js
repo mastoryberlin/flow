@@ -40,9 +40,7 @@ function useFlowToStatechart(flow, id, variant, validSenders) {
     visitor = (0, chevrotain_1.useVisitor)(validSenders);
     (0, issue_tracker_1.useIssueTracker)(parser, visitor, flow, rootId, true);
     var json = stateNodeToJsonRecursive(rootId, variant);
-    // console.log("🚀 ~ file: statechart.ts:20 ~ useFlowToStatechart ~ json:")
     var dynamicExpressions = (0, expressions_1.extractDynamicExpressions)(visitor);
-    // console.log("🚀 ~ file: statechart.ts:21 ~ useFlowToStatechart ~ dynamicExpressions:", dynamicExpressions)
     return { json: json, visitor: visitor, dynamicExpressions: dynamicExpressions };
 }
 exports.useFlowToStatechart = useFlowToStatechart;
@@ -128,7 +126,7 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                         cond: { type: 'isIntentName', intentName: intentName }
                     }); }), true)
                 };
-                if (node.name === '?!') {
+                if (node.name === '?!' || /^\?!\s\w+$/.test(node.name)) { // match ?! singleWord
                     json.on['UNKNOWN_INTENT'] = [
                         {
                             target: '*',

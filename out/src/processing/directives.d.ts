@@ -34,12 +34,6 @@ export declare function defineDirective<A extends DirectiveArgumentsTypes>(d: Di
 export declare type UiElementId = 'submitButton' | 'callButton';
 export declare const supportedDirectives: {
     /**
-      * Freezes the UI in the given fragment, i.e. prevents any further user input.
-      */
-    freeze: DirectiveInfo<{
-        fragmentId: string;
-    }>;
-    /**
       * Unfreezes the UI in the given fragment, i.e. allows user input (again).
       */
     unfreeze: DirectiveInfo<{
@@ -93,6 +87,12 @@ export declare const supportedDirectives: {
     focusApp: DirectiveInfo<{
         appId: string;
         character: "Nick" | "VZ" | "Alicia" | "Professor";
+    }>;
+    /**
+    * Freezes the UI in the given fragment, i.e. prevents any further user input.
+    */
+    freeze: DirectiveInfo<{
+        fragmentId: string;
     }>;
     hangUp: DirectiveInfo<object>;
     /**
@@ -149,6 +149,22 @@ export declare const supportedDirectives: {
      */
     show: DirectiveInfo<{
         uiElement: string;
+    }>;
+    /**
+     * Forces the use of intent buttons instead of free-text input
+     * in conversational states.
+     *
+     * By default, this directive only influences the next conversational state,
+     * i.e. intent buttons will be shown the next time a `?!` or `? Contextual`
+     * state is entered.
+     *
+     * If the optional boolean argument is passed, the behavior is altered to
+     * set the general preference for *all* upcoming conversations - where `true`
+     * means "show buttons" while `false` means "use free-text input" -, until it is
+     * overwritten by another `.showButtons` directive (with or without arguments).
+     */
+    showButtons: DirectiveInfo<{
+        preference: boolean;
     }>;
     /**
      * Loads a flow statechart and executes it as a subflow.

@@ -56,23 +56,6 @@ const splitArgs = {
 export type UiElementId = 'submitButton' | 'callButton'
 
 export const supportedDirectives = {
-  /**
-    * Freezes the UI in the given fragment, i.e. prevents any further user input.
-    */
-  freeze: defineDirective({
-    args: s => {
-      //TODO: split the non-dotword part of the directive state name into arguments
-      const [fragmentId,] = s.trim().split(/\s+/)
-      return {
-        fragmentId,
-      }
-    },
-    entry: {
-      type: '_freeze',
-      //TODO: process the arguments from above into additional props of the implementation object
-      fragmentId: s => s.fragmentId,
-    },
-  }),
 
   /**
     * Unfreezes the UI in the given fragment, i.e. allows user input (again).
@@ -239,6 +222,24 @@ export const supportedDirectives = {
       appId: a => a.appId,
       character: a => a.character
     }
+  }),
+
+  /**
+  * Freezes the UI in the given fragment, i.e. prevents any further user input.
+  */
+  freeze: defineDirective({
+    args: s => {
+      //TODO: split the non-dotword part of the directive state name into arguments
+      const [fragmentId,] = s.trim().split(/\s+/)
+      return {
+        fragmentId,
+      }
+    },
+    entry: {
+      type: '_freeze',
+      //TODO: process the arguments from above into additional props of the implementation object
+      fragmentId: s => s.fragmentId,
+    },
   }),
 
   hangUp: defineDirective({
@@ -433,6 +434,34 @@ export const supportedDirectives = {
     entry: {
       type: '_show',
       element: a => a.uiElement
+    }
+  }),
+
+  /**
+   * Forces the use of intent buttons instead of free-text input
+   * in conversational states.
+   * 
+   * By default, this directive only influences the next conversational state,
+   * i.e. intent buttons will be shown the next time a `?!` or `? Contextual`
+   * state is entered.
+   * 
+   * If the optional boolean argument is passed, the behavior is altered to
+   * set the general preference for *all* upcoming conversations - where `true`
+   * means "show buttons" while `false` means "use free-text input" -, until it is
+   * overwritten by another `.showButtons` directive (with or without arguments).
+   */
+  showButtons: defineDirective({
+    args: s => {
+      let preference: boolean | undefined = undefined
+      switch (s.trim()) {
+        case 'true': preference = true; break
+        case 'false': preference = false; break
+      }
+      return {preference}
+    },
+    entry: {
+      type: '_showIntentButtons',
+      preference: a => a.preference
     }
   }),
 

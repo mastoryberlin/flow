@@ -16,23 +16,6 @@ var splitArgs = {
 };
 exports.supportedDirectives = {
     /**
-      * Freezes the UI in the given fragment, i.e. prevents any further user input.
-      */
-    freeze: defineDirective({
-        args: function (s) {
-            //TODO: split the non-dotword part of the directive state name into arguments
-            var fragmentId = s.trim().split(/\s+/)[0];
-            return {
-                fragmentId: fragmentId
-            };
-        },
-        entry: {
-            type: '_freeze',
-            //TODO: process the arguments from above into additional props of the implementation object
-            fragmentId: function (s) { return s.fragmentId; }
-        }
-    }),
-    /**
       * Unfreezes the UI in the given fragment, i.e. allows user input (again).
       */
     unfreeze: defineDirective({
@@ -199,6 +182,23 @@ exports.supportedDirectives = {
             type: 'focusApp',
             appId: function (a) { return a.appId; },
             character: function (a) { return a.character; }
+        }
+    }),
+    /**
+    * Freezes the UI in the given fragment, i.e. prevents any further user input.
+    */
+    freeze: defineDirective({
+        args: function (s) {
+            //TODO: split the non-dotword part of the directive state name into arguments
+            var fragmentId = s.trim().split(/\s+/)[0];
+            return {
+                fragmentId: fragmentId
+            };
+        },
+        entry: {
+            type: '_freeze',
+            //TODO: process the arguments from above into additional props of the implementation object
+            fragmentId: function (s) { return s.fragmentId; }
         }
     }),
     hangUp: defineDirective({
@@ -368,6 +368,37 @@ exports.supportedDirectives = {
         entry: {
             type: '_show',
             element: function (a) { return a.uiElement; }
+        }
+    }),
+    /**
+     * Forces the use of intent buttons instead of free-text input
+     * in conversational states.
+     *
+     * By default, this directive only influences the next conversational state,
+     * i.e. intent buttons will be shown the next time a `?!` or `? Contextual`
+     * state is entered.
+     *
+     * If the optional boolean argument is passed, the behavior is altered to
+     * set the general preference for *all* upcoming conversations - where `true`
+     * means "show buttons" while `false` means "use free-text input" -, until it is
+     * overwritten by another `.showButtons` directive (with or without arguments).
+     */
+    showButtons: defineDirective({
+        args: function (s) {
+            var preference = undefined;
+            switch (s.trim()) {
+                case 'true':
+                    preference = true;
+                    break;
+                case 'false':
+                    preference = false;
+                    break;
+            }
+            return { preference: preference };
+        },
+        entry: {
+            type: '_showIntentButtons',
+            preference: function (a) { return a.preference; }
         }
     }),
     /**

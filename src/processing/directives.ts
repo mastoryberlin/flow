@@ -453,7 +453,7 @@ export const supportedDirectives = {
   showButtons: defineDirective({
     args: s => {
       let preference: boolean | undefined = undefined
-      switch (s.trim()) {
+      switch (s) {
         case 'true': preference = true; break
         case 'false': preference = false; break
       }

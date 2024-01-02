@@ -386,7 +386,7 @@ exports.supportedDirectives = {
     showButtons: defineDirective({
         args: function (s) {
             var preference = undefined;
-            switch (s.trim()) {
+            switch (s) {
                 case 'true':
                     preference = true;
                     break;

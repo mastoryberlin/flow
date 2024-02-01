@@ -108,7 +108,6 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
           INTENT: [
             ...nluContext.intents.map(intentName => ({
               target: escapeDots(`"${intentName}"`),
-              internal: true,
               cond: { type: 'isIntentName', intentName },
             })),
             // { target: '*' } // fallback intent
@@ -144,32 +143,6 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
           event: { type: 'ASSIGN_EVALUATION_RESULTS_VARIABLES', varNames: assignments.map(({ varName }) => varName) }
         },
       ]
-      //       json.entry = assignments.map(({ varName, value }) => ({
-
-      //         unquoted: true,
-      //         raw:
-      //           `choose([
-      //   {
-      //     cond: (context) => Array.isArray(context.${varName}) && Array.isArray((${evaluateInContext(value)})(context)),
-      //     actions: [
-      //       (context) => {
-      //         const newArray = (${evaluateInContext(value)})(context)
-      //         context.${varName}.splice(0, Infinity, ...newArray)
-      //       },
-      //     ],
-      //   },
-      //   {
-      //     actions: [
-      //       assign({
-      //         ${assignments.map(({ varName, value }) => `    ${varName}: ${evaluateInContext(value)}`).join(',\n')}
-      //       })
-      //     ],
-      //   },
-      // ])`,
-      //       }))
-
-      json.entry.push('_shareContextWithParent')
-
     }
 
     // ========================================================================================================================
@@ -329,22 +302,25 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         nestedInitialValue = (Object.values(after)[0] as { target: string }[])[0].target
       }
 
-      const invoke = {
-        src: { type: '_sendMessage', kind, sender } as { type: '_sendMessage', kind: dsl.MessageType, sender: string, text?: string, attachment?: string, showcase?: number },
-        onDone: '__SEND_MESSAGE_DONE__'
+      const entry = {
+        type: 'sendMessage', params: { kind, sender }
+      } as { type: 'sendMessage', params: { kind: dsl.MessageType, sender: string, text?: string, attachment?: string, showcase?: number } }
+      const on = {
+        SEND_DELAY_OVER: '__SEND_MESSAGE_DONE__'
       }
       if (node.message.type === 'text') {
-        invoke.src.text = (node.message as dsl.TextMessage).text
+        entry.params.text = (node.message as dsl.TextMessage).text
       } else {
-        invoke.src.attachment = (node.message as dsl.MediaMessage).source?.toString()
+        entry.params.attachment = (node.message as dsl.MediaMessage).source?.toString()
         if ((node.message as dsl.MediaMessage).showcase) {
-          invoke.src.showcase = (node.message as dsl.MediaMessage).showcase
+          entry.params.showcase = (node.message as dsl.MediaMessage).showcase
         }
       }
 
       json.states = {
         __SEND_MESSAGE_ACTIVE__: {
-          invoke
+          entry,
+          on,
         },
         __SEND_MESSAGE_DONE__: {
           always: node.final ? `${rootId}.__FLOW_DONE__` : [...always],
@@ -372,16 +348,6 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       json.after = {}; after = {}
     }
 
-    if (variant !== 'mainflow') {
-      const shareAction = { type: '_shareStateWithParent', path: node.path.join('.') }
-      json.entry = json.entry ? (Array.isArray(json.entry) ? [
-        shareAction,
-        ...json.entry,
-      ] : [
-        shareAction,
-        json.entry,
-      ]) : shareAction
-    }
     return json
   } else {
     // Root Node
@@ -403,85 +369,78 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
   let { on, after, always } = interpretTransitions(rootId);
   // Object.assign(on, getJumpEvents(visitor) as any)
 
-  on.CHANGED_CONTEXT_IN_STATE_STORE = {
-    actions: [
-      '_copyContext',
-    ]
-  }
+  // switch (variant) {
+  //   case 'ui':
+  //     childStates.__FLOW_DONE__.entry = {
+  //       unquoted: true,
+  //       raw: `sendParent('UI_DONE'),`
+  //     }
+  //     break
 
-  switch (variant) {
-    case 'ui':
-      childStates.__FLOW_DONE__.entry = {
-        unquoted: true,
-        raw: `sendParent('UI_DONE'),`
-      }
-      break
+  //   case 'mainflow':
+  //     on.CHANGED_CONTEXT_IN_STATE_STORE.actions.push('_persist')
 
-    case 'mainflow':
-      on.CHANGED_CONTEXT_IN_STATE_STORE.actions.push('_persist')
+  //     on.ASSIGN_EVALUATION_RESULTS_VARIABLES = {
+  //       actions: [
+  //         '_assignEvaluationResults'
+  //       ]
+  //     }
 
-      on.ASSIGN_EVALUATION_RESULTS_VARIABLES = {
-        actions: [
-          '_assignEvaluationResults'
-        ]
-      }
+  //     on.PUSH_EVALUATION_RESULTS_TO_ARRAY = {
+  //       actions: [
+  //         '_pushEvaluationResults'
+  //       ]
+  //     }
 
-      on.PUSH_EVALUATION_RESULTS_TO_ARRAY = {
-        actions: [
-          '_pushEvaluationResults'
-        ]
-      }
-
-      on.CHANGED_STATE_IN_CHILD_MACHINE = {
-        actions: [
-          '_persist',
-          // '_updateChildMachineState',
-        ]
-      }
-      on.CHANGED_CONTEXT_IN_CHILD_MACHINE = {
-        actions: [
-          '_copyContext',
-          '_persist',
-          {
-            unquoted: true,
-            raw: `raise({type: 'HAVE_CONTEXT_VARIABLES_CHANGED', namesOfChangedVariables: [...Object.keys(context)]}),`
-          },
-        ]
-      }
-      on.HAVE_CONTEXT_VARIABLES_CHANGED = {
-        unquoted: true,
-        raw: `{
-    actions: derivedRecomputeActions,
-   }`
-      }
-      on.REQUEST_UI_START = {
-        actions: [
-          '_loadChallenge',
-        ]
-      }
-      on.REQUEST_UI_STOP = {
-        actions: [
-          '_unloadChallenge',
-        ]
-      }
-      on.UI_DONE = {
-        actions: [
-          '_unloadChallenge',
-        ]
-      }
-      break
-    default: {
-      on.ASSIGN_EVALUATION_RESULTS_VARIABLES = {
-        actions: [
-          '_assignEvaluationResults'
-        ]
-      }
-    }
-  }
+  //     on.CHANGED_STATE_IN_CHILD_MACHINE = {
+  //       actions: [
+  //         '_persist',
+  //         // '_updateChildMachineState',
+  //       ]
+  //     }
+  //     on.CHANGED_CONTEXT_IN_CHILD_MACHINE = {
+  //       actions: [
+  //         '_copyContext',
+  //         '_persist',
+  //         {
+  //           unquoted: true,
+  //           raw: `raise({type: 'HAVE_CONTEXT_VARIABLES_CHANGED', namesOfChangedVariables: [...Object.keys(context)]}),`
+  //         },
+  //       ]
+  //     }
+  //     on.HAVE_CONTEXT_VARIABLES_CHANGED = {
+  //       unquoted: true,
+  //       raw: `{
+  //   actions: derivedRecomputeActions,
+  //  }`
+  //     }
+  //     on.REQUEST_UI_START = {
+  //       actions: [
+  //         '_loadChallenge',
+  //       ]
+  //     }
+  //     on.REQUEST_UI_STOP = {
+  //       actions: [
+  //         '_unloadChallenge',
+  //       ]
+  //     }
+  //     on.UI_DONE = {
+  //       actions: [
+  //         '_unloadChallenge',
+  //       ]
+  //     }
+  //     break
+  //   default: {
+  //     on.ASSIGN_EVALUATION_RESULTS_VARIABLES = {
+  //       actions: [
+  //         '_assignEvaluationResults'
+  //       ]
+  //     }
+  //   }
+  // }
 
   return {
     id: machineId,
-    predictableActionArguments: true,
     initial: 'Root',
     states: {
       Root: {
@@ -524,7 +483,6 @@ function interpretTransitions(fqPath: string, node?: dsl.StateNode) {
         group[eventName] = group[eventName] ?? [];
         group[eventName].push({
           target: getTransitionTarget(t),
-          internal: true,
           ...getTransitionGuard(t),
         });
         return group;
@@ -538,7 +496,6 @@ function interpretTransitions(fqPath: string, node?: dsl.StateNode) {
         group[key] = group[key] ?? [];
         group[key].push({
           target: getTransitionTarget(t),
-          internal: true,
           ...getTransitionGuard(t),
         });
         return group;
@@ -548,7 +505,6 @@ function interpretTransitions(fqPath: string, node?: dsl.StateNode) {
     if (alwaysTransitions.length) {
       always = alwaysTransitions.map(t => ({
         target: getTransitionTarget(t),
-        internal: true,
         ...getTransitionGuard(t),
       }));
     }

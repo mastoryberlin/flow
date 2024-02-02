@@ -122,7 +122,6 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
                 json.on = {
                     INTENT: __spreadArray([], nluContext_1.intents.map(function (intentName) { return ({
                         target: (0, util_1.escapeDots)("\"".concat(intentName, "\"")),
-                        internal: true,
                         cond: { type: 'isIntentName', intentName: intentName }
                     }); }), true)
                 };
@@ -143,45 +142,13 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
         var assignments = node.assignVariables;
         if (assignments) {
             // console.log('assignments.map(({ value }) => value):', assignments.map(({ value }) => value))
-            json.entry = [
-                {
-                    type: 'xstate.raise',
-                    event: { type: 'REQUEST_EVAL', expressions: assignments.map(function (_a) {
-                            var value = _a.value;
-                            return value;
-                        }) }
-                },
-                {
-                    type: 'xstate.raise',
-                    event: { type: 'ASSIGN_EVALUATION_RESULTS_VARIABLES', varNames: assignments.map(function (_a) {
-                            var varName = _a.varName;
-                            return varName;
-                        }) }
-                },
-            ];
-            //       json.entry = assignments.map(({ varName, value }) => ({
-            //         unquoted: true,
-            //         raw:
-            //           `choose([
-            //   {
-            //     cond: (context) => Array.isArray(context.${varName}) && Array.isArray((${evaluateInContext(value)})(context)),
-            //     actions: [
-            //       (context) => {
-            //         const newArray = (${evaluateInContext(value)})(context)
-            //         context.${varName}.splice(0, Infinity, ...newArray)
-            //       },
-            //     ],
-            //   },
-            //   {
-            //     actions: [
-            //       assign({
-            //         ${assignments.map(({ varName, value }) => `    ${varName}: ${evaluateInContext(value)}`).join(',\n')}
-            //       })
-            //     ],
-            //   },
-            // ])`,
-            //       }))
-            json.entry.push('_shareContextWithParent');
+            json.entry = assignments.map(function (_a) {
+                var lhs = _a.varName, rhs = _a.value;
+                return ({
+                    type: 'assign',
+                    params: { lhs: lhs, rhs: rhs }
+                });
+            });
         }
         // ========================================================================================================================
         // Directives
@@ -350,21 +317,24 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             else if (Object.keys(after_1).length) {
                 nestedInitialValue = Object.values(after_1)[0][0].target;
             }
-            var invoke = {
-                src: { type: '_sendMessage', kind: kind, sender: sender },
-                onDone: '__SEND_MESSAGE_DONE__'
+            var entry = {
+                type: 'sendMessage', params: { kind: kind, sender: sender }
+            };
+            var on_2 = {
+                SEND_DELAY_OVER: '__SEND_MESSAGE_DONE__'
             };
             if (node.message.type === 'text') {
-                invoke.src.text = node.message.text;
+                entry.params.text = node.message.text;
             }
             else {
-                invoke.src.attachment = (_b = node.message.source) === null || _b === void 0 ? void 0 : _b.toString();
+                entry.params.attachment = (_b = node.message.source) === null || _b === void 0 ? void 0 : _b.toString();
                 if (node.message.showcase) {
-                    invoke.src.showcase = node.message.showcase;
+                    entry.params.showcase = node.message.showcase;
                 }
             }
             json.states = __assign({ __SEND_MESSAGE_ACTIVE__: {
-                    invoke: invoke
+                    entry: entry,
+                    on: on_2
                 }, __SEND_MESSAGE_DONE__: {
                     always: node.final ? "".concat(rootId, ".__FLOW_DONE__") : __spreadArray([], always_1, true),
                     after: node.final ? {} : __assign({}, after_1)
@@ -389,15 +359,6 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
             json.after = {};
             after_1 = {};
         }
-        if (variant !== 'mainflow') {
-            var shareAction = { type: '_shareStateWithParent', path: node.path.join('.') };
-            json.entry = json.entry ? (Array.isArray(json.entry) ? __spreadArray([
-                shareAction
-            ], json.entry, true) : [
-                shareAction,
-                json.entry,
-            ]) : shareAction;
-        }
         return json;
     }
     else {
@@ -417,77 +378,73 @@ function stateNodeToJsonRecursive(fqPath, variant, node, parentInfo) {
     childStates.__ASSERTION_FAILED__ = { type: 'final' };
     var _w = interpretTransitions(rootId), on = _w.on, after = _w.after, always = _w.always;
     // Object.assign(on, getJumpEvents(visitor) as any)
-    on.CHANGED_CONTEXT_IN_STATE_STORE = {
-        actions: [
-            '_copyContext',
-        ]
-    };
-    switch (variant) {
-        case 'ui':
-            childStates.__FLOW_DONE__.entry = {
-                unquoted: true,
-                raw: "sendParent('UI_DONE'),"
-            };
-            break;
-        case 'mainflow':
-            on.CHANGED_CONTEXT_IN_STATE_STORE.actions.push('_persist');
-            on.ASSIGN_EVALUATION_RESULTS_VARIABLES = {
-                actions: [
-                    '_assignEvaluationResults'
-                ]
-            };
-            on.PUSH_EVALUATION_RESULTS_TO_ARRAY = {
-                actions: [
-                    '_pushEvaluationResults'
-                ]
-            };
-            on.CHANGED_STATE_IN_CHILD_MACHINE = {
-                actions: [
-                    '_persist',
-                    // '_updateChildMachineState',
-                ]
-            };
-            on.CHANGED_CONTEXT_IN_CHILD_MACHINE = {
-                actions: [
-                    '_copyContext',
-                    '_persist',
-                    {
-                        unquoted: true,
-                        raw: "raise({type: 'HAVE_CONTEXT_VARIABLES_CHANGED', namesOfChangedVariables: [...Object.keys(context)]}),"
-                    },
-                ]
-            };
-            on.HAVE_CONTEXT_VARIABLES_CHANGED = {
-                unquoted: true,
-                raw: "{\n    actions: derivedRecomputeActions,\n   }"
-            };
-            on.REQUEST_UI_START = {
-                actions: [
-                    '_loadChallenge',
-                ]
-            };
-            on.REQUEST_UI_STOP = {
-                actions: [
-                    '_unloadChallenge',
-                ]
-            };
-            on.UI_DONE = {
-                actions: [
-                    '_unloadChallenge',
-                ]
-            };
-            break;
-        default: {
-            on.ASSIGN_EVALUATION_RESULTS_VARIABLES = {
-                actions: [
-                    '_assignEvaluationResults'
-                ]
-            };
-        }
-    }
+    // switch (variant) {
+    //   case 'ui':
+    //     childStates.__FLOW_DONE__.entry = {
+    //       unquoted: true,
+    //       raw: `sendParent('UI_DONE'),`
+    //     }
+    //     break
+    //   case 'mainflow':
+    //     on.CHANGED_CONTEXT_IN_STATE_STORE.actions.push('_persist')
+    //     on.ASSIGN_EVALUATION_RESULTS_VARIABLES = {
+    //       actions: [
+    //         '_assignEvaluationResults'
+    //       ]
+    //     }
+    //     on.PUSH_EVALUATION_RESULTS_TO_ARRAY = {
+    //       actions: [
+    //         '_pushEvaluationResults'
+    //       ]
+    //     }
+    //     on.CHANGED_STATE_IN_CHILD_MACHINE = {
+    //       actions: [
+    //         '_persist',
+    //         // '_updateChildMachineState',
+    //       ]
+    //     }
+    //     on.CHANGED_CONTEXT_IN_CHILD_MACHINE = {
+    //       actions: [
+    //         '_copyContext',
+    //         '_persist',
+    //         {
+    //           unquoted: true,
+    //           raw: `raise({type: 'HAVE_CONTEXT_VARIABLES_CHANGED', namesOfChangedVariables: [...Object.keys(context)]}),`
+    //         },
+    //       ]
+    //     }
+    //     on.HAVE_CONTEXT_VARIABLES_CHANGED = {
+    //       unquoted: true,
+    //       raw: `{
+    //   actions: derivedRecomputeActions,
+    //  }`
+    //     }
+    //     on.REQUEST_UI_START = {
+    //       actions: [
+    //         '_loadChallenge',
+    //       ]
+    //     }
+    //     on.REQUEST_UI_STOP = {
+    //       actions: [
+    //         '_unloadChallenge',
+    //       ]
+    //     }
+    //     on.UI_DONE = {
+    //       actions: [
+    //         '_unloadChallenge',
+    //       ]
+    //     }
+    //     break
+    //   default: {
+    //     on.ASSIGN_EVALUATION_RESULTS_VARIABLES = {
+    //       actions: [
+    //         '_assignEvaluationResults'
+    //       ]
+    //     }
+    //   }
+    // }
     return {
         id: machineId,
-        predictableActionArguments: true,
         initial: 'Root',
         states: {
             Root: {
@@ -528,7 +485,7 @@ function interpretTransitions(fqPath, node) {
                 var _a;
                 var eventName = t.eventName;
                 group[eventName] = (_a = group[eventName]) !== null && _a !== void 0 ? _a : [];
-                group[eventName].push(__assign({ target: getTransitionTarget_1(t), internal: true }, getTransitionGuard_1(t)));
+                group[eventName].push(__assign({ target: getTransitionTarget_1(t) }, getTransitionGuard_1(t)));
                 return group;
             }, {});
         }
@@ -539,12 +496,12 @@ function interpretTransitions(fqPath, node) {
                 var timeout = t.timeout;
                 var key = timeout.toString();
                 group[key] = (_a = group[key]) !== null && _a !== void 0 ? _a : [];
-                group[key].push(__assign({ target: getTransitionTarget_1(t), internal: true }, getTransitionGuard_1(t)));
+                group[key].push(__assign({ target: getTransitionTarget_1(t) }, getTransitionGuard_1(t)));
                 return group;
             }, {});
         }
         if (alwaysTransitions.length) {
-            always = alwaysTransitions.map(function (t) { return (__assign({ target: getTransitionTarget_1(t), internal: true }, getTransitionGuard_1(t))); });
+            always = alwaysTransitions.map(function (t) { return (__assign({ target: getTransitionTarget_1(t) }, getTransitionGuard_1(t))); });
         }
     }
     return { always: always, on: on, after: after };

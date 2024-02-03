@@ -1,10 +1,9 @@
 {
   "name": "@mastoryberlin/flow",
-  "version": "1.0.0-alpha1",
-  "type": "commonjs",
+  "version": "1.0.1",
   "description": "",
-  "main": "./out/index.js",
-  "types": "./out/index.d.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mastoryberlin/flow.git"
@@ -21,12 +20,12 @@
     "preview": "vite preview --port 4173",
     "test:unit": "vitest --environment jsdom",
     "build-only": "vite build",
-    "build-module": "tsc --declaration --resolveJsonModule --outDir out ./index.ts",
+    "build-module": "tsc --declaration --resolveJsonModule --outDir lib ./index.ts",
     "type-check": "vue-tsc --noEmit -p tsconfig.vitest.json --composite false",
-    "build:scripts": "tsc --outDir out ./gen-spec ./gen-types ./bump-version",
-    "gen-spec": "node out/gen-spec",
-    "gen-types": "node out/gen-types",
-    "bump-version": "node out/bump-version",
+    "build:scripts": "tsc --outDir lib ./gen-spec ./gen-types ./bump-version",
+    "gen-spec": "node lib/gen-spec",
+    "gen-types": "node lib/gen-types",
+    "bump-version": "node lib/bump-version",
     "release": "yarn gen-spec && yarn gen-types && yarn build-module && yarn bump-version"
   },
   "dependencies": {

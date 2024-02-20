@@ -131,6 +131,12 @@ declare function getTextMateGrammar(): {
                 match: string;
             }[];
         };
+        checkpoints: {
+            patterns: {
+                name: string;
+                match: string;
+            }[];
+        };
         directives: {
             patterns: {
                 name: string;

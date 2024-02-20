@@ -15,12 +15,12 @@ const props = defineProps<{
 }>()
 
 const parser = useParser()
-const visitor = useVisitor(["Nick", "VZ", "Father"])
+// const visitor = useVisitor(["Nick", "VZ", "Alicia"])
 
 const flowProp = computed(() => props.flow)
 let issueArray = ref([] as Issue[])
 watch(flowProp, () => {
-  issueArray.value = useIssueTracker(parser, visitor, props.flow, '<ROOT>', true)
+  issueArray.value = useIssueTracker(parser, props.visitor, props.flow, '<ROOT>', true)
 })
 // console.log('issueArray', issueArray)
 const cstProp = computed(() => props.cst)
@@ -50,18 +50,39 @@ const currentTransitionNumber = ref<number | null>(null)
 <template>
   <div>
     <h3>State Nodes</h3>
-    <select class="state-nodes list" size="10" v-model="currentStateNodePath">
-      <option v-for="s in sortedStateNodes" :value="s.path.join('.')"> {{ s.path.join('.') }} </option>
+    <select
+     class="state-nodes list"
+     size="10"
+     v-model="currentStateNodePath"
+    >
+      <option
+       v-for="s in sortedStateNodes"
+       :value="s.path.join('.')"
+      > {{ s.path.join('.') }} </option>
     </select>
-    <StateNodeDetailView v-if="currentStateNodePath" :path="currentStateNodePath" :visitor="visitor" />
+    <StateNodeDetailView
+     v-if="currentStateNodePath"
+     :path="currentStateNodePath"
+     :visitor="visitor"
+    />
     <div v-if="issueArray">
-      <div v-for="issue in issueArray" class="issues">
+      <div
+       v-for="issue in issueArray"
+       class="issues"
+      >
         Error: {{ issue.kind }} on line {{ issue.range.start.line }}
       </div>
     </div>
     <h3>Transitions</h3>
-    <select class="transitions list" size="10" v-model="currentTransitionNumber">
-      <option v-for="t, i in sortedTransitions" :value="i">
+    <select
+     class="transitions list"
+     size="10"
+     v-model="currentTransitionNumber"
+    >
+      <option
+       v-for="t, i in sortedTransitions"
+       :value="i"
+      >
         <strong>[{{ t.type }}]</strong>
         {{ t.sourcePath?.join('.') }} ->
         {{ t.target?.label ? '@' + t.target!.label : t.target?.path?.join('.') }}
@@ -77,7 +98,11 @@ const currentTransitionNumber = ref<number | null>(null)
         }}
       </option>
     </select>
-    <!-- <StateNodeDetailView v-if="currentStateNodePath" :path="currentStateNodePath" :visitor="visitor" /> -->
+    <!-- <StateNodeDetailView
+     v-if="currentStateNodePath"
+     :path="currentStateNodePath"
+     :visitor="visitor"
+    /> -->
   </div>
 </template>
 

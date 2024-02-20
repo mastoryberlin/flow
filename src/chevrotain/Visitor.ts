@@ -56,6 +56,8 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
   private getStateNodeNameDefinition(stateNode: StateNodeCstChildren) {
     if (stateNode.Directive) {
       return stateNode.Directive[0]
+    } else if (stateNode.Checkpoint) {
+      return stateNode.Checkpoint[0]
     } else if (stateNode.Assignment) {
       const assignments = stateNode.Assignment
       const first = assignments[0]
@@ -204,6 +206,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     const nameDef = this.getStateNodeNameDefinition(ctx)
 
     if (!nameDef) { return }
+
     // Get the name and full path ...
     const name = escapeDots(nameDef.image)
     const curPath = [...this.path]
@@ -221,6 +224,16 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
 
     // ... the label if applicable ...
     const label = ctx.Label ? ctx.Label[0].image.substring(1) : undefined
+
+    // ... checkpoint if applicable ...
+    let checkpoint: dsl.Checkpoint | undefined = undefined
+    const checkpointMatch = ctx.Checkpoint ? ctx.Checkpoint[0].image.match(/^§(§)?(\w+)/) : undefined
+    if (checkpointMatch) {
+      checkpoint = {
+        name: checkpointMatch[2],
+        forceExit: !!checkpointMatch[1],
+      }
+    }
 
     // ... directive details if applicable ...
     let directive, nluContext: NLUContext | undefined, message, assignVariables
@@ -325,6 +338,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     const stateNode: dsl.StateNode = {
       name,
       label,
+      checkpoint,
       directive,
       nluContext,
       message,

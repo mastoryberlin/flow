@@ -81,6 +81,7 @@ export const supportedDirectives = {
   reveal: defineDirective({
     args: s => {
       //TODO: split the non-dotword part of the directive state name into arguments
+      if (!s) { return { fragmentId: '' } }
       const [fragmentId,] = s.trim().split(/\s+/)
       return {
         fragmentId,
@@ -457,7 +458,7 @@ export const supportedDirectives = {
         case 'true': preference = true; break
         case 'false': preference = false; break
       }
-      return {preference}
+      return { preference }
     },
     entry: {
       type: '_showIntentButtons',

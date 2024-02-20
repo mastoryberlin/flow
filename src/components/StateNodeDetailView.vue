@@ -16,9 +16,8 @@ const stateNodeJson = computed(() => stateNode.value ? JSON.stringify(stateNode.
 <template>
   <div>
     <!-- <JsonObjectTreeView v-if="stateNode" :object="stateNode" /> -->
-    {{ stateNodeJson }}
+    {{ path }}: {{ stateNodeJson }}
   </div>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

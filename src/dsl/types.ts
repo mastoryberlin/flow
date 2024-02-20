@@ -51,11 +51,17 @@ export interface Directive {
   arg: string
 }
 
+export interface Checkpoint {
+  name: string
+  forceExit: boolean
+}
+
 export interface StateNode extends SemanticUnit {
   name: string
   path: FqStateNodePath
   parallel: boolean
   label?: string
+  checkpoint?: Checkpoint
   directive?: Directive
   assignVariables?: VariableAssignment[]
   message?: Message

@@ -48,6 +48,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
   // console.log('parentInfo0:', fqPath)
   if (node) {
     const json: any = {}
+    let autoProceedFromLastChild: string | undefined = undefined
     if (children?.length) {
       if (node.parallel) {
         json.type = 'parallel'
@@ -74,6 +75,12 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         childStates['0'].always.push('*')
       } else {
         json.initial = children[0].name
+        if (node.checkpoint) {
+          const lastChild = children[children.length - 1]
+          if (!lastChild.transitions.length) {
+            autoProceedFromLastChild = lastChild.name
+          }
+        }
       }
       json.states = childStates
     }
@@ -82,11 +89,13 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       json.id = node.label
     }
 
+    let testNodeName = node.name
+
     // ========================================================================================================================
     // Interactive Conversations
     // ========================================================================================================================
 
-    if (promptStateRegExp.test(node.name)) {
+    if (promptStateRegExp.test(testNodeName)) {
       const nluContext = parentInfo?.nluContext
       if (!nluContext) {
         console.error(`Cannot obtain data for ENTER_NLU_CONTEXT and LEAVE_NLU_CONTEXT invocations: parentInfo.nluContext is undefined (path: ${fqPath})`)
@@ -113,7 +122,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
             // { target: '*' } // fallback intent
           ]
         }
-        if (node.name === '?!' || /^\?!\s\w+$/.test(node.name)) { // match ?! singleWord
+        if (testNodeName === '?!' || /^\?!\s\w+$/.test(testNodeName)) { // match ?! singleWord
           json.on['UNKNOWN_INTENT'] = [
             {
               target: '*',
@@ -340,6 +349,41 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
 
       json.always = []; always = []
       json.after = {}; after = {}
+    }
+
+    // ========================================================================================================================
+    // Checkpoints
+    // ========================================================================================================================
+
+    if (node.checkpoint) {
+      const childStates = json.states
+      if (autoProceedFromLastChild) {
+        childStates[autoProceedFromLastChild].after = json.after
+      }
+      json.states = {
+        __CHECKPOINT_ACTIVE__: {
+          entry: [
+            {
+              type: 'offerExit',
+              params: { path: fqPath },
+            }
+          ],
+          on: {
+            'CHECKPOINT_PASS': '__CHECKPOINT_DONE__',
+          },
+        },
+        __CHECKPOINT_DONE__: {
+          always: node.final ? `${rootId}.__FLOW_DONE__` : [...always],
+          after: node.final ? {} : { ...after },
+        },
+        __CHECKPOINT_REENTER__: {
+          always: json.initial ?? '__CHECKPOINT_DONE__',
+        },
+        ...childStates,
+      }
+      json.always = []; always = []
+      json.after = {}; after = {}
+      json.initial = '__CHECKPOINT_ACTIVE__'
     }
 
     return json

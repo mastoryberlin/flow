@@ -191,6 +191,14 @@
                 }
             ]
         },
+        "checkpoints": {
+            "patterns": [
+                {
+                    "name": "entity.name.section",
+                    "match": "\b§{1,2}\b"
+                }
+            ]
+        },
         "directives": {
             "patterns": [
                 {

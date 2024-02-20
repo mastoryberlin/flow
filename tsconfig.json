@@ -11,6 +11,7 @@
     "**/*.spec.ts"
   ],
   "compilerOptions": {
+    "ignoreDeprecations": "5.0",
     "module": "CommonJS",
     "lib": [
       "ES2022",

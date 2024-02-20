@@ -53,7 +53,7 @@ const Assignment = createToken({
   line_breaks: false
 })
 
-const TimeSpan = createToken({ name: 'TimeSpan', pattern: /(?:0|[1-9]\d*):\d{2}|(?:0|[1-9]\d*)(?:\.\d+)?(?:\s*(?:ms|milli(seconds?)?|s(ec(onds?)?)?|m(in(utes?)?)?|h(ours?)?)\b)?/})
+const TimeSpan = createToken({ name: 'TimeSpan', pattern: /(?:0|[1-9]\d*):\d{2}|(?:0|[1-9]\d*)(?:\.\d+)?(?:\s*(?:ms|milli(seconds?)?|s(ec(onds?)?)?|m(in(utes?)?)?|h(ours?)?)\b)?/ })
 
 const tokenDefinitions = {
   LCurly: /{/,
@@ -63,6 +63,7 @@ const tokenDefinitions = {
   Pipe: /\|/,
   Newline: /\n/,
   Arrow: /->/,
+  Checkpoint: /§{1,2}\w+\b/,
   Ellipsis: /\.{1,4}(?=\s)/,
   LengthFunction: /\blength\([^)]*\)\s*(?:[-+]\s*)?/,
   After: /\bafter\b/,
@@ -80,7 +81,7 @@ const dslTokens = Object.fromEntries(
     [name, createToken({ name, ...(definition.constructor === RegExp ? { pattern: definition } : definition) })])
 )
 
-const { LCurly, RCurly, LSquare, RSquare, Pipe, Newline, Arrow, Ellipsis, LengthFunction, After, OnEvent, IfCondition, When, Label, NumberLiteral, /* TimeSpan, StateNodeName, Directive, Assignment, */ LineComment, WhiteSpace } = dslTokens
+const { LCurly, RCurly, LSquare, RSquare, Pipe, Newline, Arrow, Ellipsis, LengthFunction, After, OnEvent, IfCondition, When, Label, Checkpoint, NumberLiteral, /* TimeSpan, StateNodeName, Directive, Assignment, */ LineComment, WhiteSpace } = dslTokens
 
 // Labels only affect error messages and Diagrams.
 LCurly.LABEL = "'{'";
@@ -94,7 +95,7 @@ const allTokens = [
   LCurly, RCurly, LSquare, RSquare, Pipe, Newline,
   Ellipsis, Arrow, NumberLiteral, TimeSpan,
   LengthFunction,
-  After, OnEvent, IfCondition, When, Label, Directive, Assignment, StateNodeName,
+  After, OnEvent, IfCondition, When, Label, Checkpoint, Directive, Assignment, StateNodeName,
 ]
 export const useTokens = () => allTokens
 

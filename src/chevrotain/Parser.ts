@@ -2,12 +2,12 @@ import { CstParser, IToken } from 'chevrotain'
 import { useTokens, useLexer } from './Lexer';
 
 const tokens = useTokens()
-const [ 
+const [
   WhiteSpace, LineComment,
   LCurly, RCurly, LSquare, RSquare, Pipe, Newline,
   Ellipsis, Arrow, NumberLiteral, TimeSpan,
   LengthFunction,
-  After, OnEvent, IfCondition, When, Label, Directive, Assignment, StateNodeName
+  After, OnEvent, IfCondition, When, Label, Checkpoint, Directive, Assignment, StateNodeName
 ] = tokens
 
 export class Parser extends CstParser {
@@ -18,7 +18,7 @@ export class Parser extends CstParser {
     }
   }
   comments: IToken[] = []
-  
+
   constructor() {
     super(tokens, {
       nodeLocationTracking: 'full',
@@ -47,7 +47,19 @@ export class Parser extends CstParser {
         { ALT: () => $.CONSUME(Directive) },
         {
           ALT: () => {
-            $.AT_LEAST_ONE(() => 
+            $.CONSUME(Checkpoint)
+            $.OPTION2(() => {
+              $.CONSUME(LCurly)
+              $.SUBRULE($.blanks)
+              $.SUBRULE($.sequence)
+              $.CONSUME(RCurly)
+              $.SUBRULE2($.blanks)
+            })
+          }
+        },
+        {
+          ALT: () => {
+            $.AT_LEAST_ONE(() =>
               $.CONSUME(Assignment)
             )
           }
@@ -55,25 +67,30 @@ export class Parser extends CstParser {
         {
           ALT: () => {
             $.SUBRULE($.stateNodeName)
-            $.OPTION2(() => {
+            $.OPTION3(() => {
               $.OR2([
-                {ALT: () => {
-                  $.CONSUME(LCurly)
-                  $.SUBRULE($.blanks)
-                  $.SUBRULE($.sequence)
-                  $.CONSUME(RCurly)
-                  $.SUBRULE2($.blanks)
-                }},
-                {ALT: () => {
-                  $.CONSUME(LSquare)
-                  $.SUBRULE3($.blanks)
-                  $.SUBRULE2($.sequence)
-                  $.CONSUME(RSquare)
-                  $.SUBRULE4($.blanks)
-                }}
+                {
+                  ALT: () => {
+                    $.CONSUME2(LCurly)
+                    $.SUBRULE3($.blanks)
+                    $.SUBRULE2($.sequence)
+                    $.CONSUME2(RCurly)
+                    $.SUBRULE4($.blanks)
+                  }
+                },
+                {
+                  ALT: () => {
+                    $.CONSUME(LSquare)
+                    $.SUBRULE5($.blanks)
+                    $.SUBRULE3($.sequence)
+                    $.CONSUME(RSquare)
+                    $.SUBRULE6($.blanks)
+                  }
+                }
               ])
             })
-        }}
+          }
+        }
       ])
     })
 
@@ -93,14 +110,16 @@ export class Parser extends CstParser {
 
     $.RULE("guard", () => {
       $.OR([
-        {ALT: () => { $.CONSUME(IfCondition) }},
-        {ALT: () => {
-          $.CONSUME2(When)
-          $.OR3 ([
-            { ALT: () => $.SUBRULE($.stateNodePath) },
-            { ALT: () => $.CONSUME2(Label) },
-          ])
-        }}
+        { ALT: () => { $.CONSUME(IfCondition) } },
+        {
+          ALT: () => {
+            $.CONSUME2(When)
+            $.OR3([
+              { ALT: () => $.SUBRULE($.stateNodePath) },
+              { ALT: () => $.CONSUME2(Label) },
+            ])
+          }
+        }
       ])
     })
 

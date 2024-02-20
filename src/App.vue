@@ -8,24 +8,18 @@ import ResultsPane from './components/ResultsPane.vue';
 import { useVisitor } from './chevrotain/Visitor';
 import packageJson from "../package.json";
 
-const code = ref(`Nick "Hello"
-. @image Alicia "Here's an image:"
-. Alicia https://storage.googleapis.com/mastory-content/character-movement.png "3D Movement" {
-  after 2s -> @continue
+const code = ref(`§cp1
+. §§cp2 {
+  Nick "Hi"
+  . _ {
+    -> @b
+  }
 }
-
-@audio Alicia "Here's an audio:"
-. Alicia https://storage.googleapis.com/mastory-content/units/Trial/security-area.mp3 "Audio" {
-  after 2s -> @continue
+. A {
+  A1
 }
-
-@video Alicia "Here's a video:"
-. Alicia https://storage.googleapis.com/mastory-content/stories/Trial/outro.mp4 "Video" {
-  after 2s -> @continue
-}
-
-@text Nick "Got it!" {
-  after 2s -> @continue
+. @b B {
+  B1
 }`)
 
 const lexer = useLexer()
@@ -46,8 +40,16 @@ onMounted(() => { parse(code.value) })
 
 <template>
   <span :style="{ position: 'fixed', top: '0', left: '0' }">v{{ version ?? '?' }}</span>
-  <FlowCodeInput v-model="code" @update="parse" />
-  <ResultsPane v-if="cst" :cst="cst" :visitor="visitor" :flow="code" />
+  <FlowCodeInput
+   v-model="code"
+   @update="parse"
+  />
+  <ResultsPane
+   v-if="cst"
+   :cst="cst"
+   :visitor="visitor"
+   :flow="code"
+  />
 </template>
 
 <style scoped></style>

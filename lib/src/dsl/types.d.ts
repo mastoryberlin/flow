@@ -44,6 +44,7 @@ export interface StateNode extends SemanticUnit {
     path: FqStateNodePath;
     parallel: boolean;
     label?: string;
+    checkpoint?: number;
     directive?: Directive;
     assignVariables?: VariableAssignment[];
     message?: Message;

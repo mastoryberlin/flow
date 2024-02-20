@@ -39,13 +39,11 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     }
   }
 
-  // console.log('parentInfo-1:', fqPath)
   const childStates = Object.fromEntries(children.map(childNode => {
     const sub = stateNodeToJsonRecursive(`${fqPath}.${childNode.name}`, variant, childNode, promptStateRegExp.test(childNode.name) ? { nluContext } : undefined)
     return [childNode.name, sub]
   }))
 
-  // console.log('parentInfo0:', fqPath)
   if (node) {
     const json: any = {}
     let autoProceedFromLastChild: string | undefined = undefined
@@ -365,7 +363,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
           entry: [
             {
               type: 'offerExit',
-              params: { path: fqPath },
+              params: { path: fqPath, ...node.checkpoint },
             }
           ],
           on: {

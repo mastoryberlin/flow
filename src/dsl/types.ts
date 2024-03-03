@@ -51,9 +51,14 @@ export interface Directive {
   arg: string
 }
 
+export enum ExitBehavior {
+  defer = 'defer',
+  immediate = 'immediate',
+}
+
 export interface Checkpoint {
   name: string
-  forceExit: boolean
+  exitBehavior: ExitBehavior
 }
 
 export interface StateNode extends SemanticUnit {

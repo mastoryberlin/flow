@@ -10,6 +10,7 @@ import * as vscode from "../dsl/vscode";
 import type { StateNodeCstChildren, TopLevelSequenceCstChildren, AlwaysTransitionCstChildren, SequenceCstChildren, TransitionTargetCstNode, TransitionTargetCstChildren, TransitionCstChildren, AlwaysTransitionCstNode, StateNodePathCstNode } from "./types";
 import { useParser } from "./Parser";
 import type * as dsl from "../dsl/types"
+import { ExitBehavior } from '../dsl/types'
 import type { CstNodeLocation, IToken } from "chevrotain";
 import type { NLUContext } from "../dsl/types";
 import { escapeDots, promptStateRegExp, unescapeDots } from "../util";
@@ -231,7 +232,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     if (checkpointMatch) {
       checkpoint = {
         name: checkpointMatch[2],
-        forceExit: !!checkpointMatch[1],
+        exitBehavior: checkpointMatch[1] ? ExitBehavior.immediate : ExitBehavior.defer,
       }
     }
 
@@ -321,7 +322,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
               intents,
               keepIntentsEnabled: firstSubNodeNameDef.image === '??',
               freeText: firstSubNodeNameDef.image === '?!' || /^\?!\s\w+$/.test(firstSubNodeNameDef.image),
-              contextId: /^\?!\s\w+$/.test(firstSubNodeNameDef.image) ? firstSubNodeNameDef.image.match(/^\?!\s\w+$/)[0] : null,
+              contextId: /^\?!\s\w+$/.test(firstSubNodeNameDef.image) ? firstSubNodeNameDef.image.match(/^\?!\s\w+$/)?.[0] : null,
               regExps,
               includes: []
             }

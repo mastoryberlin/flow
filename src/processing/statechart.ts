@@ -324,7 +324,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
           on,
         },
         __SEND_MESSAGE_DONE__: {
-          always: node.final ? `${rootId}.__FLOW_DONE__` : [...always],
+          always: node.final ? `#${rootId}.__FLOW_DONE__` : [...always],
           after: node.final ? {} : { ...after },
         },
         ...json.states
@@ -367,11 +367,11 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
             }
           ],
           on: {
-            'CHECKPOINT_PASS': '__CHECKPOINT_DONE__',
+            CHECKPOINT_PASS: '__CHECKPOINT_DONE__',
           },
         },
         __CHECKPOINT_DONE__: {
-          always: node.final ? `${rootId}.__FLOW_DONE__` : [...always],
+          always: node.final ? `#${rootId}.__FLOW_DONE__` : [...always],
           after: node.final ? {} : { ...after },
         },
         __CHECKPOINT_REENTER__: {
@@ -391,99 +391,96 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     childStates.__FLOW_DONE__ = {
       type: 'final',
       entry: {
-        "to": "#_parent",
-        "type": "xstate.send",
-        "event": {
-          "type": "SUBFLOW_DONE"
-        },
-        "id": "SUBFLOW_DONE"
-      }
+        type: "tellParentImDone",
+        id: "SUBFLOW_DONE"
+      },
     }
-  }
-  childStates.__ASSERTION_FAILED__ = { type: 'final' }
 
-  let { on, after, always } = interpretTransitions(rootId);
-  // Object.assign(on, getJumpEvents(visitor) as any)
+    childStates.__ASSERTION_FAILED__ = { type: 'final' }
 
-  // switch (variant) {
-  //   case 'ui':
-  //     childStates.__FLOW_DONE__.entry = {
-  //       unquoted: true,
-  //       raw: `sendParent('UI_DONE'),`
-  //     }
-  //     break
+    let { on, after, always } = interpretTransitions(rootId);
+    // Object.assign(on, getJumpEvents(visitor) as any)
 
-  //   case 'mainflow':
-  //     on.CHANGED_CONTEXT_IN_STATE_STORE.actions.push('_persist')
+    // switch (variant) {
+    //   case 'ui':
+    //     childStates.__FLOW_DONE__.entry = {
+    //       unquoted: true,
+    //       raw: `sendParent('UI_DONE'),`
+    //     }
+    //     break
 
-  //     on.ASSIGN_EVALUATION_RESULTS_VARIABLES = {
-  //       actions: [
-  //         '_assignEvaluationResults'
-  //       ]
-  //     }
+    //   case 'mainflow':
+    //     on.CHANGED_CONTEXT_IN_STATE_STORE.actions.push('_persist')
 
-  //     on.PUSH_EVALUATION_RESULTS_TO_ARRAY = {
-  //       actions: [
-  //         '_pushEvaluationResults'
-  //       ]
-  //     }
+    //     on.ASSIGN_EVALUATION_RESULTS_VARIABLES = {
+    //       actions: [
+    //         '_assignEvaluationResults'
+    //       ]
+    //     }
 
-  //     on.CHANGED_STATE_IN_CHILD_MACHINE = {
-  //       actions: [
-  //         '_persist',
-  //         // '_updateChildMachineState',
-  //       ]
-  //     }
-  //     on.CHANGED_CONTEXT_IN_CHILD_MACHINE = {
-  //       actions: [
-  //         '_copyContext',
-  //         '_persist',
-  //         {
-  //           unquoted: true,
-  //           raw: `raise({type: 'HAVE_CONTEXT_VARIABLES_CHANGED', namesOfChangedVariables: [...Object.keys(context)]}),`
-  //         },
-  //       ]
-  //     }
-  //     on.HAVE_CONTEXT_VARIABLES_CHANGED = {
-  //       unquoted: true,
-  //       raw: `{
-  //   actions: derivedRecomputeActions,
-  //  }`
-  //     }
-  //     on.REQUEST_UI_START = {
-  //       actions: [
-  //         '_loadChallenge',
-  //       ]
-  //     }
-  //     on.REQUEST_UI_STOP = {
-  //       actions: [
-  //         '_unloadChallenge',
-  //       ]
-  //     }
-  //     on.UI_DONE = {
-  //       actions: [
-  //         '_unloadChallenge',
-  //       ]
-  //     }
-  //     break
-  //   default: {
-  //     on.ASSIGN_EVALUATION_RESULTS_VARIABLES = {
-  //       actions: [
-  //         '_assignEvaluationResults'
-  //       ]
-  //     }
-  //   }
-  // }
+    //     on.PUSH_EVALUATION_RESULTS_TO_ARRAY = {
+    //       actions: [
+    //         '_pushEvaluationResults'
+    //       ]
+    //     }
 
-  return {
-    id: machineId,
-    initial: 'Root',
-    states: {
-      Root: {
-        id: rootId,
-        initial: children[0].name,
-        states: childStates,
-        on, after, always
+    //     on.CHANGED_STATE_IN_CHILD_MACHINE = {
+    //       actions: [
+    //         '_persist',
+    //         // '_updateChildMachineState',
+    //       ]
+    //     }
+    //     on.CHANGED_CONTEXT_IN_CHILD_MACHINE = {
+    //       actions: [
+    //         '_copyContext',
+    //         '_persist',
+    //         {
+    //           unquoted: true,
+    //           raw: `raise({type: 'HAVE_CONTEXT_VARIABLES_CHANGED', namesOfChangedVariables: [...Object.keys(context)]}),`
+    //         },
+    //       ]
+    //     }
+    //     on.HAVE_CONTEXT_VARIABLES_CHANGED = {
+    //       unquoted: true,
+    //       raw: `{
+    //   actions: derivedRecomputeActions,
+    //  }`
+    //     }
+    //     on.REQUEST_UI_START = {
+    //       actions: [
+    //         '_loadChallenge',
+    //       ]
+    //     }
+    //     on.REQUEST_UI_STOP = {
+    //       actions: [
+    //         '_unloadChallenge',
+    //       ]
+    //     }
+    //     on.UI_DONE = {
+    //       actions: [
+    //         '_unloadChallenge',
+    //       ]
+    //     }
+    //     break
+    //   default: {
+    //     on.ASSIGN_EVALUATION_RESULTS_VARIABLES = {
+    //       actions: [
+    //         '_assignEvaluationResults'
+    //       ]
+    //     }
+    //   }
+    // }
+
+    return {
+      id: machineId,
+      initial: 'Root',
+      states: {
+        Root: {
+          id: rootId,
+          initial: children[0].name,
+          states: childStates,
+          on, after, always
+        }
       }
     }
   }

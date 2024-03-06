@@ -57,43 +57,6 @@ export type UiElementId = 'submitButton' | 'callButton'
 
 export const supportedDirectives = {
 
-  /**
-    * Unfreezes the UI in the given fragment, i.e. allows user input (again).
-    */
-  unfreeze: defineDirective({
-    args: s => {
-      //TODO: split the non-dotword part of the directive state name into arguments
-      const [fragmentId,] = s.trim().split(/\s+/)
-      return {
-        fragmentId,
-      }
-    },
-    entry: {
-      type: '_unfreeze',
-      //TODO: process the arguments from above into additional props of the implementation object
-      fragmentId: s => s.fragmentId,
-    },
-  }),
-
-  /**
-   * Reveals the sample solution for the given fragment.
-   */
-  reveal: defineDirective({
-    args: s => {
-      //TODO: split the non-dotword part of the directive state name into arguments
-      if (!s) { return { fragmentId: '' } }
-      const [fragmentId,] = s.trim().split(/\s+/)
-      return {
-        fragmentId,
-      }
-    },
-    entry: {
-      type: '_reveal',
-      //TODO: process the arguments from above into additional props of the implementation object
-      fragmentId: s => s.fragmentId,
-    },
-  }),
-
   achieve: defineDirective({
     args: s => ({
       achievement: s?.trim(),
@@ -383,6 +346,25 @@ export const supportedDirectives = {
   }),
 
   /**
+   * Mounts a fragment.
+   */
+  mount: defineDirective({
+    args: s => {
+      if (!s) { return { fragmentId: '' } }
+      const [fragmentId,] = s.trim().split(/\s+/)
+      return {
+        fragmentId,
+      }
+    },
+    entry: {
+      type: '_mount',
+      params: s => ({
+        fragmentId: s.fragmentId
+      }),
+    },
+  }),
+
+  /**
    * Offers help according to the dynamic "help map" passed as an argument.
    * 
    * The help map is a simple key-value map of strings, where the key defines the text shown on
@@ -422,6 +404,25 @@ export const supportedDirectives = {
         event: a => ({ type: 'PUSH_EVALUATION_RESULTS_TO_ARRAY', arrayName: a.array })
       },
     ]
+  }),
+
+  /**
+   * Reveals the sample solution for the given fragment.
+   */
+  reveal: defineDirective({
+    args: s => {
+      if (!s) { return { fragmentId: '' } }
+      const [fragmentId,] = s.trim().split(/\s+/)
+      return {
+        fragmentId,
+      }
+    },
+    entry: {
+      type: '_reveal',
+      params: s => ({
+        fragmentId: s.fragmentId
+      }),
+    },
   }),
 
   /**
@@ -481,10 +482,47 @@ export const supportedDirectives = {
   }),
 
   /**
+  * Unfreezes the UI in the given fragment, i.e. allows user input (again).
+  */
+  unfreeze: defineDirective({
+    args: s => {
+      //TODO: split the non-dotword part of the directive state name into arguments
+      const [fragmentId,] = s.trim().split(/\s+/)
+      return {
+        fragmentId,
+      }
+    },
+    entry: {
+      type: '_unfreeze',
+      //TODO: process the arguments from above into additional props of the implementation object
+      fragmentId: s => s.fragmentId,
+    },
+  }),
+
+  /**
    * Unloads the current unit's challenge UI and turns the Wire page into the idle state with "No Challenge Available".
    */
   unloadChallenge: defineDirective({
     args: s => ({}),
     entry: { type: '_unloadChallenge' }
+  }),
+
+  /**
+   * Unmounts a fragment.
+   */
+  unmount: defineDirective({
+    args: s => {
+      if (!s) { return { fragmentId: '' } }
+      const [fragmentId,] = s.trim().split(/\s+/)
+      return {
+        fragmentId,
+      }
+    },
+    entry: {
+      type: '_unmount',
+      params: s => ({
+        fragmentId: s.fragmentId
+      }),
+    },
   }),
 }

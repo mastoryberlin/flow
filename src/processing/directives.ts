@@ -43,11 +43,19 @@ export function defineDirective<A extends DirectiveArgumentsTypes>(d: DirectiveI
 
 const sepHelper = '&.&'
 const splitArgs = {
-  byWhiteSpace(s: string) {
+  byFirstWhiteSpace(s: string) {
     const argSplitter = new RegExp('\\s+|(?<!^)\\b(?!$)')
     return s.replace(argSplitter, sepHelper).split(sepHelper)
-  }
+  },
+  byWhiteSpace(s: string) {
+    return s.split(/\s+/)
+  },
 }
+
+const missingRequiredArgument = (argumentName: string) =>
+  `Missing required argument "${argumentName}"`
+const invalidArgumentValue = (argumentName: string, receivedValue: string, expected: string) =>
+  `Invalid value "${receivedValue}" for argument "${argumentName}" (expected: ${expected})`
 
 // ========================================================================================================================
 // Supported Directives
@@ -56,7 +64,6 @@ const splitArgs = {
 export type UiElementId = 'submitButton' | 'callButton'
 
 export const supportedDirectives = {
-
   achieve: defineDirective({
     args: s => ({
       achievement: s?.trim(),
@@ -172,10 +179,10 @@ export const supportedDirectives = {
    */
   focusApp: defineDirective({
     args: s => {
-      let args = splitArgs.byWhiteSpace(s)
+      let args = splitArgs.byFirstWhiteSpace(s)
       const character = allNpcs.find(c => c.toLowerCase() === args[0].toLowerCase())
       if (character) {
-        args = splitArgs.byWhiteSpace(args[1])
+        args = splitArgs.byFirstWhiteSpace(args[1])
       }
       let appId = args[0].trim().toLowerCase()
       return { appId, character }
@@ -229,10 +236,10 @@ export const supportedDirectives = {
 
   inChallenge: defineDirective({
     args: s => {
-      let args = splitArgs.byWhiteSpace(s)
+      let args = splitArgs.byFirstWhiteSpace(s)
       const character = allNpcs.find(c => c.toLowerCase() === args[0].toLowerCase())
       if (character) {
-        args = splitArgs.byWhiteSpace(args[1])
+        args = splitArgs.byFirstWhiteSpace(args[1])
       }
       let eventName = args[0]
 
@@ -267,10 +274,10 @@ export const supportedDirectives = {
 
   inEpisode: defineDirective({
     args: s => {
-      let args = splitArgs.byWhiteSpace(s)
+      let args = splitArgs.byFirstWhiteSpace(s)
       const character = allNpcs.find(c => c.toLowerCase() === args[0].toLowerCase())
       if (character) {
-        args = splitArgs.byWhiteSpace(args[1])
+        args = splitArgs.byFirstWhiteSpace(args[1])
       }
       let eventName = args[0]
 
@@ -324,14 +331,49 @@ export const supportedDirectives = {
     }
   }),
 
-  let: defineDirective(({
+  /**
+   * Sends a message to a fragment.
+   * 
+   * This is the Flow equivalent of the `let` property in declarative event or state handlers
+   * within unit fragment trees.
+   */
+  let: defineDirective({
+    args: s => {
+      if (!s) { throw missingRequiredArgument('fragmentId') }
+      const [fragmentId, eventName, rawEventParams] = splitArgs.byFirstWhiteSpace(s)
+      if (!fragmentId) { throw missingRequiredArgument('fragmentId') }
+      if (!eventName) { throw missingRequiredArgument('eventName') }
+
+      let eventParams
+      try {
+        eventParams = JSON.parse(rawEventParams || '{}')
+      } catch (error) {
+        throw invalidArgumentValue('eventParams', rawEventParams, 'valid JSON')
+      }
+
+      if (typeof eventParams !== 'object') {
+        throw invalidArgumentValue('eventParams', eventParams, 'JSON object')
+      }
+
+      return {
+        fragmentId,
+        event: { type: eventName, ...(eventParams ?? {}) },
+      }
+    },
+    entry: {
+      type: '_let',
+      params: s => s,
+    },
+  }),
+
+  have: defineDirective(({
     args: s => ({
       npcName: s.split(' ')[0],
       promptDoc: s.split(' ')[1],
       fallback: s.match(/"([^"]*)"/)![0]
     }),
     invoke: {
-      type: '_let',
+      type: '_have',
       npcName: s => s.npcName,
       promptDoc: s => s.promptDoc,
       fallback: s => s.fallback
@@ -412,7 +454,7 @@ export const supportedDirectives = {
   reveal: defineDirective({
     args: s => {
       if (!s) { return { fragmentId: '' } }
-      const [fragmentId,] = s.trim().split(/\s+/)
+      const [fragmentId] = s.trim().split(/\s+/)
       return {
         fragmentId,
       }
@@ -426,7 +468,34 @@ export const supportedDirectives = {
   }),
 
   /**
-   * Shows a UI element if it was previously hidden.
+   * Assigns a value to a fragment property.
+   */
+  set: defineDirective({
+    args: s => {
+      if (!s) { throw missingRequiredArgument('varName') }
+      const [varName, rawValue] = splitArgs.byFirstWhiteSpace(s)
+      if (!varName) { throw missingRequiredArgument('varName') }
+      if (!rawValue) { throw missingRequiredArgument('value') }
+
+      try {
+        const value = JSON.parse(rawValue)
+
+        return {
+          varName,
+          value,
+        }
+      } catch (error) {
+        throw invalidArgumentValue('value', rawValue, 'valid JSON')
+      }
+    },
+    entry: {
+      type: '_set',
+      params: s => s,
+    },
+  }),
+
+  /**
+   * Shows a fragment or general UI element if it was previously hidden.
    */
   show: defineDirective({
     args: s => ({
@@ -435,7 +504,7 @@ export const supportedDirectives = {
     }),
     entry: {
       type: '_show',
-      element: a => a.uiElement
+      params: s => s
     }
   }),
 

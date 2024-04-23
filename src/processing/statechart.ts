@@ -96,26 +96,28 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     if (promptStateRegExp.test(testNodeName)) {
       const nluContext = parentInfo?.nluContext
       if (!nluContext) {
-        console.error(`Cannot obtain data for ENTER_NLU_CONTEXT and LEAVE_NLU_CONTEXT invocations: parentInfo.nluContext is undefined (path: ${fqPath})`)
+        console.error(`Cannot obtain data for enterInteractive and leaveInteractive invocations: parentInfo.nluContext is undefined (path: ${fqPath})`)
       } else {
         // ================================================================
         // TODO: Set the contextId in a reasonable (non-hardcoded) way
         //       in a content post-production step - here it
         //       is only done for development purposes
         json.entry = {
-          type: 'ENTER_NLU_CONTEXT',
-          pathInFlow: fqPath.split('.').slice(0, -1),
-          contextId: '907415bb-cea1-4908-aa7c-548a27da14f2',
-          ...nluContext,
+          type: 'enterInteractive',
+          params: {
+            pathInFlow: fqPath.split('.').slice(0, -1),
+            contextId: '907415bb-cea1-4908-aa7c-548a27da14f2',
+            ...nluContext,
+          }
         }
-        json.exit = 'LEAVE_NLU_CONTEXT'
+        json.exit = 'leaveInteractive'
         // ================================================================
 
         json.on = {
           INTENT: [
             ...nluContext.intents.map(intentName => ({
               target: escapeDots(`"${intentName}"`),
-              cond: { type: 'isIntentName', intentName },
+              guard: { type: 'isIntentName', params: { intentName } },
             })),
             // { target: '*' } // fallback intent
           ]
@@ -180,7 +182,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         }
           break;
         case 'leaveConversation': {
-          json.entry = { type: 'LEAVE_NLU_CONTEXT' }
+          json.entry = { type: 'leaveInteractive' }
 
         } break;
         case 'tut':
@@ -324,7 +326,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
           on,
         },
         __SEND_MESSAGE_DONE__: {
-          always: node.final ? `#${rootId}.__FLOW_DONE__` : [...always],
+          always: node.final ? `#${rootId}.__FLOW_DONE__` : json.initial ? [json.initial, ...always] : [...always],
           after: node.final ? {} : { ...after },
         },
         ...json.states

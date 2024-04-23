@@ -1,4 +1,7 @@
-<script setup lang="ts">
+<script
+ setup
+ lang="ts"
+>
 import { onMounted, ref } from 'vue';
 import FlowCodeInput from './components/FlowCodeInput.vue'
 import { useLexer } from "./chevrotain/Lexer";
@@ -8,19 +11,22 @@ import ResultsPane from './components/ResultsPane.vue';
 import { useVisitor } from './chevrotain/Visitor';
 import packageJson from "../package.json";
 
-const code = ref(`§cp1
-. §§cp2 {
-  Nick "Hi"
-  . _ {
-    -> @b
+const code = ref(`VZ "What would you like to see next?" {
+  ??
+  "an image" {
+    -> @image
+  }
+  "an audio" {
+    -> @audio
+  }
+  "a video" {
+    -> @video
+  }
+  "more text" {
+    -> @text
   }
 }
-. A {
-  A1
-}
-. @b B {
-  B1
-}`)
+Final`)
 
 const lexer = useLexer()
 const parser = useParser()

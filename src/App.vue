@@ -11,22 +11,17 @@ import ResultsPane from './components/ResultsPane.vue';
 import { useVisitor } from './chevrotain/Visitor';
 import packageJson from "../package.json";
 
-const code = ref(`VZ "What would you like to see next?" {
-  ??
-  "an image" {
-    -> @image
-  }
-  "an audio" {
-    -> @audio
-  }
-  "a video" {
-    -> @video
-  }
-  "more text" {
-    -> @text
-  }
+const code = ref(`A
+. if foo {
+  B
 }
-Final`)
+else if bar {
+  C
+}
+else {
+  D
+}
+E`)
 
 const lexer = useLexer()
 const parser = useParser()

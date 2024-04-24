@@ -7,7 +7,7 @@ const [
   LCurly, RCurly, LSquare, RSquare, Pipe, Newline,
   Ellipsis, Arrow, NumberLiteral, TimeSpan,
   LengthFunction,
-  After, OnEvent, IfCondition, When, Label, Checkpoint, Directive, Assignment, StateNodeName
+  After, OnEvent, If, Else, When, Label, Checkpoint, Directive, Assignment, StateNodeName
 ] = tokens
 
 export class Parser extends CstParser {
@@ -59,6 +59,18 @@ export class Parser extends CstParser {
         },
         {
           ALT: () => {
+            $.SUBRULE($.ifClause)
+            $.MANY2(() => {
+              $.CONSUME(Else)
+              $.SUBRULE2($.ifClause)
+            })
+            $.OPTION3(() => {
+              $.SUBRULE($.elseClause)
+            })
+          }
+        },
+        {
+          ALT: () => {
             $.AT_LEAST_ONE(() =>
               $.CONSUME(Assignment)
             )
@@ -67,24 +79,24 @@ export class Parser extends CstParser {
         {
           ALT: () => {
             $.SUBRULE($.stateNodeName)
-            $.OPTION3(() => {
-              $.OR2([
+            $.OPTION4(() => {
+              $.OR3([
                 {
                   ALT: () => {
-                    $.CONSUME2(LCurly)
-                    $.SUBRULE3($.blanks)
-                    $.SUBRULE2($.sequence)
-                    $.CONSUME2(RCurly)
-                    $.SUBRULE4($.blanks)
+                    $.CONSUME3(LCurly)
+                    $.SUBRULE5($.blanks)
+                    $.SUBRULE3($.sequence)
+                    $.CONSUME3(RCurly)
+                    $.SUBRULE6($.blanks)
                   }
                 },
                 {
                   ALT: () => {
                     $.CONSUME(LSquare)
-                    $.SUBRULE5($.blanks)
-                    $.SUBRULE3($.sequence)
+                    $.SUBRULE7($.blanks)
+                    $.SUBRULE4($.sequence)
                     $.CONSUME(RSquare)
-                    $.SUBRULE6($.blanks)
+                    $.SUBRULE8($.blanks)
                   }
                 }
               ])
@@ -108,20 +120,56 @@ export class Parser extends CstParser {
       })
     })
 
-    $.RULE("guard", () => {
+    $.RULE("ifClause", () => {
+      $.CONSUME(If)
+      $.SUBRULE($.condition)
+      $.CONSUME(LCurly)
+      $.SUBRULE($.blanks)
+      $.SUBRULE($.sequence)
+      $.CONSUME(RCurly)
+      $.SUBRULE2($.blanks)
+    })
+
+    $.RULE("elseClause", () => {
+      $.CONSUME(Else)
       $.OR([
-        { ALT: () => { $.CONSUME(IfCondition) } },
         {
           ALT: () => {
-            $.CONSUME2(When)
-            $.OR3([
-              { ALT: () => $.SUBRULE($.stateNodePath) },
-              { ALT: () => $.CONSUME2(Label) },
-            ])
+            $.SUBRULE($.ifClause)
+          }
+        },
+        {
+          ALT: () => {
+            $.CONSUME(LCurly)
+            $.SUBRULE($.blanks)
+            $.SUBRULE($.sequence)
+            $.CONSUME(RCurly)
+            $.SUBRULE2($.blanks)
           }
         }
       ])
     })
+
+    $.RULE("condition", () => {
+      $.OR([
+        { ALT: () => { $.CONSUME(StateNodeName) } },
+      ])
+    })
+
+    // $.RULE("guard", () => {
+    //   $.OR([
+    //     { ALT: () => { $.CONSUME(If) } },
+    //     {
+    //       ALT: () => {
+    //         $.CONSUME2(When)
+    //         $.OR3([
+    //           { ALT: () => $.SUBRULE($.stateNodePath) },
+    //           { ALT: () => $.CONSUME2(Label) },
+    //         ])
+    //       }
+    //     }
+    //   ])
+    // })
 
     $.RULE("transition", () => {
       $.OR([
@@ -140,7 +188,7 @@ export class Parser extends CstParser {
 
     $.RULE("eventTransition", () => {
       $.CONSUME(OnEvent)
-      $.OPTION(() => $.SUBRULE($.guard))
+      // $.OPTION(() => $.SUBRULE($.guard))
       $.SUBRULE($.transitionTargetOrShortcutSyntax)
     })
 
@@ -158,12 +206,12 @@ export class Parser extends CstParser {
           }
         },
       ])
-      $.OPTION2(() => $.SUBRULE($.guard))
+      // $.OPTION2(() => $.SUBRULE($.guard))
       $.SUBRULE($.transitionTargetOrShortcutSyntax)
     })
 
     $.RULE("alwaysTransition", () => {
-      $.OPTION(() => $.SUBRULE($.guard))
+      // $.OPTION(() => $.SUBRULE($.guard))
       $.CONSUME(Arrow)
       $.SUBRULE($.transitionTarget)
       $.SUBRULE($.blanks)

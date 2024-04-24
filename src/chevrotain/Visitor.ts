@@ -209,7 +209,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     if (!nameDef) { return }
 
     // Get the name and full path ...
-    const name = escapeDots(nameDef.image)
+    const name = `${escapeDots(nameDef.image)}:${nameDef.startLine}`
     const curPath = [...this.path]
     const fullPath = curPath.join('.') + '.' + name
     this.path.push(name)

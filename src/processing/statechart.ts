@@ -52,21 +52,26 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         json.type = 'parallel'
       } else if (children.every(c => /^(?:[1-9][0-9]*|\*)$/.test(c.name))) {
         json.initial = '0'
-        childStates['0'] = { // Functional substate - only entered if the parent was re-entered the n-th time
+        childStates['0'] = { // Functional substate to count how often this state was re-entered
           always: [] as Array<any>,
+          entry: 'copyReenterCountersFromRunner',
           exit: {
-            type: '_incrementReenterCounter_',
-            path: fqPath
+            type: 'incrementReenterCounter',
+            params: {
+              path: fqPath,
+            },
           }
         }
         for (const k of children.filter(c => c.name !== '*')) {
           const n = Number.parseInt(k.name)
           childStates['0'].always.push({
             target: k.name,
-            cond: {
-              type: '_isReenterCase_',
-              number: n,
-              path: fqPath
+            guard: {
+              type: 'isReenterCase',
+              params: {
+                number: n,
+                path: fqPath,
+              }
             }
           })
         }

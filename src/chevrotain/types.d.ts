@@ -39,6 +39,9 @@ export type StateNodeCstChildren = {
   blanks?: (BlanksCstNode)[];
   sequence?: (SequenceCstNode)[];
   RCurly?: (IToken)[];
+  ifClause?: (IfClauseCstNode)[];
+  Else?: IToken[];
+  elseClause?: ElseClauseCstNode[];
   Assignment?: IToken[];
   stateNodeName?: StateNodeNameCstNode[];
   LSquare?: IToken[];
@@ -66,16 +69,41 @@ export type StateNodePathCstChildren = {
   Pipe?: IToken[];
 };
 
-export interface GuardCstNode extends CstNode {
-  name: "guard";
-  children: GuardCstChildren;
+export interface IfClauseCstNode extends CstNode {
+  name: "ifClause";
+  children: IfClauseCstChildren;
 }
 
-export type GuardCstChildren = {
-  IfCondition?: IToken[];
-  When?: IToken[];
-  stateNodePath?: StateNodePathCstNode[];
-  Label?: IToken[];
+export type IfClauseCstChildren = {
+  If: IToken[];
+  condition: ConditionCstNode[];
+  LCurly: IToken[];
+  blanks: (BlanksCstNode)[];
+  sequence: SequenceCstNode[];
+  RCurly: IToken[];
+};
+
+export interface ElseClauseCstNode extends CstNode {
+  name: "elseClause";
+  children: ElseClauseCstChildren;
+}
+
+export type ElseClauseCstChildren = {
+  Else: IToken[];
+  ifClause?: IfClauseCstNode[];
+  LCurly?: IToken[];
+  blanks?: (BlanksCstNode)[];
+  sequence?: SequenceCstNode[];
+  RCurly?: IToken[];
+};
+
+export interface ConditionCstNode extends CstNode {
+  name: "condition";
+  children: ConditionCstChildren;
+}
+
+export type ConditionCstChildren = {
+  StateNodeName?: IToken[];
 };
 
 export interface TransitionCstNode extends CstNode {
@@ -106,7 +134,6 @@ export interface EventTransitionCstNode extends CstNode {
 
 export type EventTransitionCstChildren = {
   OnEvent: IToken[];
-  guard?: GuardCstNode[];
   transitionTargetOrShortcutSyntax: TransitionTargetOrShortcutSyntaxCstNode[];
 };
 
@@ -121,7 +148,6 @@ export type AfterTransitionCstChildren = {
   LengthFunction?: IToken[];
   TimeSpan?: IToken[];
   NumberLiteral?: IToken[];
-  guard?: GuardCstNode[];
   transitionTargetOrShortcutSyntax: TransitionTargetOrShortcutSyntaxCstNode[];
 };
 
@@ -131,7 +157,6 @@ export interface AlwaysTransitionCstNode extends CstNode {
 }
 
 export type AlwaysTransitionCstChildren = {
-  guard?: GuardCstNode[];
   Arrow: IToken[];
   transitionTarget: TransitionTargetCstNode[];
   blanks: BlanksCstNode[];
@@ -163,7 +188,9 @@ export interface ICstNodeVisitor<IN, OUT> extends ICstVisitor<IN, OUT> {
   stateNode(children: StateNodeCstChildren, param?: IN): OUT;
   stateNodeName(children: StateNodeNameCstChildren, param?: IN): OUT;
   stateNodePath(children: StateNodePathCstChildren, param?: IN): OUT;
-  guard(children: GuardCstChildren, param?: IN): OUT;
+  ifClause(children: IfClauseCstChildren, param?: IN): OUT;
+  elseClause(children: ElseClauseCstChildren, param?: IN): OUT;
+  condition(children: ConditionCstChildren, param?: IN): OUT;
   transition(children: TransitionCstChildren, param?: IN): OUT;
   transitionTarget(children: TransitionTargetCstChildren, param?: IN): OUT;
   eventTransition(children: EventTransitionCstChildren, param?: IN): OUT;

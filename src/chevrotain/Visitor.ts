@@ -7,7 +7,7 @@
 
 import * as vscode from "../dsl/vscode";
 
-import type { StateNodeCstChildren, TopLevelSequenceCstChildren, AlwaysTransitionCstChildren, SequenceCstChildren, TransitionTargetCstNode, TransitionTargetCstChildren, TransitionCstChildren, AlwaysTransitionCstNode, StateNodePathCstNode } from "./types";
+import type { StateNodeCstChildren, TopLevelSequenceCstChildren, AlwaysTransitionCstChildren, SequenceCstChildren, TransitionTargetCstNode, TransitionTargetCstChildren, TransitionCstChildren, AlwaysTransitionCstNode, StateNodePathCstNode, IfClauseCstNode, ElseClauseCstNode, IfClauseCstChildren, ElseClauseCstChildren } from "./types";
 import { useParser } from "./Parser";
 import type * as dsl from "../dsl/types"
 import { ExitBehavior } from '../dsl/types'
@@ -45,6 +45,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
   ambiguousStateNodes = [] as [string, vscode.Range][]
   path = [this.rootNodeId] // array to internally keep track of the currently traversed state node path
   validSenderNamesInLowerCase: string[]
+  dontChangeNamePaths: string[] = []
 
   constructor(
     validSenders = ['Nick', 'VZ', 'Alicia', 'Professor']
@@ -54,13 +55,20 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     this.validateVisitor()
   }
 
-  private getStateNodeNameDefinition(stateNode: StateNodeCstChildren) {
-    if (stateNode.Directive) {
-      return stateNode.Directive[0]
-    } else if (stateNode.Checkpoint) {
-      return stateNode.Checkpoint[0]
-    } else if (stateNode.Assignment) {
-      const assignments = stateNode.Assignment
+  private getStateNodeNameDefinition(base: StateNodeCstChildren | IfClauseCstChildren | ElseClauseCstChildren): IToken {
+    if ('If' in base) {
+      const ret = base.condition[0].children.StateNodeName![0]
+      return ret
+    } else if ('Else' in base) {
+      if (!('ifClause' in base)) {
+        return base.Else![0]
+      }
+    } else if (base.Directive) {
+      return base.Directive[0]
+    } else if (base.Checkpoint) {
+      return base.Checkpoint[0]
+    } else if (base.Assignment) {
+      const assignments = base.Assignment
       const first = assignments[0]
       const last = assignments[assignments.length - 1]
       return {
@@ -72,10 +80,24 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
         endLine: last.endLine,
         endColumn: last.endColumn
       } as IToken
-    } else if (stateNode.stateNodeName) {
-      const ch = stateNode.stateNodeName![0].children
+    } else if (base.stateNodeName) {
+      const ch = base.stateNodeName![0].children
       const stateNodeNameDefinition = ch.StateNodeName || ch.NumberLiteral
       return stateNodeNameDefinition![0]
+    }
+
+    const { startLine, startColumn } = base.ifClause![0].children.If[0]
+    const endClause = 'elseClause' in base
+      ? base.elseClause![0]
+      : base.ifClause![base.ifClause!.length - 1]
+    const { endLine, endColumn } = endClause.children.RCurly![0]
+    return {
+      image: '',
+      startOffset: 0,
+      startLine, startColumn,
+      endLine, endColumn,
+      tokenType: { name: '' },
+      tokenTypeIdx: -1,
     }
   }
 
@@ -143,6 +165,10 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
               } else {
                 this.transitionsBySourcePath[asString] = [t]
               }
+            } else {
+              console.warn('unable to fix transition target for t=', t,
+                '- stateNodeSiblings:', stateNodeSiblings,
+              )
             }
           }
         }
@@ -205,14 +231,22 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
 
   stateNode(ctx: StateNodeCstChildren) {
     const nameDef = this.getStateNodeNameDefinition(ctx)
-
     if (!nameDef) { return }
 
-    // Get the name and full path ...
-    const name = `${escapeDots(nameDef.image)}:${nameDef.startLine}`
+    let ifTruthyTargets: [string, dsl.FqStateNodePath][] | undefined
+    let rawName: string
+    if (ctx.ifClause) {
+      rawName = `__IF_BLOCK__`
+    } else {
+      // Get the name and full path ...
+      rawName = escapeDots(nameDef.image)
+    }
+
     const curPath = [...this.path]
-    const fullPath = curPath.join('.') + '.' + name
-    this.path.push(name)
+    const uniqueName = this.dontChangeNamePaths.includes(curPath.join('.')) ? rawName : `${rawName}:${nameDef.startLine}`
+    const fullPath = curPath.join('.') + '.' + uniqueName
+
+    this.path.push(uniqueName)
 
     // ... the range of the name definition ...
     let { startOffset, startLine, startColumn, endLine, endColumn } = nameDef
@@ -226,6 +260,35 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     // ... the label if applicable ...
     const label = ctx.Label ? ctx.Label[0].image.substring(1) : undefined
 
+    if (ctx.ifClause) {
+      ifTruthyTargets = []
+
+      const { ifClause, elseClause } = ctx
+      const subCtxs: (IfClauseCstChildren | ElseClauseCstChildren)[] = []
+
+      ifClause.forEach((c, i) => {
+        const str = JSON.stringify(c.children)
+        const sub = JSON.parse(str) as IfClauseCstChildren
+        const snn = sub.condition[0].children.StateNodeName![0]
+        const cond = snn.image
+        const prefix = i > 0 ? 'else if ' : 'if '
+        const stateName = prefix + cond
+        snn.image = stateName
+        ifTruthyTargets!.push([cond, [...this.path, `${escapeDots(stateName)}:${snn.startLine}`]])
+        subCtxs.push(sub)
+      })
+
+      if (elseClause) {
+        const ch = elseClause[0].children
+        ifTruthyTargets!.push(['', [...this.path, `else:${ch.Else[0].startLine}`]])
+        subCtxs.push(ch)
+      }
+
+      for (const c of subCtxs) {
+        this.stateNode(c)
+      }
+    }
+
     // ... checkpoint if applicable ...
     let checkpoint: dsl.Checkpoint | undefined = undefined
     const checkpointMatch = ctx.Checkpoint ? ctx.Checkpoint[0].image.match(/^§(§)?(\w+)/) : undefined
@@ -236,8 +299,9 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
       }
     }
 
-    // ... directive details if applicable ...
     let directive, nluContext: NLUContext | undefined, message, assignVariables
+
+    // ... directive details if applicable ...
     if (ctx.Directive) {
       directive = ctx.Directive[0].payload
     } else if (ctx.Assignment) {
@@ -253,7 +317,7 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
         `"([^"]*)"(?:\\s+(${timeRegExpString}))?$`,
         'di'
       )
-      const messageMatch = name.match(messagePattern)
+      const messageMatch = rawName.match(messagePattern)
       if (messageMatch) {
         const [_, senderCaseInsensitive, mediaTypeOrUrl, textOrPlaceholder, showcaseTimeout] = messageMatch
         const sender = senderCaseInsensitive ?
@@ -304,7 +368,9 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
         const subNodes = ch.stateNode
         if (subNodes) {
           const firstSubNodeNameDef = this.getStateNodeNameDefinition(subNodes[0].children)
+          // console.log(`CHECKING FOR NLU: ${firstSubNodeNameDef?.image} - re test:`, promptStateRegExp.test(firstSubNodeNameDef?.image))
           if (firstSubNodeNameDef && promptStateRegExp.test(firstSubNodeNameDef.image)) {
+            this.dontChangeNamePaths.push(fullPath)
             const subNodeNameStrings = subNodes.slice(1)
               .map(s => this.getStateNodeNameDefinition(s.children)?.image)
 
@@ -320,13 +386,13 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
 
             nluContext = {
               intents,
-              keepIntentsEnabled: firstSubNodeNameDef.image === '??',
-              freeText: firstSubNodeNameDef.image === '?!' || /^\?!\s\w+$/.test(firstSubNodeNameDef.image),
-              contextId: /^\?!\s\w+$/.test(firstSubNodeNameDef.image) ? firstSubNodeNameDef.image.match(/^\?!\s\w+$/)?.[0] : null,
+              keepIntentsEnabled: /^\?\?$/.test(firstSubNodeNameDef.image),
+              freeText: /^\?!(?:\s\w+)?$/.test(firstSubNodeNameDef.image),
+              contextId: /^\?!\s\w+$/.test(firstSubNodeNameDef.image) ? firstSubNodeNameDef.image.match(/^(\?!\s\w+)$/)?.[1] : null,
               regExps,
               includes: []
             }
-            console.log("🚀 ~ file: Visitor.ts:307 ~ DslVisitorWithDefaults ~ stateNode ~ nluContext:", nluContext)
+            // console.log("🚀 ~ file: Visitor.ts:307 ~ DslVisitorWithDefaults ~ stateNode ~ nluContext:", nluContext)
           }
         }
       }
@@ -337,12 +403,13 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
     }
 
     const stateNode: dsl.StateNode = {
-      name,
+      name: uniqueName,
       label,
       checkpoint,
       directive,
       nluContext,
       message,
+      ifTruthyTargets: ifTruthyTargets,
       assignVariables,
       // regExp,
       parallel: !!ctx.LSquare,
@@ -427,24 +494,24 @@ export class DslVisitorWithDefaults extends BaseVisitorWithDefaults {
       }
     }
     let guard: dsl.TransitionGuard | undefined
-    const guardNode = (eventOrAfterTransition ? eventOrAfterTransition[0] : ctx.alwaysTransition![0]).children.guard?.[0].children
-    if (guardNode) {
-      if (guardNode.When) {
-        if (guardNode.Label) {
-          guard = { refState: { label: guardNode.Label![0].image.substring(1) } } as dsl.WhenTransitionGuard
-        } else if (guardNode.stateNodePath) {
-          const ch = guardNode.stateNodePath[0].children.stateNodeName[0].children
-          const sub = ch.NumberLiteral || ch.TimeSpan || ch.StateNodeName
-          if (sub) {
-            const path = sub[0].image.split(/\s*\|\s*/)
-            guard = { refState: { path } } as dsl.WhenTransitionGuard
-          }
-        }
-      } else if (guardNode.IfCondition) {
-        const condition = guardNode.IfCondition[0].image.replace(/^if\s*/, '')
-        guard = { condition } as dsl.IfTransitionGuard
-      }
-    }
+    // const guardNode = (eventOrAfterTransition ? eventOrAfterTransition[0] : ctx.alwaysTransition![0]).children.guard?.[0].children
+    // if (guardNode) {
+    //   if (guardNode.When) {
+    //     if (guardNode.Label) {
+    //       guard = { refState: { label: guardNode.Label![0].image.substring(1) } } as dsl.WhenTransitionGuard
+    //     } else if (guardNode.stateNodePath) {
+    //       const ch = guardNode.stateNodePath[0].children.stateNodeName[0].children
+    //       const sub = ch.NumberLiteral || ch.TimeSpan || ch.StateNodeName
+    //       if (sub) {
+    //         const path = sub[0].image.split(/\s*\|\s*/)
+    //         guard = { refState: { path } } as dsl.WhenTransitionGuard
+    //       }
+    //     }
+    //   } else if (guardNode.IfCondition) {
+    //     const condition = guardNode.IfCondition[0].image.replace(/^if\s*/, '')
+    //     guard = { condition } as dsl.IfTransitionGuard
+    //   }
+    // }
 
     const range = new vscode.Range(loc.startLine!, loc.startColumn!, loc.endLine!, loc.endColumn!)
     const transition = {

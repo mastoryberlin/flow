@@ -39,12 +39,20 @@ export interface Directive {
     name: string;
     arg: string;
 }
+export declare enum ExitBehavior {
+    defer = "defer",
+    immediate = "immediate"
+}
+export interface Checkpoint {
+    name: string;
+    exitBehavior: ExitBehavior;
+}
 export interface StateNode extends SemanticUnit {
     name: string;
     path: FqStateNodePath;
     parallel: boolean;
     label?: string;
-    checkpoint?: number;
+    checkpoint?: Checkpoint;
     directive?: Directive;
     assignVariables?: VariableAssignment[];
     message?: Message;

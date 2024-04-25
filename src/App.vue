@@ -11,9 +11,18 @@ import ResultsPane from './components/ResultsPane.vue';
 import { useVisitor } from './chevrotain/Visitor';
 import packageJson from "../package.json";
 
-const code = ref(`A
+const code = ref(`_ {
+  ?
+  "Again!" {
+    Nick "Let's do it again!"
+    . _ {
+      after 2s -> @start
+    }
+  }
+}`/* `A
 . if foo {
   B
+  . B2
 }
 else if bar {
   C
@@ -21,7 +30,7 @@ else if bar {
 else {
   D
 }
-E`)
+E` */)
 
 const lexer = useLexer()
 const parser = useParser()

@@ -1,4 +1,7 @@
-<script setup lang="ts">
+<script
+ setup
+ lang="ts"
+>
 import { ref, computed } from 'vue';
 import type { Ref } from 'vue';
 import { allPanelIds } from '../constants';
@@ -26,29 +29,47 @@ const currentPanel = computed(() => panels[currentPanelId.value])
 </script>
 
 <template>
-  <div>
+  <div class="rhs">
     <nav>
       <div class="btn-wrapper large">
-        <button v-for="(p, k, i) in panels" @click="currentPanelId = k"
-          class="btn" :class="currentPanelId === k ? 'pressed' : null">
-          <strong>{{ i + 1 }}</strong>: {{p.displayTitle}}
+        <button
+         v-for="(p, k, i) in panels"
+         @click="currentPanelId = k"
+         class="btn"
+         :class="currentPanelId === k ? 'pressed' : null"
+        >
+          <strong>{{ i + 1 }}</strong>: {{ p.displayTitle }}
         </button>
       </div>
 
       <div class="btn-wrapper small">
         <select v-model="currentPanelId">
-          <option v-for="(p, k, i) in panels" :value="k">{{p.displayTitle}}</option>
+          <option
+           v-for="(p, k, i) in panels"
+           :value="k"
+          >{{ p.displayTitle }}</option>
         </select>
       </div>
     </nav>
 
-    <div>
-      <component :is="currentPanel.component" :cst="cst" :visitor="visitor" :flow="flow" />
+    <div style="height: 100%;">
+      <component
+       :is="currentPanel.component"
+       :cst="cst"
+       :visitor="visitor"
+       :flow="flow"
+      />
     </div>
   </div>
 </template>
 
 <style scoped>
+.rhs {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  max-height: 100%;
+}
+
 .btn {
   position: relative;
   padding: 0.5em 1em;
@@ -58,12 +79,15 @@ const currentPanel = computed(() => panels[currentPanelId.value])
   box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5);
   cursor: pointer;
 }
+
 .btn.pressed:nth-child(1) {
   background: rgb(145, 183, 255);
 }
+
 .btn.pressed:nth-child(2) {
   background: rgb(187, 208, 158);
 }
+
 .btn.pressed:nth-child(3) {
   background: rgb(255, 125, 253);
 }
@@ -77,6 +101,7 @@ const currentPanel = computed(() => panels[currentPanelId.value])
 .small {
   display: block;
 }
+
 .large {
   display: none;
 }
@@ -85,6 +110,7 @@ const currentPanel = computed(() => panels[currentPanelId.value])
   .large {
     display: block;
   }
+
   .small {
     display: none;
   }

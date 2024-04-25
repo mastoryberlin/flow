@@ -1,4 +1,7 @@
-<script setup lang="ts">
+<script
+ setup
+ lang="ts"
+>
 import { computed, guardReactiveProps, ref, watch } from 'vue';
 import type { TopLevelSequenceCstNode } from '../chevrotain/types';
 import type { DslVisitorWithDefaults } from '../chevrotain/Visitor';
@@ -88,14 +91,14 @@ const currentTransitionNumber = ref<number | null>(null)
         {{ t.target?.label ? '@' + t.target!.label : t.target?.path?.join('.') }}
         {{ t.target?.unknown ? '???' : '' }}
         {{
-          (t.guard as IfTransitionGuard | undefined)?.condition ?
-          `[if ${(t.guard as IfTransitionGuard).condition}]` :
-          (t.guard as WhenTransitionGuard | undefined)?.refState ?
-            `[when in: ${(t.guard as WhenTransitionGuard).refState.label ?
-              '@' + (t.guard as WhenTransitionGuard).refState.label :
-              (t.guard as WhenTransitionGuard).refState.path!.join('.')}]` :
-            ''
-        }}
+      (t.guard as IfTransitionGuard | undefined)?.condition ?
+        `[if ${(t.guard as IfTransitionGuard).condition}]` :
+        (t.guard as WhenTransitionGuard | undefined)?.refState ?
+          `[when in: ${(t.guard as WhenTransitionGuard).refState.label ?
+            '@' + (t.guard as WhenTransitionGuard).refState.label :
+            (t.guard as WhenTransitionGuard).refState.path!.join('.')}]` :
+          ''
+    }}
       </option>
     </select>
     <!-- <StateNodeDetailView
@@ -109,6 +112,7 @@ const currentTransitionNumber = ref<number | null>(null)
 <style scoped>
 .list {
   width: 100%;
+  overflow-x: scroll;
 }
 
 .issues {

@@ -20,6 +20,9 @@ export function useFlowToStatechart(flow: string, id = 'Unknown State Machine', 
   visitor = useVisitor(validSenders)
   useIssueTracker(parser, visitor, flow, rootId, true)
   const json = stateNodeToJsonRecursive(rootId, variant)
+  json.context = {
+    evaluatedExpressions: {},
+  }
   const dynamicExpressions = extractDynamicExpressions(visitor)
   return { json, visitor, dynamicExpressions }
 }
@@ -50,7 +53,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     if (children?.length) {
       if (node.parallel) {
         json.type = 'parallel'
-      } else if (children.every(c => /^(?:[1-9][0-9]*|\*)$/.test(c.name))) {
+      } else if (children.every(c => /^(?:[1-9][0-9]*|\*):\d+$/.test(c.name))) {
         json.initial = '0'
         childStates['0'] = { // Functional substate to count how often this state was re-entered
           always: [] as Array<any>,
@@ -62,11 +65,11 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
             },
           }
         }
-        for (const k of children.filter(c => c.name !== '*')) {
+        for (const k of children) {
           const n = Number.parseInt(k.name)
           childStates['0'].always.push({
             target: k.name,
-            guard: {
+            guard: /^\*:\d+$/.test(k.name) ? undefined : {
               type: 'isReenterCase',
               params: {
                 number: n,
@@ -75,7 +78,6 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
             }
           })
         }
-        childStates['0'].always.push('*')
       } else {
         json.initial = children[0].name
         if (node.checkpoint) {
@@ -127,7 +129,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
             // { target: '*' } // fallback intent
           ]
         }
-        if (testNodeName === '?!' || /^\?!\s\w+$/.test(testNodeName)) { // match ?! singleWord
+        if (/^\?!(?:\s\w+)?:\d+$/.test(testNodeName)) { // match ?! singleWord
           json.on['UNKNOWN_INTENT'] = [
             {
               target: '*',
@@ -314,7 +316,8 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         type: 'sendMessage', params: { kind, sender }
       } as { type: 'sendMessage', params: { kind: dsl.MessageType, sender: string, text?: string, attachment?: string, showcase?: number } }
       const on = {
-        SEND_DELAY_OVER: '__SEND_MESSAGE_DONE__'
+        SEND_DELAY_OVER: '__SEND_MESSAGE_DONE__',
+        WAIT: '__SEND_MESSAGE_REPEAT__',
       }
       if (node.message.type === 'text') {
         entry.params.text = (node.message as dsl.TextMessage).text
@@ -329,6 +332,11 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
         __SEND_MESSAGE_ACTIVE__: {
           entry,
           on,
+        },
+        __SEND_MESSAGE_REPEAT__: {
+          after: {
+            1000: '__SEND_MESSAGE_ACTIVE__'
+          }
         },
         __SEND_MESSAGE_DONE__: {
           always: node.final ? `#${rootId}.__FLOW_DONE__` : json.initial ? [json.initial, ...always] : [...always],
@@ -391,6 +399,90 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       json.initial = '__CHECKPOINT_ACTIVE__'
     }
 
+    // ========================================================================================================================
+    // If Statements
+    // ========================================================================================================================
+
+    const { ifTruthyTargets: tt } = node
+    if (tt) {
+      const finallyAsTarget = '#' + node.path.join('.') + '.__FINALLY__'
+      for (const s of Object.values(json.states ?? {})) {
+        const grandChildrenNames = JSON.parse(JSON.stringify(Object.keys((s as any).states ?? {}))) as string[]
+        if (grandChildrenNames.length) {
+          grandChildrenNames.sort((a, b) => {
+            const re = /:(\d+)$/
+            const m = Number.parseInt(a.match(re)?.[1] ?? '0')
+            const n = Number.parseInt(b.match(re)?.[1] ?? '0')
+            return n - m
+          })
+          const lastGrandChild = (s as any).states[grandChildrenNames[0]] as any
+          const lastGrandChildHasTransitions = (['on', 'always', 'after'] as const).some(k => {
+            const def = lastGrandChild?.[k]
+            function hasTransitions(v: unknown): boolean {
+              switch (typeof v) {
+                case 'undefined': return false
+                case 'string': return true
+                case 'object':
+                  if (!v) { return false }
+                  if (Array.isArray(v)) {
+                    return v.length > 0
+                      ? v.every(sub => hasTransitions(sub))
+                      : false
+                  } else {
+                    // transition object - either accept an existing target
+                    // or set one if an actions-only transition
+                    (v as any).target ||= finallyAsTarget
+                    return true
+                  }
+              }
+              return false
+            }
+            switch (k) {
+              case 'always': return hasTransitions(def)
+              default: return def && Object.values(def).length && Object.values(def).every(sub => hasTransitions(sub))
+            }
+          })
+          if (!lastGrandChildHasTransitions) {
+            lastGrandChild.always = finallyAsTarget
+          }
+        } else {
+          (s as any).always = finallyAsTarget
+        }
+      }
+      const on = json.on ?? {}
+      const after = json.after ?? {}
+      json.states.__FINALLY__ = {
+        after: node.final ? {} : { ...after },
+        on: node.final ? {} : { ...on },
+      }
+      const internalAlways = tt.map(([e, t]) => ({
+        guard: e ? {
+          type: 'isTruthy',
+          params: {
+            expression: e
+          },
+        } : undefined,
+        target: '#' + t.join('.'),
+      }))
+      if (internalAlways.every(t => !!t.guard)) {
+        // TODO !
+        internalAlways.push({
+          guard: undefined,
+          target: finallyAsTarget,
+        })
+      }
+      json.states.__SWITCH__ = {
+        entry: {
+          type: 'evaluateTruthiness',
+          params: {
+            expressions: tt.map(([e, _]) => e).filter(e => !!e),
+          },
+        },
+        always: internalAlways,
+      }
+      json.initial = '__SWITCH__'
+      json.on = json.after = json.always = undefined
+    }
     return json
   } else {
     // Root Node
@@ -406,25 +498,6 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
     childStates.__ASSERTION_FAILED__ = { type: 'final' }
 
     let { on, after, always } = interpretTransitions(rootId);
-    // Object.assign(on, getJumpEvents(visitor) as any)
-
-    // switch (variant) {
-    //   case 'ui':
-    //     childStates.__FLOW_DONE__.entry = {
-    //       unquoted: true,
-    //       raw: `sendParent('UI_DONE'),`
-    //     }
-    //     break
-
-    //   case 'mainflow':
-    //     on.CHANGED_CONTEXT_IN_STATE_STORE.actions.push('_persist')
-
-    //     on.ASSIGN_EVALUATION_RESULTS_VARIABLES = {
-    //       actions: [
-    //         '_assignEvaluationResults'
-    //       ]
-    //     }
-
     //     on.PUSH_EVALUATION_RESULTS_TO_ARRAY = {
     //       actions: [
     //         '_pushEvaluationResults'

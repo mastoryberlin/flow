@@ -66,6 +66,7 @@ export interface StateNode extends SemanticUnit {
   path: FqStateNodePath
   parallel: boolean
   label?: string
+  ifTruthyTargets?: [string, FqStateNodePath][]
   checkpoint?: Checkpoint
   directive?: Directive
   assignVariables?: VariableAssignment[]

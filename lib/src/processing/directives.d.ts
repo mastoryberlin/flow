@@ -33,18 +33,6 @@ export declare type DirectiveInfo<A extends DirectiveArgumentsTypes> = {
 export declare function defineDirective<A extends DirectiveArgumentsTypes>(d: DirectiveInfo<A>): DirectiveInfo<A>;
 export declare type UiElementId = 'submitButton' | 'callButton';
 export declare const supportedDirectives: {
-    /**
-      * Unfreezes the UI in the given fragment, i.e. allows user input (again).
-      */
-    unfreeze: DirectiveInfo<{
-        fragmentId: string;
-    }>;
-    /**
-     * Reveals the sample solution for the given fragment.
-     */
-    reveal: DirectiveInfo<{
-        fragmentId: string;
-    }>;
     achieve: DirectiveInfo<{
         achievement: string;
     }>;
@@ -118,7 +106,17 @@ export declare const supportedDirectives: {
     leaveCall: DirectiveInfo<{
         NPCName: string;
     }>;
+    /**
+     * Sends a message to a fragment.
+     *
+     * This is the Flow equivalent of the `let` property in declarative event or state handlers
+     * within unit fragment trees.
+     */
     let: DirectiveInfo<{
+        fragmentId: string;
+        event: any;
+    }>;
+    have: DirectiveInfo<{
         npcName: string;
         promptDoc: string;
         fallback: string;
@@ -127,6 +125,12 @@ export declare const supportedDirectives: {
      * Loads the current unit's challenge UI and makes it appear on the Wire page.
      */
     loadChallenge: DirectiveInfo<object>;
+    /**
+     * Mounts a fragment.
+     */
+    mount: DirectiveInfo<{
+        fragmentId: string;
+    }>;
     /**
      * Offers help according to the dynamic "help map" passed as an argument.
      *
@@ -145,7 +149,20 @@ export declare const supportedDirectives: {
         element: string;
     }>;
     /**
-     * Shows a UI element if it was previously hidden.
+     * Reveals the sample solution for the given fragment.
+     */
+    reveal: DirectiveInfo<{
+        fragmentId: string;
+    }>;
+    /**
+     * Assigns a value to a fragment property.
+     */
+    set: DirectiveInfo<{
+        varName: string;
+        value: any;
+    }>;
+    /**
+     * Shows a fragment or general UI element if it was previously hidden.
      */
     show: DirectiveInfo<{
         uiElement: string;
@@ -173,8 +190,20 @@ export declare const supportedDirectives: {
         subflowId: string;
     }>;
     /**
+    * Unfreezes the UI in the given fragment, i.e. allows user input (again).
+    */
+    unfreeze: DirectiveInfo<{
+        fragmentId: string;
+    }>;
+    /**
      * Unloads the current unit's challenge UI and turns the Wire page into the idle state with "No Challenge Available".
      */
     unloadChallenge: DirectiveInfo<object>;
+    /**
+     * Unmounts a fragment.
+     */
+    unmount: DirectiveInfo<{
+        fragmentId: string;
+    }>;
 };
 export {};

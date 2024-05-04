@@ -140,8 +140,9 @@ export const supportedDirectives = {
       }
     },
     invoke: {
-      src: () => '_cinema',
-      input: (args) => args,
+      type: 'cinema',
+      source: ({ source }) => source,
+      freezeLastFrame: ({ freezeLastFrame }) => freezeLastFrame,
     },
   }),
 
@@ -212,12 +213,12 @@ export const supportedDirectives = {
     },
   }),
 
-  hangUp: defineDirective({
-    args: s => ({}),
-    entry: {
-      type: '_hangUp',
-    }
-  }),
+  // hangUp: defineDirective({
+  //   args: s => ({}),
+  //   entry: {
+  //     type: '_hangUp',
+  //   }
+  // }),
 
   /**
    * Hides a UI element if it was previously displayed.
@@ -233,102 +234,102 @@ export const supportedDirectives = {
     }
   }),
 
-  inChallenge: defineDirective({
-    args: s => {
-      let args = splitArgs.byFirstWhiteSpace(s)
-      const character = allNpcs.find(c => c.toLowerCase() === args[0].toLowerCase())
-      if (character) {
-        args = splitArgs.byFirstWhiteSpace(args[1])
-      }
-      let eventName = args[0]
+  //   inChallenge: defineDirective({
+  //     args: s => {
+  //       let args = splitArgs.byFirstWhiteSpace(s)
+  //       const character = allNpcs.find(c => c.toLowerCase() === args[0].toLowerCase())
+  //       if (character) {
+  //         args = splitArgs.byFirstWhiteSpace(args[1])
+  //       }
+  //       let eventName = args[0]
 
-      let eventData = "{}"
-      if (args.length > 1 && args[1].trim()) {
-        eventData = args[1].trim()
-      }
+  //       let eventData = "{}"
+  //       if (args.length > 1 && args[1].trim()) {
+  //         eventData = args[1].trim()
+  //       }
 
-      if (character) { eventData = eventData.replace('{', `{_pretendCausedByNpc:"${character}",`) }
-      return { eventName, eventData }
-    },
-    entry: {
-      unquoted: () => true,
-      raw: (a) => {
-        const event = a.eventData === '{}' ? `'${a.eventName}'` : `(context: Context) => ({
-      type: '${a.eventName}',
-      ...(${evaluateInContext(a.eventData)})(context)
-    })`
-        return `choose([{
-  cond: (context: Context) => !!context.$ui,
-  actions: [
-    sendTo((context: Context) => context.$ui!, ${event})
-  ]
-}, {
-  actions: [
-    escalate('Cannot send the ${a.eventName} event: $ui actor ref is undefined at this point.')
-  ]
-}])`
-      }
-    }
-  }),
+  //       if (character) { eventData = eventData.replace('{', `{_pretendCausedByNpc:"${character}",`) }
+  //       return { eventName, eventData }
+  //     },
+  //     entry: {
+  //       unquoted: () => true,
+  //       raw: (a) => {
+  //         const event = a.eventData === '{}' ? `'${a.eventName}'` : `(context: Context) => ({
+  //       type: '${a.eventName}',
+  //       ...(${evaluateInContext(a.eventData)})(context)
+  //     })`
+  //         return `choose([{
+  //   cond: (context: Context) => !!context.$ui,
+  //   actions: [
+  //     sendTo((context: Context) => context.$ui!, ${event})
+  //   ]
+  // }, {
+  //   actions: [
+  //     escalate('Cannot send the ${a.eventName} event: $ui actor ref is undefined at this point.')
+  //   ]
+  // }])`
+  //       }
+  //     }
+  //   }),
 
-  inEpisode: defineDirective({
-    args: s => {
-      let args = splitArgs.byFirstWhiteSpace(s)
-      const character = allNpcs.find(c => c.toLowerCase() === args[0].toLowerCase())
-      if (character) {
-        args = splitArgs.byFirstWhiteSpace(args[1])
-      }
-      let eventName = args[0]
+  //   inEpisode: defineDirective({
+  //     args: s => {
+  //       let args = splitArgs.byFirstWhiteSpace(s)
+  //       const character = allNpcs.find(c => c.toLowerCase() === args[0].toLowerCase())
+  //       if (character) {
+  //         args = splitArgs.byFirstWhiteSpace(args[1])
+  //       }
+  //       let eventName = args[0]
 
-      let eventData = "{}"
-      if (args.length > 1 && args[1].trim()) {
-        eventData = args[1].trim()
-      }
+  //       let eventData = "{}"
+  //       if (args.length > 1 && args[1].trim()) {
+  //         eventData = args[1].trim()
+  //       }
 
-      if (character) { eventData = eventData.replace('{', `{_pretendCausedByNpc:"${character}",`) }
-      return { eventName, eventData }
-    },
-    entry: {
-      unquoted: () => true,
-      raw: (a) => {
-        const event = a.eventData === '{}' ? `'${a.eventName}'` : `(context: Context) => ({
-      type: '${a.eventName}',
-      ...(${evaluateInContext(a.eventData)})(context),
-    })`
-        return `sendParent(${event})`
-      }
-    }
-  }),
+  //       if (character) { eventData = eventData.replace('{', `{_pretendCausedByNpc:"${character}",`) }
+  //       return { eventName, eventData }
+  //     },
+  //     entry: {
+  //       unquoted: () => true,
+  //       raw: (a) => {
+  //         const event = a.eventData === '{}' ? `'${a.eventName}'` : `(context: Context) => ({
+  //       type: '${a.eventName}',
+  //       ...(${evaluateInContext(a.eventData)})(context),
+  //     })`
+  //         return `sendParent(${event})`
+  //       }
+  //     }
+  //   }),
 
-  incomingCallFrom: defineDirective({
-    args: s => ({
-      interlocutors: s.split(/[\s,]+/)
-    }),
-    invoke: {
-      type: 'startCall',
-      interlocutors: s => s.interlocutors
-    }
-  }),
+  // incomingCallFrom: defineDirective({
+  //   args: s => ({
+  //     interlocutors: s.split(/[\s,]+/)
+  //   }),
+  //   invoke: {
+  //     type: 'startCall',
+  //     interlocutors: s => s.interlocutors
+  //   }
+  // }),
 
-  joinCall: defineDirective({
-    args: s => ({
-      NPCName: s,
-    }),
-    entry: {
-      type: '_npcJoinCall',
-      NPCName: a => a.NPCName
-    }
-  }),
+  // joinCall: defineDirective({
+  //   args: s => ({
+  //     NPCName: s,
+  //   }),
+  //   entry: {
+  //     type: '_npcJoinCall',
+  //     NPCName: a => a.NPCName
+  //   }
+  // }),
 
-  leaveCall: defineDirective({
-    args: s => ({
-      NPCName: s,
-    }),
-    entry: {
-      type: '_npcLeaveCall',
-      NPCName: a => a.NPCName
-    }
-  }),
+  // leaveCall: defineDirective({
+  //   args: s => ({
+  //     NPCName: s,
+  //   }),
+  //   entry: {
+  //     type: '_npcLeaveCall',
+  //     NPCName: a => a.NPCName
+  //   }
+  // }),
 
   /**
    * Sends a message to a fragment.

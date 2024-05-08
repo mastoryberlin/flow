@@ -408,6 +408,34 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       const finallyAsTarget = '#' + node.path.join('.') + '.__FINALLY__'
       for (const s of Object.values(json.states ?? {})) {
         const grandChildrenNames = JSON.parse(JSON.stringify(Object.keys((s as any).states ?? {}))) as string[]
+        function hasTransitionsImplRecursive(v: unknown): boolean {
+          switch (typeof v) {
+            case 'undefined': return false
+            case 'string': return true
+            case 'object':
+              if (!v) { return false }
+              if (Array.isArray(v)) {
+                return v.length > 0
+                  ? v.every(sub => hasTransitionsImplRecursive(sub))
+                  : false
+              } else {
+                // transition object - either accept an existing target
+                // or set one if an actions-only transition
+                (v as any).target ||= finallyAsTarget
+                return true
+              }
+          }
+          return false
+        }
+        function hasTransitions(stateNode: any) {
+          return (['on', 'always', 'after'] as const).some(k => {
+            const def = stateNode?.[k]
+            switch (k) {
+              case 'always': return hasTransitionsImplRecursive(def)
+              default: return def && Object.values(def).length && Object.values(def).every(sub => hasTransitionsImplRecursive(sub))
+            }
+          })
+        }
         if (grandChildrenNames.length) {
           grandChildrenNames.sort((a, b) => {
             const re = /:(\d+)$/
@@ -416,37 +444,13 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
             return n - m
           })
           const lastGrandChild = (s as any).states[grandChildrenNames[0]] as any
-          const lastGrandChildHasTransitions = (['on', 'always', 'after'] as const).some(k => {
-            const def = lastGrandChild?.[k]
-            function hasTransitions(v: unknown): boolean {
-              switch (typeof v) {
-                case 'undefined': return false
-                case 'string': return true
-                case 'object':
-                  if (!v) { return false }
-                  if (Array.isArray(v)) {
-                    return v.length > 0
-                      ? v.every(sub => hasTransitions(sub))
-                      : false
-                  } else {
-                    // transition object - either accept an existing target
-                    // or set one if an actions-only transition
-                    (v as any).target ||= finallyAsTarget
-                    return true
-                  }
-              }
-              return false
-            }
-            switch (k) {
-              case 'always': return hasTransitions(def)
-              default: return def && Object.values(def).length && Object.values(def).every(sub => hasTransitions(sub))
-            }
-          })
-          if (!lastGrandChildHasTransitions) {
+          if (!hasTransitions(lastGrandChild)) {
             lastGrandChild.always = finallyAsTarget
           }
         } else {
-          (s as any).always = finallyAsTarget
+          if (!hasTransitions(s)) {
+            (s as any).always = finallyAsTarget
+          }
         }
       }
       const on = json.on ?? {}

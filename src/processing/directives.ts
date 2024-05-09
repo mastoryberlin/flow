@@ -140,9 +140,8 @@ export const supportedDirectives = {
       }
     },
     invoke: {
-      type: 'cinema',
-      source: ({ source }) => source,
-      freezeLastFrame: ({ freezeLastFrame }) => freezeLastFrame,
+      src: () => '_cinema',
+      input: (args) => args,
     },
   }),
 

@@ -129,7 +129,7 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
             // { target: '*' } // fallback intent
           ]
         }
-        if (/^\?!(?:\s\w+)?:\d+$/.test(testNodeName)) { // match ?! singleWord
+        if (/^\?!/.test(testNodeName)) { // match ?! singleWord
           json.on['UNKNOWN_INTENT'] = [
             {
               target: '*',

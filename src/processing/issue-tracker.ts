@@ -420,7 +420,7 @@ export function useIssueTracker(parser: Parser, visitor: DslVisitorWithDefaults,
   checkDuplicateStateNodeNames()
   checkTransitionSources()
   checkTransitionTargets()
-  checkReenterableFallbacks()
+  // checkReenterableFallbacks()
   checkMessageSenders()
   checkMessageMediaUrl()
   checkTodos()

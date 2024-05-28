@@ -549,6 +549,13 @@ export const supportedDirectives = {
     },
   }),
 
+  stopEpisode: defineDirective({
+    args: s => ({}),
+    entry: {
+      type: '_stopEpisode',
+    }
+  }),
+
   /**
   * Unfreezes the UI in the given fragment, i.e. allows user input (again).
   */

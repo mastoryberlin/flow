@@ -95,7 +95,9 @@ export const supportedDirectives = {
   }),
 
   /**
-   * Evaluates the given `expression` and fails the test if it is falsy.\n\nThis directive only affects unit tests and has no effect outside of them.
+   * Evaluates the given `expression` and fails the test if it is falsy.
+   * 
+   * This directive only affects unit tests and has no effect outside of them.
    */
   assert: defineDirective({
     args: s => ({
@@ -127,16 +129,35 @@ export const supportedDirectives = {
   }),
 
   /**
-   * Starts a video player in fullscreen "cinema" mode.\n\nThe player closes automatically when the video reaches its end. This will also mark the directive as done, and there is no way for the user to close the window (other than jumping to the very end of the video).
+   * Starts a video player in fullscreen "cinema" mode.
+   * 
+   * By default, the player closes automatically when the video reaches its end. 
+   * This will also mark the directive as done, and there is no way for the user to close the window
+   * (other than jumping to the very end of the video).
+   * 
+   * You can alter this behavior by adding the `freeze` keyword after the video URL;
+   * if present, the video player will "freeze" the last frame of the video once it
+   * completes. **IMPORTANT**: In freeze mode, there is *no way at all* for the user to
+   * escape the situation unless you provide one with an interactive messenger area
+   * (choice buttons / open question input field). Furthermore, even after the user has
+   * made an input in one of these, the video player will not close but instead assume
+   * that a follow-up `.cinema` directive will replace its URL by another.
+   * 
+   * In normal (non-freeze) mode, you may also opt to add the `tbc` keyword after the 
+   * video URL. If you do so, the directive will trigger a "To be continued ..."
+   * fullscreen animation after video playback and wait for it to finish before continuing.
    */
   cinema: defineDirective({
     args: s => {
-      const [source, freeze] = s.split(/\s+/)
-      const freezeLastFrame = freeze === 'freeze'
+      const [source, ...options] = splitArgs.byWhiteSpace(s)
+      const loptions = options.map(o => o.toLowerCase())
+      const freezeLastFrame = loptions.includes('freeze')
+      const toBeContinued = loptions.includes('tbc')
       return {
         /** The URL of the video file to play */
         source,
         freezeLastFrame,
+        toBeContinued,
       }
     },
     invoke: {
@@ -156,7 +177,9 @@ export const supportedDirectives = {
   }),
 
   /**
-   * Terminates the flow at this point.\n\nIf this directive appears in a subflow, it stops the subflow state machine and returns control back to the main flow. If it appears in an episode main flow, it stops the episode entirely. If it appears in a challenge flow, it unloads the challenge from the Wire.
+   * Terminates the flow at this point.
+   * 
+   * If this directive appears in a subflow, it stops the subflow state machine and returns control back to the main flow. If it appears in an episode main flow, it stops the episode entirely. If it appears in a challenge flow, it unloads the challenge from the Wire.
    */
   done: defineDirective({
     args: s => ({}),
@@ -401,6 +424,27 @@ export const supportedDirectives = {
       type: '_mount',
       params: s => ({
         fragmentId: s.fragmentId
+      }),
+    },
+  }),
+
+  /**
+   * Marks an Activity's achievement aspect (or "component") as not reached by the user,
+   * typically as part of them receiving support for it. Calling this directive
+   * influences scoring and achievement tracking.
+   */
+  notAchieved: defineDirective({
+    args: s => {
+      if (!s) { return { component: '' } }
+      const [component,] = s.trim().split(/\s+/)
+      return {
+        component,
+      }
+    },
+    entry: {
+      type: '_notAchieved',
+      params: s => ({
+        component: s.component,
       }),
     },
   }),

@@ -166,6 +166,21 @@ export const supportedDirectives = {
     },
   }),
 
+  tutorial: defineDirective({
+    args: s => {
+      const [path, target] = splitArgs.byWhiteSpace(s)
+      return {
+        /** The path of the tutorial to show */
+        path,
+        target: target ?? '',
+      }
+    },
+    invoke: {
+      src: () => '_tutorial',
+      input: (args) => args,
+    },
+  }),
+
   confetti: defineDirective({
     args: s => ({
       intensity: Number.parseInt(s) || 5,
@@ -255,6 +270,25 @@ export const supportedDirectives = {
       element: a => a.uiElement,
     }
   }),
+
+  // /**
+  //  * Highlights a fragment or UI element for some seconds.
+  //  */
+  // highlight: defineDirective({
+  //   args: s => {
+  //     const [element, duration] = splitArgs.byWhiteSpace(s)
+  //     return {
+  //       /** The fragment or UI element to highlight. */
+  //       element,
+  //       duration: duration as string | undefined,
+  //     }
+  //   },
+  //   entry: {
+  //     type: '_highlight',
+  //     element: a => a.element,
+  //     duration: a => a.duration,
+  //   }
+  // }),
 
   //   inChallenge: defineDirective({
   //     args: s => {

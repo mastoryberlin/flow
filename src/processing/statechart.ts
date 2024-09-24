@@ -495,7 +495,6 @@ function stateNodeToJsonRecursive(fqPath: string, variant: StatechartVariant, no
       type: 'final',
       entry: {
         type: "tellParentImDone",
-        id: "SUBFLOW_DONE"
       },
     }
 

@@ -634,6 +634,13 @@ export const supportedDirectives = {
     }
   }),
 
+  gameOver: defineDirective({
+    args: s => ({}),
+    entry: {
+      type: '_gameOver',
+    }
+  }),
+
   /**
   * Unfreezes the UI in the given fragment, i.e. allows user input (again).
   */

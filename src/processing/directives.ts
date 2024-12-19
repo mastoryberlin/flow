@@ -41,21 +41,66 @@ export function defineDirective<A extends DirectiveArgumentsTypes>(d: DirectiveI
   return d
 }
 
-const sepHelper = '&.&'
-const splitArgs = {
-  byFirstWhiteSpace(s: string) {
-    const argSplitter = new RegExp('\\s+|(?<!^)\\b(?!$)')
-    return s.replace(argSplitter, sepHelper).split(sepHelper)
-  },
-  byWhiteSpace(s: string) {
-    return s.split(/\s+/)
-  },
-}
-
 const missingRequiredArgument = (argumentName: string) =>
   `Missing required argument "${argumentName}"`
 const invalidArgumentValue = (argumentName: string, receivedValue: string, expected: string) =>
   `Invalid value "${receivedValue}" for argument "${argumentName}" (expected: ${expected})`
+
+const sepHelper = '&.&'
+const splitArgs = {
+  byFirstWhiteSpace(s: string) {
+    return s.replace(/\s+/, sepHelper).split(sepHelper)
+  },
+  byWhiteSpace(s: string) {
+    return s.split(/\s+/)
+  },
+  toIdentifierAndOrJsonObject(s: string, keyInParsedObject: string, keyForNestedArgs?: string) {
+    s = s.trim()
+    let ret: Record<string, unknown> = {}
+    function tryParse(maybeSerializedJson: string) {
+      try {
+        const json = JSON.parse(maybeSerializedJson)
+        return json
+      } catch (e) {
+        throw new Error(invalidArgumentValue('directive argument', maybeSerializedJson, 'valid JSON'), { cause: e })
+      }
+    }
+    if (s.includes(' ')) {
+      const arr = this.byFirstWhiteSpace(s)
+      console.log('byFirstWhiteSpace returned', arr)
+      const [first, second] = arr
+      if (first.includes('{')) {
+        // assume the entire string is just one object
+        ret = tryParse(s)
+      } else if (/^\w+$/.test(first)) {
+        if (second) {
+          const args = tryParse(second)
+          if (keyForNestedArgs) {
+            ret[keyForNestedArgs] = args
+          } else {
+            Object.assign(ret, args)
+          }
+        }
+        ret[keyInParsedObject] = first
+      } else {
+        throw new Error(invalidArgumentValue('first word', first, 'valid identifier'))
+      }
+    } else if (s.includes('{')) {
+      ret = tryParse(s)
+    } else if (/^\w+$/.test(s)) {
+      {
+        ret[keyInParsedObject] = s
+      }
+    } else {
+      throw new Error(invalidArgumentValue('first word', s, 'valid identifier'))
+    }
+    if (keyForNestedArgs && !(keyForNestedArgs in ret)) {
+      const {[keyInParsedObject]:identifier, ...rest} = ret
+      return {[keyInParsedObject]: identifier, [keyForNestedArgs]: rest}
+    }
+    return ret
+  },
+}
 
 // ========================================================================================================================
 // Supported Directives
@@ -199,16 +244,6 @@ export const supportedDirectives = {
   done: defineDirective({
     args: s => ({}),
     always: (args, root) => `#${root}.__FLOW_DONE__`,
-  }),
-
-  exec: defineDirective({
-    args: s => ({
-      actionName: s.trim(),
-    }),
-    entry: {
-      type: '_exec',
-      actionName: a => a.actionName
-    }
   }),
 
   /**
@@ -542,6 +577,23 @@ export const supportedDirectives = {
         fragmentId: s.fragmentId
       }),
     },
+  }),
+
+  /**
+   * Runs the specified unit action (defined in main.js), optionally with parameters.
+   * Usage: .runAction myAction
+   *        .runAction myAction {"myParameters": "in JSON!", "anotherOne": 2.5}
+   *        .runAction {"name": "myAction", "canStillHaveParameters": true}
+   */
+  runAction: defineDirective({
+    args: s => {
+      if (!s) { throw missingRequiredArgument('action') }
+      return splitArgs.toIdentifierAndOrJsonObject(s, 'name', 'params')
+    },
+    entry: {
+      type: '_runAction',
+      params: action => action,
+    }
   }),
 
   /**

@@ -1,7 +1,4 @@
 {
-  "extends": [
-    "@vue/tsconfig/tsconfig.json"
-  ],
   "include": [
     "src/**/*",
     "gen-spec.ts",

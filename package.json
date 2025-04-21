@@ -21,7 +21,7 @@
     "test:unit": "vitest --environment jsdom",
     "build-only": "vite build",
     "build-module": "tsc --declaration --resolveJsonModule --outDir lib ./index.ts",
-    "type-check": "vue-tsc --noEmit -p tsconfig.vitest.json --composite false",
+    "type-check": "tsc --noEmit -p tsconfig.vitest.json --composite false",
     "build:scripts": "tsc --outDir lib ./gen-spec ./gen-types ./bump-version",
     "gen-spec": "node lib/gen-spec",
     "gen-types": "node lib/gen-types",
@@ -29,16 +29,11 @@
     "release": "yarn gen-spec && yarn gen-types && yarn build-module && yarn bump-version"
   },
   "dependencies": {
-    "chevrotain": "^10.4.1",
-    "vue": "^3.5.13",
-    "vue3-treeview": "^0.4.0"
+    "chevrotain": "^10.4.1"
   },
   "devDependencies": {
     "@types/jsdom": "^20.0.0",
     "@types/node": "^16.11.56",
-    "@vitejs/plugin-vue": "^3.0.3",
-    "@vue/test-utils": "^2.0.2",
-    "@vue/tsconfig": "^0.1.3",
     "chokidar": "^3.5.3",
     "concurrently": "^7.5.0",
     "fs": "^0.0.1-security",
@@ -47,7 +42,6 @@
     "path": "^0.12.7",
     "typescript": "~4.7.4",
     "vite": "^3.0.9",
-    "vitest": "^0.23.0",
-    "vue-tsc": "^0.40.7"
+    "vitest": "^0.23.0"
   }
 }
